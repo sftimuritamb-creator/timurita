@@ -3,271 +3,55 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Statybos Darbai - Demo PWA</title>
-  <meta name="description" content="Demo: trumpalaikio darbo platforma (PWA)" />
-  <link <link rel="manifest" href="manifest.json">
+  <title>Timurita</title>
+  <meta name="description" content="Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams." />
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="Timurita_logo_192x192.png" type="image/png">
+  <meta name="theme-color" content="#1a2a44">
+
   <style>
-    :root{--bg:#f5f7fb;--card:#fff;--accent:#0b67ff;--muted:#666}
-    body{font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:var(--bg);color:#222}
-    header{background:linear-gradient(90deg,#0b67ff,#5fb3ff);color:#fff;padding:18px}
-    .container{max-width:980px;margin:18px auto;padding:12px}
-    .grid{display:grid;grid-template-columns:1fr 360px;gap:12px}
-    .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(12,30,60,0.06)}
-    label{display:block;margin:8px 0 4px;font-weight:600}
-    input,select,textarea,button{width:100%;padding:8px;border-radius:8px;border:1px solid #e1e6f0}
-    .muted{color:var(--muted);font-size:13px}
-    .row{display:flex;gap:8px}
-    .small{font-size:13px}
-    .worker-list{max-height:560px;overflow:auto}
-    .worker-item{padding:10px;border-radius:8px;border:1px dashed #eef4ff;margin-bottom:8px}
-    .btn{background:var(--accent);color:#fff;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
-    .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(11,103,255,0.12)}
-    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-    .day{padding:8px;border-radius:6px;text-align:center;border:1px solid transparent}
-    .day.disabled{opacity:0.45}
-    .day.free{background:#111;color:#fff}
-    .day.booked{background:#ff4b4b;color:#fff}
-    .day.weekend{background:#f0f0f0}
-    .offer-list{max-height:220px;overflow:auto}
-    footer{padding:12px;text-align:center;color:#666;font-size:13px}
-    pre{white-space:pre-wrap;word-wrap:break-word}
-  </style>
-</head>
-<body>
-<header>
-  <div class="container">
-    <h1>StatybosDarbas — Demo PWA</h1>
-    <div class="muted">Nemokamas demo: darbdaviai ir darbuotojai. Veikia lokaliai arba per GitHub Pages.</div>
-  </div>
-</header>
-<main class="container">
-  <div class="grid">
-    <div>
-      <div class="card" id="authCard">
-        <h3 id="authTitle">Prisijungti / Registruotis</h3>
-        <div id="authForms">
-          <label>Vartotojo tipas</label>
-          <select id="roleSelect"><option value="worker">Darbuotojas</option><option value="employer">Darbdavys</option></select>
-          <label>Vardas</label>
-          <input id="name" placeholder="Vardas Pavardė" />
-          <label>Amžius</label>
-          <input id="age" type="number" />
-          <label>Miestas</label>
-          <input id="city" />
-          <label>Specialybė (jei darbuotojas)</label>
-          <input id="skill" />
-          <label>Individualios veiklos nr. (jei turi)</label>
-          <input id="taxid" />
-          <div class="row" style="margin-top:8px">
-            <button class="btn" id="registerBtn">Registruotis</button>
-            <button class="btn ghost" id="loginBtn">Prisijungti</button>
-          </div>
-          <p class="muted small">Registruojantis darbo sutartis sugeneruojama automatiškai (demo: atsisiunčiama kaip tekstinis failas) ir pažymi kaip pasirašyta po patvirtinimo.</p>
-        </div>
-      </div>
+    :root {
+      --bg: #f5f7fb;
+      --card: #fff;
+      --accent: #0b67ff;
+      --muted: #666;
+    }
 
-      <div class="card" id="mainCard" style="margin-top:12px;display:none">
-        <div id="employerView" style="display:none">
-          <h3>Darbdavio sritis</h3>
-          <div class="row">
-            <input id="searchCity" placeholder="Filtruoti pagal miestą" />
-            <button class="btn ghost" id="filterBtn">Filtruoti</button>
-          </div>
-          <h4 style="margin-top:10px">Užsiregistravę darbuotojai</h4>
-          <div class="worker-list" id="workerList"></div>
-        </div>
+    body {
+      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+    }
 
-        <div id="workerView" style="display:none">
-          <h3>Darbuotojo sritis</h3>
-          <div><strong>Mano profilis</strong></div>
-          <div id="myProfile" style="margin-top:8px"></div>
-          <h4 style="margin-top:8px">Gauti pasiūlymai</h4>
-          <div class="offer-list" id="offerList"></div>
-        </div>
-      </div>
+    header {
+      width: 100%;
+      background: linear-gradient(90deg, #0b67ff, #5fb3ff);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
 
-      <div class="card" style="margin-top:12px">
-        <h4>Logas / greiti veiksmai</h4>
-        <div id="log" style="min-height:80px;font-size:13px"></div>
-      </div>
-    </div>
+    header img {
+      width: 120px;
+      height: 120px;
+      display: block;
+      margin: 10px auto;
+    }
 
-    <div>
-      <div class="card">
-        <h3 id="profileHeader">Profilis / Kalendorius</h3>
-        <div id="profileBox"></div>
-        <div style="margin-top:12px">
-          <h4>Kalendorius (pasirinkite datą pasiūlymui)</h4>
-          <div id="calendar" class="calendar"></div>
-        </div>
-      </div>
+    header h1 {
+      margin: 10px 0 0;
+      font-size: 1.8em;
+      font-weight: 600;
+    }
 
-      <div class="card" style="margin-top:12px">
-        <h4>Sutartys (demo)</h4>
-        <div id="contractsArea"></div>
-      </div>
-    </div>
-  </div>
-</main>
-<footer>
-  Demo: neprodukcinė versija. Norėdami publikuoti kaip tikrą app, reikalingas serveris, DB ir saugūs API rakatai.
-</footer>
-
-<script>
-// --- Demo PWA single-file logic (LOCALSTORAGE-based) ---
-const holidays = [ // sample LT public holidays (dates only for demo year-independent check)
-  '01-01','03-11','05-01','06-24','07-06','12-24','12-25','12-26'
-];
-
-function log(msg){const el=document.getElementById('log');el.innerHTML=(new Date()).toLocaleTimeString()+" — "+msg+"<br>"+el.innerHTML}
-
-// simple data stores in localStorage
-const DB_KEY='sd_demo_db_v1';
-let DB = JSON.parse(localStorage.getItem(DB_KEY)||'{}');
-if(!DB.users) DB.users=[]; if(!DB.offers) DB.offers=[]; if(!DB.contracts) DB.contracts=[];
-
-function saveDB(){localStorage.setItem(DB_KEY,JSON.stringify(DB));}
-
-function uid(prefix='id'){return prefix+Math.random().toString(36).slice(2,9)}
-
-// UI refs
-const roleSelect=document.getElementById('roleSelect');
-const registerBtn=document.getElementById('registerBtn');
-const loginBtn=document.getElementById('loginBtn');
-const nameInput=document.getElementById('name');
-const ageInput=document.getElementById('age');
-const cityInput=document.getElementById('city');
-const skillInput=document.getElementById('skill');
-const taxidInput=document.getElementById('taxid');
-const authCard=document.getElementById('authCard');
-const mainCard=document.getElementById('mainCard');
-const employerView=document.getElementById('employerView');
-const workerView=document.getElementById('workerView');
-const workerList=document.getElementById('workerList');
-const profileBox=document.getElementById('profileBox');
-const profileHeader=document.getElementById('profileHeader');
-const calendarEl=document.getElementById('calendar');
-const offerList=document.getElementById('offerList');
-const contractsArea=document.getElementById('contractsArea');
-
-let currentUser=null; // {id,role,...}
-let selectedWorker=null; // for employers to click a worker
-let calendarMode='view'; // viewing worker's calendar
-
-// --- Registration / Login (demo: no password, simply creates user and signs them in) ---
-registerBtn.addEventListener('click',()=>{
-  const role=roleSelect.value; const name=nameInput.value.trim();
-  if(!name){alert('Įrašyk vardą');return}
-  const user={id:uid(role==='worker'?'w_':'e_'),role, name, age:ageInput.value||'', city:cityInput.value||'', skill:skillInput.value||'', taxid:taxidInput.value||'', rating:5, calendar:{}, signedContract:false}};
-  DB.users.push(user); saveDB(); log('Užregistruotas: '+name+' ('+role+')');
-  // generate initial employment/collaboration contract and prompt to 'sign'
-  const contract=generateContract(user);
-  DB.contracts.push(contract); saveDB();
-  promptToSignContract(user,contract);
-  signin(user.id);
-});
-
-loginBtn.addEventListener('click',()=>{
-  const name=nameInput.value.trim(); const user=DB.users.find(u=>u.name===name);
-  if(!user){alert('Naudotojas nerastas. Įveskite tą patį vardą, su kuriuo užsiregistravote demo');return}
-  signin(user.id);
-});
-
-function signin(id){currentUser=DB.users.find(u=>u.id===id); authCard.style.display='none'; mainCard.style.display='block';
-  if(currentUser.role==='employer'){employerView.style.display='block'; workerView.style.display='none'; profileHeader.innerText='Peržiūrėti darbuotoją / Kalendorius'; renderWorkerList();}
-  else{employerView.style.display='none'; workerView.style.display='block'; profileHeader.innerText='Mano profilis / Kalendorius'; renderMyProfile();}
-  renderContracts(); log('Prisijungė: '+currentUser.name);
-}
-
-function generateContract(user){const id=uid('c_'); const now=new Date().toLocaleString(); const type=(user.role==='worker')? 'Įdarbinimo sutartis' : 'Bendradarbiavimo sutartis';
-  const text=`Sutartis: ${type}\nID: ${id}\nVardas: ${user.name}\nRole: ${user.role}\nData: ${now}\n\nSąlygos: Demo sutartis. Pasirašius elektroniniu parašu naudotojas patvirtina, kad sutinka.`;
-  return {id, userId:user.id, type, text, signed:false};
-}
-
-function promptToSignContract(user,contract){if(confirm('Sukurta sutartis ('+contract.type+'). Pasirašyti dabar?')){contract.signed=true; DB.contracts = DB.contracts.map(c=> c.id===contract.id?contract:c); saveDB(); downloadTextFile(contract.text+'\n\n[Pasirašyta:'+user.name+']',contract.id+'.txt'); user.signedContract=true; saveDB(); log('Sutartis pasirašyta: '+contract.id);}}
-
-function downloadTextFile(text, filename){const blob = new Blob([text], {type:'text/plain'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);}
-
-function renderContracts(){contractsArea.innerHTML=''; const myContracts=DB.contracts.filter(c=>c.userId===currentUser?.id); if(!currentUser) return; if(myContracts.length===0) contractsArea.innerHTML='<div class="muted">Nėra sutartų dokumentų</div>';
-  myContracts.forEach(c=>{const d=document.createElement('div'); d.className='card'; d.style.marginBottom='8px'; d.innerHTML=`<strong>${c.type}</strong> — ID: ${c.id} <div class='muted'>Signed: ${c.signed}</div><pre>${c.text}</pre>`; contractsArea.appendChild(d);});
-}
-
-// --- Employer: render worker list ---
-function renderWorkerList(filterCity=''){workerList.innerHTML=''; const workers=DB.users.filter(u=>u.role==='worker' && (filterCity?u.city.toLowerCase().includes(filterCity.toLowerCase()):true)); if(workers.length===0){workerList.innerHTML='<div class="muted">Nėra darbuotojų</div>';return}
-  workers.forEach(w=>{const el=document.createElement('div'); el.className='worker-item'; el.innerHTML=`<strong>${w.name}</strong> — ${w.skill||'—'} <div class='muted'>${w.city} • ${w.age} m. • Įm. nr: ${w.taxid||'—'}</div><div style='margin-top:8px' class='row'><button class='btn ghost' onclick="viewWorker('${w.id}')">Peržiūrėti / Siųsti pasiūlymą</button></div>`; workerList.appendChild(el);});}
-
-window.viewWorker = function(id){ selectedWorker = DB.users.find(u=>u.id===id); renderProfile(selectedWorker); calendarMode='offer'; }
-
-function renderProfile(user){profileBox.innerHTML=`<strong>${user.name}</strong><div class='muted'>${user.skill||''} • ${user.city} • ${user.age} m.</div><div style='margin-top:8px'>Įvertinimas: ${user.rating} ★</div>`; renderCalendar(user);}
-
-// --- Calendar: generate month grid (simple) ---
-function renderCalendar(user){calendarEl.innerHTML=''; const now=new Date(); const year=now.getFullYear(); const month=now.getMonth(); const firstDay=new Date(year,month,1); const startWeekDay=firstDay.getDay(); const daysInMonth=new Date(year,month+1,0).getDate(); // sun=0...sat=6
-  // show one month only
-  for(let i=0;i<startWeekDay;i++){const empty=document.createElement('div'); empty.className='day disabled'; empty.innerHTML=''; calendarEl.appendChild(empty);} 
-  for(let d=1; d<=daysInMonth; d++){const date = new Date(year,month,d); const dow=date.getDay(); const dayEl=document.createElement('div'); dayEl.className='day';
-    const mm = String(date.getMonth()+1).padStart(2,'0'); const dd = String(date.getDate()).padStart(2,'0'); const key = `${year}-${mm}-${dd}`;
-    // check weekend
-    if(dow===0||dow===6){ dayEl.classList.add('weekend'); dayEl.classList.add('disabled'); }
-    // check holiday
-    if(holidays.includes(mm+'-'+dd)){ dayEl.classList.add('disabled'); dayEl.classList.add('weekend'); }
-    // check booked
-    if(user.calendar && user.calendar[key]==='booked'){ dayEl.classList.add('booked'); }
-    // check free (worker can set days free manually for demo)
-    if(user.calendar && user.calendar[key]==='free'){ dayEl.classList.add('free'); }
-    dayEl.innerHTML=`<div>${d}</div>`;
-    // click handling: if employer and day is free -> send offer; if worker -> toggle free
-    dayEl.addEventListener('click',()=>{
-      if(currentUser.role==='employer'){ // make offer only on free day
-        if(user.calendar && user.calendar[key]==='free'){
-          makeOffer(currentUser.id,user.id,key);
-        } else{ alert('Ši data negalima pasirinkti (užimta arba neleidžiama).') }
-      } else {
-        // worker toggles free/booked manually in demo
-        user.calendar = user.calendar||{};
-        if(user.calendar[key]==='free'){ user.calendar[key]=null; } else { user.calendar[key]='free' }
-        saveDB(); renderCalendar(user); renderMyProfile(); }
-    });
-    calendarEl.appendChild(dayEl);
-  }
-}
-
-function makeOffer(employerId, workerId, dateKey){ const offer = {id:uid('o_'), employerId, workerId, date:dateKey, status:'pending', createdAt:new Date().toISOString()}; DB.offers.push(offer); saveDB(); log('Pasiūlymas išsiųstas: '+dateKey+' darbuotojui'); if(currentUser.role==='employer') alert('Pasiūlymas išsiųstas'); renderOffersFor(workerId);}
-
-function renderOffersFor(workerId){ // used to update worker's UI if logged in
-  if(currentUser && currentUser.id===workerId){ renderMyOffers(); }
-}
-
-function renderMyOffers(){ offerList.innerHTML=''; const myOffers=DB.offers.filter(o=>o.workerId===currentUser.id);
-  if(myOffers.length===0) offerList.innerHTML='<div class="muted">Nėra pasiūlymų</div>';
-  myOffers.forEach(o=>{const emp=DB.users.find(u=>u.id===o.employerId)||{name:'Anon'}; const el=document.createElement('div'); el.className='card'; el.style.marginBottom='8px'; el.innerHTML=`<strong>${emp.name}</strong> pasiūlė datą: ${o.date} <div class='muted'>Status: ${o.status}</div>`;
-    if(o.status==='pending'){ const btns=document.createElement('div'); btns.className='row'; const a=document.createElement('button'); a.className='btn ghost'; a.innerText='Atmesti'; a.onclick=()=>respondOffer(o.id,false); const b=document.createElement('button'); b.className='btn'; b.innerText='Patvirtinti'; b.onclick=()=>respondOffer(o.id,true); btns.appendChild(a); btns.appendChild(b); el.appendChild(btns); }
-    offerList.appendChild(el);
-  })
-}
-
-function respondOffer(offerId, accept){ const oIndex = DB.offers.findIndex(x=>x.id===offerId); if(oIndex===-1) return; const offer=DB.offers[oIndex]; offer.status = accept? 'accepted':'rejected'; DB.offers[oIndex]=offer; if(accept){ // mark date booked in worker calendar and generate loaning contract
-    const worker = DB.users.find(u=>u.id===offer.workerId); worker.calendar = worker.calendar||{}; worker.calendar[offer.date]='booked'; // booked = red
-    const contract = {id:uid('loan_'), userId:worker.id, employerId:offer.employerId, text:`Paskolinimo sutartis\nDarbuotojas: ${worker.name}\nDarbdavys: ${DB.users.find(u=>u.id===offer.employerId)?.name || ''}\nData: ${offer.date}\nAuto: neterminuota (demo)` , signed:true}; DB.contracts.push(contract); log('Pasiūlymas patvirtintas. Sukurta paskolinimo sutartis: '+contract.id);
-  } else { log('Pasiūlymas atmestas: '+offer.id); }
-  saveDB(); renderMyOffers(); renderCalendar(DB.users.find(u=>u.id===offer.workerId)); renderWorkerList(); renderContracts();}
-
-function renderMyProfile(){ profileBox.innerHTML=''; profileBox.innerHTML=`<strong>${currentUser.name}</strong><div class='muted'>${currentUser.skill||''} • ${currentUser.city}</div><div style='margin-top:8px'>Įvertinimas: ${currentUser.rating} ★</div><div style='margin-top:8px'><button class='btn' id='toggleFreeBtn'>Peržiūrėti / redaguoti kalendorių (spausk dienas, kad pažymėtum laisvą)</button></div>`; renderCalendar(currentUser); renderMyOffers(); }
-
-// initial render if some user exists
-(function initDemo(){ document.getElementById('filterBtn').addEventListener('click',()=>{renderWorkerList(document.getElementById('searchCity').value)});
-  // create sample data if empty
-  if(DB.users.length===0){ const w1={id:uid('w_'),role:'worker',name:'Jonas Petraitis',age:32,city:'Vilnius',skill:'Betonavimas',taxid:'123456789',rating:4.6,calendar:{}}; const w2={id:uid('w_'),role:'worker',name:'Petras Kazlauskas',age:28,city:'Kaunas',skill:'Mūrininkas',taxid:'',rating:4.2,calendar:{}}; const e1={id:uid('e_'),role:'employer',name:'UAB Statyba',age:'',city:'Vilnius',rating:4.8}; DB.users.push(w1,w2,e1); saveDB(); }
-})();
-
-// expose renderMyOffers to global for refresh
-window.renderMyOffers = renderMyOffers;
-</script>
-</body>
-</html>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js')
-    .then(() => console.log('Service Worker registered'))
-    .catch(err => console.log('SW registration failed:', err));
-}
-</script>
+    main {
+      width: 100%;
+      max-width: 600px;
+      background: var(--card);
+      marg
