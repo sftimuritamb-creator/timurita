@@ -1,57 +1,73 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="lt">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Timurita</title>
-  <meta name="description" content="Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams." />
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="Timurita_logo_192x192.png" type="image/png">
+
+  <!-- PWA manifestas -->
+  <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#1a2a44">
+  <meta name="description" content="Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams.">
+
+  <!-- Ikona -->
+  <link rel="icon" href="./Timurita_logo_192x192.png" type="image/png">
 
   <style>
-    :root {
-      --bg: #f5f7fb;
-      --card: #fff;
-      --accent: #0b67ff;
-      --muted: #666;
-    }
-
     body {
-      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      background: var(--bg);
+      font-family: "Inter", "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
+      background-color: #f5f7fb;
       color: #222;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-    }
-
-    header {
-      width: 100%;
-      background: linear-gradient(90deg, #0b67ff, #5fb3ff);
-      color: #fff;
-      padding: 20px;
+      justify-content: center;
+      height: 100vh;
       text-align: center;
     }
 
-    header img {
-      width: 120px;
-      height: 120px;
-      display: block;
-      margin: 10px auto;
+    img {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 20px;
     }
 
-    header h1 {
-      margin: 10px 0 0;
-      font-size: 1.8em;
-      font-weight: 600;
+    h1 {
+      font-size: 28px;
+      color: #0b67ff;
+      margin-bottom: 10px;
     }
 
-    main {
-      width: 100%;
-      max-width: 600px;
-      background: var(--card);
-      marg
+    p {
+      font-size: 16px;
+      max-width: 320px;
+      color: #555;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 20px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+
+<body>
+  <img src="./Timurita_logo_192x192.png" alt="Timurita logotipas">
+  <h1>Timurita</h1>
+  <p>Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams.</p>
+
+  <footer>© 2025 Timurita</footer>
+
+  <!-- Service Worker registracija -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(() => console.log('Service Worker sėkmingai užregistruotas.'))
+        .catch(error => console.log('Service Worker klaida:', error));
+    }
+  </script>
+</body>
+</html>
