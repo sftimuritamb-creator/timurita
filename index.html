@@ -1,73 +1,113 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="lt">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Timurita</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Timurita</title>
+    <meta name="description" content="Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams." />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="Timurita_logo_192x192.png" type="image/png" />
+    <meta name="theme-color" content="#1a2a44" />
 
-  <!-- PWA manifestas -->
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#1a2a44">
-  <meta name="description" content="Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams.">
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --accent: #0b67ff;
+      }
 
-  <!-- Ikona -->
-  <link rel="icon" href="./Timurita_logo_192x192.png" type="image/png">
+      body {
+        font-family: Inter, Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: #222;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
 
-  <style>
-    body {
-      margin: 0;
-      font-family: "Inter", "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
-      background-color: #f5f7fb;
-      color: #222;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-    }
+      img.logo {
+        width: 140px;
+        margin-bottom: 20px;
+      }
 
-    img {
-      width: 140px;
-      height: 140px;
-      margin-bottom: 20px;
-    }
+      h1 {
+        color: var(--accent);
+        margin: 0;
+      }
 
-    h1 {
-      font-size: 28px;
-      color: #0b67ff;
-      margin-bottom: 10px;
-    }
+      p {
+        margin-top: 10px;
+        color: #555;
+        max-width: 400px;
+      }
 
-    p {
-      font-size: 16px;
-      max-width: 320px;
-      color: #555;
-    }
+      button.install {
+        margin-top: 30px;
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 12px 22px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
 
-    footer {
-      position: absolute;
-      bottom: 20px;
-      font-size: 12px;
-      color: #888;
-    }
-  </style>
-</head>
+      button.install:hover {
+        background: #004fdc;
+      }
 
-<body>
-  <img src="./Timurita_logo_192x192.png" alt="Timurita logotipas">
-  <h1>Timurita</h1>
-  <p>Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams.</p>
+      footer {
+        position: absolute;
+        bottom: 15px;
+        font-size: 13px;
+        color: #888;
+      }
+    </style>
+  </head>
 
-  <footer>© 2025 Timurita</footer>
+  <body>
+    <img src="Timurita_logo_original.png" alt="Timurita logotipas" class="logo" />
+    <h1>Timurita</h1>
+    <p>Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams.</p>
 
-  <!-- Service Worker registracija -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(() => console.log('Service Worker sėkmingai užregistruotas.'))
-        .catch(error => console.log('Service Worker klaida:', error));
-    }
-  </script>
-</body>
+    <button class="install" id="installButton" hidden>Įdiegti programėlę</button>
+
+    <footer>© 2025 Timurita</footer>
+
+    <script>
+      let deferredPrompt;
+      const installButton = document.getElementById('installButton');
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installButton.hidden = false;
+      });
+
+      installButton.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installButton.hidden = true;
+        }
+        deferredPrompt = null;
+      });
+
+      window.addEventListener('appinstalled', () => {
+        installButton.hidden = true;
+      });
+    </script>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js');
+      }
+    </script>
+  </body>
 </html>
