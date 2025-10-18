@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Statybos Darbai - Demo PWA</title>
   <meta name="description" content="Demo: trumpalaikio darbo platforma (PWA)" />
-  <link rel="manifest" href="#" />
+  <link <link rel="manifest" href="manifest.json">
   <style>
     :root{--bg:#f5f7fb;--card:#fff;--accent:#0b67ff;--muted:#666}
     body{font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:var(--bg);color:#222}
@@ -264,3 +264,10 @@ window.renderMyOffers = renderMyOffers;
 </script>
 </body>
 </html>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(() => console.log('Service Worker registered'))
+    .catch(err => console.log('SW registration failed:', err));
+}
+</script>
