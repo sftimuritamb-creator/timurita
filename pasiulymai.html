@@ -10,14 +10,14 @@
 </head>
 <body>
   <header class="app-header">
-    <img src="./Timurita_logo_192x192.png" alt="Timurita logo">
+    <img src="./Timurita_logo_192x192.png" alt="Timurita">
     <div class="logo-left"><h3>Timurita</h3><div class="small">Pasiūlymai</div></div>
   </header>
 
   <main class="container">
     <div class="card">
       <h2>Siūlomos darbo vietos</h2>
-      <div id="offersList" class="list"></div>
+      <div class="list" id="offersList"></div>
     </div>
   </main>
 
@@ -30,8 +30,8 @@
 
   <script>
     const sampleOffers = [
-      {id:'o1', title:'Plokščių klojimas - Vilnius', employer:'UAB Statyba', date:'2025-11-05', city:'Vilnius'},
-      {id:'o2', title:'Mūrininkas reikalingas - Kaunas', employer:'MB Projektai', date:'2025-11-07', city:'Kaunas'}
+      {id:'o1',title:'Plokščių klojimas — Vilnius',employer:'UAB Statyba',date:'2025-11-05',city:'Vilnius'},
+      {id:'o2',title:'Mūrininkas - mažam projektui, Kaunas',employer:'MB Projektai',date:'2025-11-07',city:'Kaunas'}
     ];
 
     function renderOffers(){
@@ -46,7 +46,6 @@
 
     function apply(id){ alert('Pasiūlymas pasiųstas (demo)'); }
     function go(p){ location.href = p; }
-
     renderOffers();
   </script>
 </body>
