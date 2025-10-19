@@ -1,27 +1,53 @@
-<!doctype html><html lang="lt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Pasiūlymai - Timurita</title><link rel="stylesheet" href="style.css"><link rel="manifest" href="./manifest.json"><meta name="theme-color" content="#1a2a44"></head><body>
-<header class="app-header"><img src="Timurita_logo_192x192.png" alt="Timurita"><div><h3>Timurita</h3><div class="small">Darbo pasiūlymai</div></div></header>
-<main class="container">
-  <div class="card">
-    <h2>Siūlomos darbo vietos</h2>
-    <div class="list" id="offersList"></div>
-  </div>
-</main>
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Darbo pasiūlymai - Timurita</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#1a2a44">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="app-header">
+    <img src="./Timurita_logo_192x192.png" alt="Timurita logo">
+    <div class="logo-left"><h3>Timurita</h3><div class="small">Pasiūlymai</div></div>
+  </header>
 
-<nav class="bottom-nav">
-  <button class="nav-btn" onclick="go('darbuotojai.html')">Darbuotojai</button>
-  <button class="nav-btn active" onclick="go('pasiulymai.html')">Pasiūlymai</button>
-  <button class="nav-btn" onclick="go('profilis.html')">Profilis</button>
-  <button class="nav-btn" onclick="go('darbdavys.html')">Darbdavys</button>
-</nav>
+  <main class="container">
+    <div class="card">
+      <h2>Siūlomos darbo vietos</h2>
+      <div id="offersList" class="list"></div>
+    </div>
+  </main>
 
-<script>
-const sampleOffers=[
-  {id:'o1',title:'Plokščių klojimas - Vilnius',employer:'UAB Statyba',date:'2025-11-05',city:'Vilnius'},
-  {id:'o2',title:'Mūrininkas reikalingas - Kaunas',employer:'MB Projektai',date:'2025-11-07',city:'Kaunas'}
-];
-function renderOffers(){const el=document.getElementById('offersList');el.innerHTML='';sampleOffers.forEach(o=>{const it=document.createElement('div');it.className='offer-item';it.innerHTML=`<div><strong>${o.title}</strong><div class="small">${o.employer} • ${o.city} • ${o.date}</div></div><div><button class="btn" onclick="apply('${o.id}')">Siūlyti</button></div>`;el.appendChild(it)})}
-function apply(id){alert('Pasiūlymas pasiųstas (demo)')}
-function go(p){location.href=p}
-renderOffers()
-</script>
-</body></html>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="go('darbuotojai.html')">Darbuotojai</button>
+    <button class="nav-btn active" onclick="go('pasiulymai.html')">Pasiūlymai</button>
+    <button class="nav-btn" onclick="go('profilis.html')">Profilis</button>
+    <button class="nav-btn" onclick="go('darbdavys.html')">Darbdavys</button>
+  </nav>
+
+  <script>
+    const sampleOffers = [
+      {id:'o1', title:'Plokščių klojimas - Vilnius', employer:'UAB Statyba', date:'2025-11-05', city:'Vilnius'},
+      {id:'o2', title:'Mūrininkas reikalingas - Kaunas', employer:'MB Projektai', date:'2025-11-07', city:'Kaunas'}
+    ];
+
+    function renderOffers(){
+      const el = document.getElementById('offersList'); el.innerHTML = '';
+      sampleOffers.forEach(o=>{
+        const node = document.createElement('div'); node.className = 'offer-item';
+        node.innerHTML = `<div><strong>${o.title}</strong><div class="small">${o.employer} • ${o.city} • ${o.date}</div></div>
+                          <div><button class="btn" onclick="apply('${o.id}')">Siūlyti</button></div>`;
+        el.appendChild(node);
+      });
+    }
+
+    function apply(id){ alert('Pasiūlymas pasiųstas (demo)'); }
+    function go(p){ location.href = p; }
+
+    renderOffers();
+  </script>
+</body>
+</html>
