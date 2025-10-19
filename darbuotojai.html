@@ -1,77 +1,29 @@
-<!doctype html>
-<html lang="lt">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Darbuotojai - Timurita</title>
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#1a2a44">
-  <link rel="stylesheet" href="./style.css">
-</head>
-<body>
-  <header class="app-header">
-    <a href="./index.html" style="display:flex;align-items:center;text-decoration:none;color:inherit">
-      <img src="./Timurita_logo_192x192.png" alt="Timurita">
-      <div class="logo-left"><h3>Timurita</h3><div class="small">Darbuotojai</div></div>
-    </a>
-  </header>
-
-  <main class="container">
-    <div class="card">
-      <h2>Registruoti darbuotojai</h2>
-      <p class="small">Paspausk ant darbuotojo kortelės, kad matytum profilį ir kalendorių.</p>
-      <div class="list" id="workersList"></div>
-    </div>
-  </main>
-
-  <nav class="bottom-nav">
-    <button class="nav-btn active" onclick="go('darbuotojai.html')">Darbuotojai</button>
-    <button class="nav-btn" onclick="go('pasiulymai.html')">Pasiūlymai</button>
-    <button class="nav-btn" onclick="go('profilis.html')">Profilis</button>
-    <button class="nav-btn" onclick="go('darbdavys.html')">Darbdavys</button>
-  </nav>
-
-  <script>
-    // Parskaitome darbuotojus iš JSON
-    async function loadWorkers(){
-      try {
-        const res = await fetch('./darbuotojai.json', {cache: "no-store"});
-        const data = await res.json();
-        renderWorkers(data);
-      } catch(err){
-        console.error('Klaida kraunant darbuotojus', err);
-        document.getElementById('workersList').innerText = 'Klaida užkraunant darbuotojus.';
-      }
-    }
-
-    function avatarSVG(initials, bgColor){
-      return `<svg width="56" height="56" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${initials}">
-        <rect width="56" height="56" rx="12" fill="${bgColor}"></rect>
-        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Inter, Arial" font-size="18" fill="#fff">${initials}</text>
-      </svg>`;
-    }
-
-    function renderWorkers(list){
-      const el = document.getElementById('workersList'); el.innerHTML = '';
-      const colors = ['#1a73e8','#0b67ff','#1768a5'];
-      list.forEach((w,i)=>{
-        const node = document.createElement('div'); node.className = 'worker-item';
-        const initials = w.name.split(' ').map(x=>x[0]).slice(0,2).join('');
-        node.innerHTML = `<div style="display:flex;gap:12px;align-items:center">
-            <div class="avatar">${avatarSVG(initials, colors[i % colors.length])}</div>
-            <div>
-              <strong>${w.name}</strong>
-              <div class="small">${w.skill} • ${w.city}</div>
-            </div>
-          </div>
-          <div><a class="btn" href="profilis.html?id=${encodeURIComponent(w.id)}">Peržiūrėti</a></div>`;
-        el.appendChild(node);
-      });
-    }
-
-    function go(p){ location.href = p; }
-
-    loadWorkers();
-  </script>
-</body>
-</html>
+[
+  {
+    "id": "w1",
+    "name": "Jonas Petraitis",
+    "age": 32,
+    "skill": "Mūrininkas",
+    "tax": "123456789",
+    "city": "Vilnius",
+    "calendar": { "2025-11-05": "užimta" }
+  },
+  {
+    "id": "w2",
+    "name": "Mantas Vaitkus",
+    "age": 28,
+    "skill": "Elektrikas",
+    "tax": "987654321",
+    "city": "Kaunas",
+    "calendar": { "2025-11-07": "užimta" }
+  },
+  {
+    "id": "w3",
+    "name": "Lukas Adomaitis",
+    "age": 40,
+    "skill": "Dažytojas",
+    "tax": "246801357",
+    "city": "Klaipėda",
+    "calendar": {}
+  }
+]
