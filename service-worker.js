@@ -4,13 +4,18 @@ self.addEventListener('install', event => {
       return cache.addAll([
         './',
         './index.html',
+        './darbuotojai.html',
+        './pasiulymai.html',
+        './profilis.html',
+        './darbdavys.html',
+        './style.css',
         './manifest.json',
         './Timurita_logo_192x192.png',
         './Timurita_logo_512x512.png'
       ]);
     })
   );
-  console.log('✅ Service Worker installed and cached files.');
+  console.log('Service Worker installed and cached files.');
 });
 
 self.addEventListener('fetch', event => {
