@@ -1,29 +1,132 @@
-[
-  {
-    "id": "w1",
-    "name": "Jonas Petraitis",
-    "age": 32,
-    "skill": "Mūrininkas",
-    "tax": "123456789",
-    "city": "Vilnius",
-    "calendar": { "2025-11-05": "užimta" }
-  },
-  {
-    "id": "w2",
-    "name": "Mantas Vaitkus",
-    "age": 28,
-    "skill": "Elektrikas",
-    "tax": "987654321",
-    "city": "Kaunas",
-    "calendar": { "2025-11-07": "užimta" }
-  },
-  {
-    "id": "w3",
-    "name": "Lukas Adomaitis",
-    "age": 40,
-    "skill": "Dažytojas",
-    "tax": "246801357",
-    "city": "Klaipėda",
-    "calendar": {}
-  }
-]
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Darbuotojai - Timurita</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --accent: #0b67ff;
+      --text: #222;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    header img {
+      width: 100px;
+      height: auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--accent);
+      margin: 20px 0 10px 0;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      padding: 20px;
+      flex-grow: 1;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #fff;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+    }
+
+    footer a {
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    footer a.active {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="https://i.imgur.com/Yh7vJ9P.png" alt="Timurita logotipas">
+  </header>
+
+  <h1>Darbuotojai</h1>
+  <div class="container" id="workers"></div>
+
+  <footer>
+    <a href="index.html">Pagrindinis</a>
+    <a href="darbuotojai.html" class="active">Darbuotojai</a>
+    <a href="darbai.html">Darbo pasiūlymai</a>
+    <a href="profilis.html">Profilis</a>
+    <a href="darbdavys.html">Darbdavys</a>
+  </footer>
+
+  <script>
+    fetch("workers.json")
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("workers");
+        data.forEach(worker => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <img src="https://i.pravatar.cc/150?img=${Math.floor(Math.random()*70)}" alt="Avataras" class="avatar">
+            <h3>${worker.name}</h3>
+            <p><b>Profesija:</b> ${worker.skill}</p>
+            <p><b>Miestas:</b> ${worker.city}</p>
+            <p><b>Amžius:</b> ${worker.age}</p>
+            <p><b>IV nr.:</b> ${worker.tax}</p>
+          `;
+          container.appendChild(card);
+        });
+      })
+      .catch(err => {
+        document.getElementById("workers").innerHTML = "<p>Klaida įkeliant duomenis.</p>";
+        console.error(err);
+      });
+  </script>
+</body>
+</html>
