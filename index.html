@@ -1,113 +1,115 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="lt">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Timurita</title>
-    <meta name="description" content="Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams." />
-    <link rel="manifest" href="manifest.json" />
-    <link rel="icon" href="Timurita_logo_192x192.png" type="image/png" />
-    <meta name="theme-color" content="#1a2a44" />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timurita</title>
+  <meta name="description" content="Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams.">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="Timurita_logo_192x192.png" type="image/png">
+  <meta name="theme-color" content="#1a2a44">
 
-    <style>
-      :root {
-        --bg: #f5f7fb;
-        --accent: #0b67ff;
-      }
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --accent: #0b67ff;
+      --text: #222;
+    }
 
-      body {
-        font-family: Inter, Roboto, Helvetica, Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background: var(--bg);
-        color: #222;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-      }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
 
-      img.logo {
-        width: 140px;
-        margin-bottom: 20px;
-      }
+    img {
+      width: 120px;
+      height: auto;
+      margin-bottom: 16px;
+    }
 
-      h1 {
-        color: var(--accent);
-        margin: 0;
-      }
+    h1 {
+      color: var(--accent);
+      margin: 10px 0 20px;
+      font-size: 28px;
+    }
 
-      p {
-        margin-top: 10px;
-        color: #555;
-        max-width: 400px;
-      }
+    p {
+      max-width: 320px;
+      margin-bottom: 40px;
+      line-height: 1.5;
+    }
 
-      button.install {
-        margin-top: 30px;
-        background: var(--accent);
-        color: white;
-        border: none;
-        padding: 12px 22px;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background 0.2s;
-      }
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-      button.install:hover {
-        background: #004fdc;
-      }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
 
-      footer {
-        position: absolute;
-        bottom: 15px;
-        font-size: 13px;
-        color: #888;
-      }
-    </style>
-  </head>
+    button:hover {
+      background: #084fc4;
+    }
 
-  <body>
-    <img src="Timurita_logo_original.png" alt="Timurita logotipas" class="logo" />
-    <h1>Timurita</h1>
-    <p>Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams.</p>
+    footer {
+      position: absolute;
+      bottom: 20px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <img src="Timurita_logo_192x192.png" alt="Timurita logotipas">
+  <h1>Timurita</h1>
+  <p>Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams.</p>
 
-    <button class="install" id="installButton" hidden>Įdiegti programėlę</button>
+  <div class="buttons">
+    <button onclick="openWorker()">Prisijungti kaip Darbuotojas</button>
+    <button onclick="openEmployer()">Prisijungti kaip Darbdavys</button>
+    <button onclick="openAbout()">Apie programą</button>
+  </div>
 
-    <footer>© 2025 Timurita</footer>
+  <footer>© 2025 Timurita</footer>
 
-    <script>
-      let deferredPrompt;
-      const installButton = document.getElementById('installButton');
+  <script>
+    // Demo navigacija – veiksmai vėliau pakeičiami į tikrus puslapius
+    function openWorker() {
+      alert("Darbuotojo prisijungimo puslapis (dar kuriamas)");
+    }
 
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        installButton.hidden = false;
-      });
+    function openEmployer() {
+      alert("Darbdavio prisijungimo puslapis (dar kuriamas)");
+    }
 
-      installButton.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          installButton.hidden = true;
-        }
-        deferredPrompt = null;
-      });
+    function openAbout() {
+      alert("Timurita – trumpalaikio darbo platforma statybų sektoriuje.");
+    }
 
-      window.addEventListener('appinstalled', () => {
-        installButton.hidden = true;
-      });
-    </script>
-
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js');
-      }
-    </script>
-  </body>
+    // Service worker registracija
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker įdiegtas'))
+        .catch(err => console.error('SW klaida:', err));
+    }
+  </script>
+</body>
 </html>
