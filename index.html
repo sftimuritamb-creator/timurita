@@ -1,40 +1,52 @@
 <!doctype html>
 <html lang="lt">
 <head>
-<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Timurita</title>
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#1a2a44">
-<link rel="icon" href="./Timurita_logo_192x192.png" type="image/png">
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Timurita</title>
+  <meta name="description" content="Trumpalaikio darbo platforma statybų sektoriuje." />
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#1a2a44">
+  <link rel="icon" href="./Timurita_logo_192x192.png" type="image/png">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<header class="app-header">
-  <img src="Timurita_logo_192x192.png" alt="Timurita">
-  <div><h3>Timurita</h3><div class="small">Sujungiame darbdavius ir statybų specialistus</div></div>
-</header>
-<main class="container">
-  <div class="card">
-    <h1>Sveiki atvykę į Timurita</h1>
-    <p>Trumpalaikio darbo platforma statybų sektoriuje. Pasirinkite, ką norite daryti:</p>
-    <div style="display:flex;gap:12px;flex-wrap:wrap">
-      <button class="btn" onclick="navigate('darbuotojai.html')">Darbuotojai</button>
-      <button class="btn" onclick="navigate('pasiulymai.html')">Darbo pasiūlymai</button>
-      <button class="btn" onclick="navigate('profilis.html')">Profilis</button>
-      <button class="btn" onclick="navigate('darbdavys.html')">Darbdavys</button>
+  <header class="app-header">
+    <img src="./Timurita_logo_192x192.png" alt="Timurita logo">
+    <div class="logo-left"><h3>Timurita</h3><div class="small">Sujungiame darbdavius ir statybų specialistus</div></div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <h1>Sveiki atvykę į Timurita</h1>
+      <p>Trumpalaikio darbo platforma statybų sektoriuje. Pasirinkite veiksmą apačioje arba mygtukus žemiau.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px">
+        <button class="btn" onclick="navigate('darbuotojai.html')">Darbuotojai</button>
+        <button class="btn" onclick="navigate('pasiulymai.html')">Darbo pasiūlymai</button>
+        <button class="btn" onclick="navigate('profilis.html')">Profilis</button>
+        <button class="btn" onclick="navigate('darbdavys.html')">Darbdavys</button>
+      </div>
     </div>
-  </div>
-  <div class="card small"><strong>Demo:</strong> duomenys saugomi tik lokaliai.</div>
-</main>
 
-<nav class="bottom-nav">
-  <button class="nav-btn active" onclick="navigate('darbuotojai.html')">Darbuotojai</button>
-  <button class="nav-btn" onclick="navigate('pasiulymai.html')">Pasiūlymai</button>
-  <button class="nav-btn" onclick="navigate('profilis.html')">Profilis</button>
-  <button class="nav-btn" onclick="navigate('darbdavys.html')">Darbdavys</button>
-</nav>
+    <div class="card small"><strong>Demo režimas:</strong> duomenys saugomi lokaliai (localStorage).</div>
+  </main>
 
-<script>
-function navigate(p){ location.href=p }
-</script>
-</body></html>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="navigate('darbuotojai.html')">Darbuotojai</button>
+    <button class="nav-btn" onclick="navigate('pasiulymai.html')">Pasiūlymai</button>
+    <button class="nav-btn" onclick="navigate('profilis.html')">Profilis</button>
+    <button class="nav-btn" onclick="navigate('darbdavys.html')">Darbdavys</button>
+  </nav>
+
+  <script>
+    function navigate(path){ location.href = path; }
+
+    // PWA: register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(()=>console.log('SW registered'))
+        .catch(e=>console.log('SW error', e));
+    }
+  </script>
+</body>
+</html>
