@@ -1,42 +1,63 @@
-<!doctype html><html lang="lt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Profilis - Timurita</title><link rel="stylesheet" href="style.css"><link rel="manifest" href="./manifest.json"><meta name="theme-color" content="#1a2a44"></head><body>
-<header class="app-header"><img src="Timurita_logo_192x192.png" alt="Timurita"><div><h3>Timurita</h3><div class="small">Profilis</div></div></header>
-<main class="container">
-  <div class="card">
-    <h2>Mano profilis</h2>
-    <div class="field"><label class="label">Vardas</label><input id="name" class="input"></div>
-    <div class="field"><label class="label">Amžius</label><input id="age" class="input" type="number"></div>
-    <div class="field"><label class="label">Specialybė</label><input id="skill" class="input"></div>
-    <div class="field"><label class="label">Individualios veiklos nr.</label><input id="tax" class="input"></div>
-    <div class="field"><label class="label">Miestas</label><input id="city" class="input"></div>
-    <div style="margin-top:10px"><button class="btn" onclick="saveProfile()">Išsaugoti</button></div>
-    <div style="margin-top:10px" class="small">Role: <select id="role"><option value="worker">Darbuotojas</option><option value="employer">Darbdavys</option></select></div>
-  </div>
-</main>
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profilis - Timurita</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#1a2a44">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="app-header">
+    <img src="./Timurita_logo_192x192.png" alt="Timurita logo">
+    <div class="logo-left"><h3>Timurita</h3><div class="small">Profilis</div></div>
+  </header>
 
-<nav class="bottom-nav">
-  <button class="nav-btn" onclick="go('darbuotojai.html')">Darbuotojai</button>
-  <button class="nav-btn" onclick="go('pasiulymai.html')">Pasiūlymai</button>
-  <button class="nav-btn active" onclick="go('profilis.html')">Profilis</button>
-  <button class="nav-btn" onclick="go('darbdavys.html')">Darbdavys</button>
-</nav>
+  <main class="container">
+    <div class="card">
+      <h2>Mano profilis</h2>
+      <div class="field"><label class="label">Vardas</label><input id="name" class="input"></div>
+      <div class="field"><label class="label">Amžius</label><input id="age" class="input" type="number"></div>
+      <div class="field"><label class="label">Specialybė</label><input id="skill" class="input"></div>
+      <div class="field"><label class="label">Individualios veiklos nr.</label><input id="tax" class="input"></div>
+      <div class="field"><label class="label">Miestas</label><input id="city" class="input"></div>
+      <div style="margin-top:8px"><button class="btn" onclick="saveProfile()">Išsaugoti</button></div>
+      <div style="margin-top:10px" class="small">Role: <select id="role"><option value="worker">Darbuotojas</option><option value="employer">Darbdavys</option></select></div>
+    </div>
+  </main>
 
-<script>
-// demo profile saved in localStorage
-function loadProfile(){
-  const p=JSON.parse(localStorage.getItem('tim_profile')||'{}');
-  document.getElementById('name').value=p.name||'';
-  document.getElementById('age').value=p.age||'';
-  document.getElementById('skill').value=p.skill||'';
-  document.getElementById('tax').value=p.tax||'';
-  document.getElementById('city').value=p.city||'';
-  document.getElementById('role').value=p.role||'worker';
-}
-function saveProfile(){
-  const p={name:document.getElementById('name').value,age:document.getElementById('age').value,skill:document.getElementById('skill').value,tax:document.getElementById('tax').value,city:document.getElementById('city').value,role:document.getElementById('role').value};
-  localStorage.setItem('tim_profile',JSON.stringify(p));
-  alert('Profilis išsaugotas');
-}
-function go(p){location.href=p}
-loadProfile();
-</script>
-</body></html>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="go('darbuotojai.html')">Darbuotojai</button>
+    <button class="nav-btn" onclick="go('pasiulymai.html')">Pasiūlymai</button>
+    <button class="nav-btn active" onclick="go('profilis.html')">Profilis</button>
+    <button class="nav-btn" onclick="go('darbdavys.html')">Darbdavys</button>
+  </nav>
+
+  <script>
+    function loadProfile(){
+      const p = JSON.parse(localStorage.getItem('tim_profile')||'{}');
+      document.getElementById('name').value = p.name||'';
+      document.getElementById('age').value = p.age||'';
+      document.getElementById('skill').value = p.skill||'';
+      document.getElementById('tax').value = p.tax||'';
+      document.getElementById('city').value = p.city||'';
+      document.getElementById('role').value = p.role||'worker';
+    }
+    function saveProfile(){
+      const p = {
+        name: document.getElementById('name').value,
+        age: document.getElementById('age').value,
+        skill: document.getElementById('skill').value,
+        tax: document.getElementById('tax').value,
+        city: document.getElementById('city').value,
+        role: document.getElementById('role').value
+      };
+      localStorage.setItem('tim_profile', JSON.stringify(p));
+      alert('Profilis išsaugotas');
+    }
+    function go(p){ location.href = p; }
+    loadProfile();
+  </script>
+</body>
+</html>
