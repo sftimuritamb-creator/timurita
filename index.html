@@ -19,16 +19,16 @@
   <main class="container">
     <div class="card">
       <h1>Sveiki atvykę į Timurita</h1>
-      <p>Trumpalaikio darbo platforma statybų sektoriuje. Pasirinkite veiksmą apačioje arba mygtukus žemiau.</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px">
-        <button class="btn" onclick="navigate('darbuotojai.html')">Darbuotojai</button>
-        <button class="btn" onclick="navigate('pasiulymai.html')">Darbo pasiūlymai</button>
-        <button class="btn" onclick="navigate('profilis.html')">Profilis</button>
-        <button class="btn" onclick="navigate('darbdavys.html')">Darbdavys</button>
+      <p>Trumpalaikio darbo platforma statybų sektoriuje. Pasirinkite veiksmą apačioje arba žemiau.</p>
+      <div class="grid-actions" style="margin-top:14px;">
+        <button class="btn big" onclick="navigate('darbuotojai.html')">Darbuotojai</button>
+        <button class="btn big" onclick="navigate('pasiulymai.html')">Darbo pasiūlymai</button>
+        <button class="btn big" onclick="navigate('profilis.html')">Profilis</button>
+        <button class="btn big" onclick="navigate('darbdavys.html')">Darbdavys</button>
       </div>
     </div>
 
-    <div class="card small"><strong>Demo režimas:</strong> duomenys saugomi lokaliai (localStorage).</div>
+    <div class="card small"><strong>Demo režimas:</strong> duomenys saugomi lokaliai (localStorage). Vėliau įdiegsiu registraciją ir serverinę dalį.</div>
   </main>
 
   <nav class="bottom-nav">
@@ -39,9 +39,9 @@
   </nav>
 
   <script>
-    function navigate(path){ location.href = path; }
+    function navigate(p){ location.href = p; }
 
-    // PWA: register service worker
+    // register service worker for PWA (if present)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js')
         .then(()=>console.log('SW registered'))
