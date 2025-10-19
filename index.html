@@ -1,108 +1,40 @@
 <!doctype html>
 <html lang="lt">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Timurita</title>
-  <meta name="description" content="Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams." />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="Timurita_logo_192x192.png" type="image/png" />
-  <meta name="theme-color" content="#1a2a44" />
-
-  <style>
-    :root {
-      --bg: #f4f5f7;
-      --card: #ffffff;
-      --accent: #0b67ff;
-      --text: #222;
-    }
-
-    body {
-      margin: 0;
-      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-    }
-
-    img {
-      width: 120px;
-      height: auto;
-      margin-bottom: 16px;
-    }
-
-    h1 {
-      color: var(--accent);
-      margin: 8px 0;
-    }
-
-    p {
-      max-width: 400px;
-      margin: 0 auto 20px;
-      font-size: 15px;
-      line-height: 1.5;
-    }
-
-    .buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    button {
-      background-color: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    button:hover {
-      background-color: #095cd1;
-    }
-
-    footer {
-      position: absolute;
-      bottom: 16px;
-      font-size: 13px;
-      color: #777;
-    }
-  </style>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Timurita</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1a2a44">
+<link rel="icon" href="./Timurita_logo_192x192.png" type="image/png">
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-  <img src="Timurita_logo_192x192.png" alt="Timurita logotipas" />
-  <h1>Timurita</h1>
-  <p>Trumpalaikio darbo statybų sektoriuje programa – darbuotojams ir darbdaviams.</p>
-
-  <div class="buttons">
-    <button onclick="openWorker()">Prisijungti kaip Darbuotojas</button>
-    <button onclick="openEmployer()">Prisijungti kaip Darbdavys</button>
-    <button onclick="openAbout()">Apie programą</button>
+<header class="app-header">
+  <img src="Timurita_logo_192x192.png" alt="Timurita">
+  <div><h3>Timurita</h3><div class="small">Sujungiame darbdavius ir statybų specialistus</div></div>
+</header>
+<main class="container">
+  <div class="card">
+    <h1>Sveiki atvykę į Timurita</h1>
+    <p>Trumpalaikio darbo platforma statybų sektoriuje. Pasirinkite, ką norite daryti:</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn" onclick="navigate('darbuotojai.html')">Darbuotojai</button>
+      <button class="btn" onclick="navigate('pasiulymai.html')">Darbo pasiūlymai</button>
+      <button class="btn" onclick="navigate('profilis.html')">Profilis</button>
+      <button class="btn" onclick="navigate('darbdavys.html')">Darbdavys</button>
+    </div>
   </div>
+  <div class="card small"><strong>Demo:</strong> duomenys saugomi tik lokaliai.</div>
+</main>
 
-  <footer>© 2025 Timurita</footer>
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="navigate('darbuotojai.html')">Darbuotojai</button>
+  <button class="nav-btn" onclick="navigate('pasiulymai.html')">Pasiūlymai</button>
+  <button class="nav-btn" onclick="navigate('profilis.html')">Profilis</button>
+  <button class="nav-btn" onclick="navigate('darbdavys.html')">Darbdavys</button>
+</nav>
 
-  <script>
-    function openWorker() {
-      alert("Darbuotojo puslapis (čia vėliau nukreipsime)");
-    }
-    function openEmployer() {
-      alert("Darbdavio puslapis (čia vėliau nukreipsime)");
-    }
-    function openAbout() {
-      alert("Apie programą – informacinis puslapis (vėliau pridėsime)");
-    }
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('Service Worker registered')
+<script>
+function navigate(p){ location.href=p }
+</script>
+</body></html>

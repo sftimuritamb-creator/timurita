@@ -1,0 +1,43 @@
+<!doctype html><html lang="lt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Darbdavys - Timurita</title><link rel="stylesheet" href="style.css"><link rel="manifest" href="./manifest.json"><meta name="theme-color" content="#1a2a44"></head><body>
+<header class="app-header"><img src="Timurita_logo_192x192.png" alt="Timurita"><div><h3>Timurita</h3><div class="small">Darbdavys</div></div></header>
+<main class="container">
+  <div class="card">
+    <h2>Įmonės informacija</h2>
+    <div class="field"><label class="label">Įmonės pavadinimas</label><input id="company" class="input"></div>
+    <div class="field"><label class="label">Įmonės adresas</label><input id="address" class="input"></div>
+    <div class="field"><label class="label">Kontaktinis tel.</label><input id="phone" class="input"></div>
+    <div style="margin-top:10px"><button class="btn" id="saveCompany">Išsaugoti</button></div>
+    <div style="margin-top:12px" class="small">Pastaba: tik vartotojas su role='employer' gali redaguoti.</div>
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-btn" onclick="go('darbuotojai.html')">Darbuotojai</button>
+  <button class="nav-btn" onclick="go('pasiulymai.html')">Pasiūlymai</button>
+  <button class="nav-btn" onclick="go('profilis.html')">Profilis</button>
+  <button class="nav-btn active" onclick="go('darbdavys.html')">Darbdavys</button>
+</nav>
+
+<script>
+function loadCompany(){
+  const c=JSON.parse(localStorage.getItem('tim_company')||'{}');
+  document.getElementById('company').value=c.company||'';
+  document.getElementById('address').value=c.address||'';
+  document.getElementById('phone').value=c.phone||'';
+  // disable editing if role is not employer
+  const profile=JSON.parse(localStorage.getItem('tim_profile')||'{}');
+  const canEdit = profile.role==='employer';
+  document.getElementById('company').disabled=!canEdit;
+  document.getElementById('address').disabled=!canEdit;
+  document.getElementById('phone').disabled=!canEdit;
+  document.getElementById('saveCompany').disabled=!canEdit;
+  if(!canEdit){document.getElementById('saveCompany').innerText='Negalite redaguoti (prisijunk kaip darbdavys)'};
+}
+document.getElementById('saveCompany').addEventListener('click',()=>{
+  const c={company:document.getElementById('company').value,address:document.getElementById('address').value,phone:document.getElementById('phone').value};
+  localStorage.setItem('tim_company',JSON.stringify(c)); alert('Įmonės duomenys išsaugoti');
+});
+function go(p){location.href=p}
+loadCompany();
+</script>
+</body></html>

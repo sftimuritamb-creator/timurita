@@ -1,0 +1,42 @@
+<!doctype html><html lang="lt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Darbuotojai - Timurita</title><link rel="stylesheet" href="style.css"><link rel="manifest" href="./manifest.json"><meta name="theme-color" content="#1a2a44"></head><body>
+<header class="app-header"><img src="Timurita_logo_192x192.png" alt="Timurita"><div><h3>Timurita</h3><div class="small">Darbuotojai</div></div></header>
+<main class="container">
+  <div class="card">
+    <h2>Registruoti darbuotojai</h2>
+    <div class="list" id="workersList"></div>
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="go('darbuotojai.html')">Darbuotojai</button>
+  <button class="nav-btn" onclick="go('pasiulymai.html')">Pasiūlymai</button>
+  <button class="nav-btn" onclick="go('profilis.html')">Profilis</button>
+  <button class="nav-btn" onclick="go('darbdavys.html')">Darbdavys</button>
+</nav>
+
+<div class="modal" id="profileModal"><div class="card" id="profileCard"></div></div>
+
+<script>
+const sampleWorkers = [
+  {id:'w1',name:'Jonas Petraitis',age:32,skill:'Betonavimas',tax:'123456789',city:'Vilnius',calendar:{} },
+  {id:'w2',name:'Petras Kazlauskas',age:28,skill:'Mūrininkas',tax:'',city:'Kaunas',calendar:{} }
+];
+function renderWorkers(){
+  const el=document.getElementById('workersList'); el.innerHTML='';
+  sampleWorkers.forEach(w=>{
+    const item=document.createElement('div'); item.className='worker-item';
+    item.innerHTML=`<div><strong>${w.name}</strong><div class="small">${w.skill} • ${w.city} • ${w.age} m.</div></div><div><button class="btn" onclick="openProfile('${w.id}')">Peržiūrėti</button></div>`;
+    el.appendChild(item);
+  });
+}
+function openProfile(id){
+  const w=sampleWorkers.find(x=>x.id===id);
+  const card=document.getElementById('profileCard');
+  card.innerHTML=`<h2>${w.name}</h2><p class="small">Amžius: ${w.age} • Miestas: ${w.city}</p><p>Specialybė: ${w.skill}</p><p>IV nr.: ${w.tax || '—'}</p><div style="margin-top:10px"><strong>Užimtumo kalendorius</strong><div class="small">(demo: darbuotojas valdo savo kalendorių)</div><div style="margin-top:8px"><em>2025-11-01</em> — užimta</div></div><div style="margin-top:12px"><button class="btn" onclick="closeModal()">Uždaryti</button></div>`;
+  document.getElementById('profileModal').classList.add('show');
+}
+function closeModal(){document.getElementById('profileModal').classList.remove('show')}
+function go(p){location.href=p}
+renderWorkers();
+</script>
+</body></html>
