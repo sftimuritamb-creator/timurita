@@ -5,11 +5,12 @@ self.addEventListener('install', event => {
         './',
         './index.html',
         './darbuotojai.html',
-        './pasiulymai.html',
         './profilis.html',
+        './pasiulymai.html',
         './darbdavys.html',
         './style.css',
         './manifest.json',
+        './darbuotojai.json',
         './Timurita_logo_192x192.png',
         './Timurita_logo_512x512.png'
       ]);
