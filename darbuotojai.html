@@ -10,13 +10,14 @@
 </head>
 <body>
   <header class="app-header">
-    <img src="./Timurita_logo_192x192.png" alt="Timurita logo">
+    <img src="./Timurita_logo_192x192.png" alt="Timurita">
     <div class="logo-left"><h3>Timurita</h3><div class="small">Darbuotojai</div></div>
   </header>
 
   <main class="container">
     <div class="card">
       <h2>Registruoti darbuotojai</h2>
+      <p class="small">Paspausk ant darbuotojo kortelės, kad matytum profilį ir kalendorių.</p>
       <div class="list" id="workersList"></div>
     </div>
   </main>
@@ -28,35 +29,60 @@
     <button class="nav-btn" onclick="go('darbdavys.html')">Darbdavys</button>
   </nav>
 
+  <!-- Modal for profile -->
   <div id="profileModal" class="modal"><div class="card" id="profileCard"></div></div>
 
   <script>
-    // demonstraciniai darbuotojai
+    // demonstraciniai darbuotojai su avatar (SVG inline generuojame per template)
     const sampleWorkers = [
-      {id:'w1',name:'Jonas Petraitis',age:32,skill:'Betonavimas',tax:'123456789',city:'Vilnius', calendar: {'2025-11-05':'booked'} },
-      {id:'w2',name:'Petras Kazlauskas',age:28,skill:'Mūrininkas',tax:'',city:'Kaunas', calendar: {} }
+      {id:'w1',name:'Jonas Petraitis',age:32,skill:'Mūrininkas',tax:'123456789',city:'Vilnius', calendar: {'2025-11-05':'užimta'} },
+      {id:'w2',name:'Mantas Vaitkus',age:28,skill:'Elektrikas',tax:'987654321',city:'Kaunas', calendar: {'2025-11-07':'užimta'} },
+      {id:'w3',name:'Lukas Adomaitis',age:40,skill:'Dažytojas',tax:'246801357',city:'Klaipėda', calendar: {} }
     ];
 
+    function avatarSVG(initials, bgColor){
+      return `<svg width="56" height="56" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${initials}">
+        <rect width="56" height="56" rx="12" fill="${bgColor}"></rect>
+        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Inter, Arial" font-size="18" fill="#fff">${initials}</text>
+      </svg>`;
+    }
+
     function renderWorkers(){
-      const el = document.getElementById('workersList');
-      el.innerHTML = '';
-      sampleWorkers.forEach(w=>{
+      const el = document.getElementById('workersList'); el.innerHTML = '';
+      const colors = ['#1a73e8','#0b67ff','#1768a5'];
+      sampleWorkers.forEach((w,i)=>{
         const node = document.createElement('div'); node.className = 'worker-item';
-        node.innerHTML = `<div><strong>${w.name}</strong><div class="small">${w.skill} • ${w.city} • ${w.age} m.</div></div>
-                          <div><button class="btn" onclick="openProfile('${w.id}')">Peržiūrėti</button></div>`;
+        const initials = w.name.split(' ').map(x=>x[0]).slice(0,2).join('');
+        node.innerHTML = `<div style="display:flex;gap:12px;align-items:center">
+            <div class="avatar">${avatarSVG(initials, colors[i % colors.length])}</div>
+            <div>
+              <strong>${w.name}</strong>
+              <div class="small">${w.skill} • ${w.city}</div>
+            </div>
+          </div>
+          <div><button class="btn" onclick="openProfile('${w.id}')">Peržiūrėti</button></div>`;
         el.appendChild(node);
       });
     }
 
     function openProfile(id){
       const w = sampleWorkers.find(x=>x.id===id);
-      const card = document.getElementById('profileCard');
-      card.innerHTML = `<h2>${w.name}</h2>
-        <p class="small">Amžius: ${w.age} • Miestas: ${w.city}</p>
-        <p>Specialybė: ${w.skill}</p>
-        <p>IV nr.: ${w.tax || '—'}</p>
-        <div style="margin-top:10px"><strong>Užimtumo kalendorius</strong><div class="small">Demo: datos pakeistos rankiniu būdu</div>
-        <div style="margin-top:8px"><span class="small">2025-11-05 — užimta</span></div></div>
+      const initials = w.name.split(' ').map(x=>x[0]).slice(0,2).join('');
+      const modal = document.getElementById('profileCard');
+      // build calendar demo (simple)
+      const calEntries = Object.keys(w.calendar);
+      let calHtml = '<div class="small">Užimtumo datos (demo)</div>';
+      if(calEntries.length===0) calHtml += '<div class="small">Nėra užimtumo įrašų.</div>';
+      else calHtml += calEntries.map(d=>`<div class="small">${d} — ${w.calendar[d]}</div>`).join('');
+      modal.innerHTML = `<div style="display:flex;gap:14px;align-items:center">
+          <div>${avatarSVG(initials, '#0b67ff')}</div>
+          <div style="flex:1"><h2>${w.name}</h2><div class="small">${w.skill} • ${w.city}</div></div>
+        </div>
+        <div style="margin-top:12px">
+          <p><strong>Amžius:</strong> ${w.age}</p>
+          <p><strong>Individualios veiklos nr.:</strong> ${w.tax || '—'}</p>
+          ${calHtml}
+        </div>
         <div style="margin-top:12px"><button class="btn" onclick="closeModal()">Uždaryti</button></div>`;
       document.getElementById('profileModal').classList.add('show');
     }
