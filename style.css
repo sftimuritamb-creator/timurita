@@ -20,7 +20,7 @@ p{margin:0 0 12px 0;color:var(--muted)}
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;background:var(--nav);display:flex;justify-content:space-around;padding:8px 0;border-top:1px solid #eef2f6}
 .nav-btn{background:transparent;border:none;padding:8px 12px;font-size:14px;cursor:pointer;color:#333;display:flex;flex-direction:column;align-items:center}
 .nav-btn.active{color:var(--accent);font-weight:600}
-.btn{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer}
+.btn{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;text-decoration:none}
 .field{display:flex;flex-direction:column;margin-bottom:8px}
 .label{font-size:13px;color:#555;margin-bottom:6px}
 .input{padding:8px;border-radius:8px;border:1px solid #e6eef9}
