@@ -5,7 +5,7 @@
    - API/duomenys (workers.json): network-first su cache fallback
 */
 
-const VERSION = 'v4-2025-11-11';
+const VERSION = 'v5-2025-11-11';
 const APP_CACHE = `timurita-app-${VERSION}`;
 const RUNTIME_CACHE = `timurita-runtime-${VERSION}`;
 
