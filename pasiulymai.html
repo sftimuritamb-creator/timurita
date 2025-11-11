@@ -97,59 +97,10 @@
     <a href="/timurita/darbdavys.html">Darbdavys</a>
   </nav>
 
-  <!-- Puslapio logika: IndexedDB (offers) -->
+  <!-- Puslapio logika: NAUDOJA bendrą /timurita/db.js -->
   <script type="module">
-    // Šiame puslapyje pasidarome labai mažą „offers“ DB (atskirai nuo profiles).
-    const DB_NAME = 'timurita-db';
-    const DB_VERSION = 2;           // jei vėliau keisi struktūrą – padidink
-    const STORE = 'offers';
+    import { saveOffer, getAllOffers, deleteOffer, seedOffers } from '/timurita/db.js';
 
-    function openDB() {
-      return new Promise((res, rej) => {
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
-        req.onupgradeneeded = () => {
-          const db = req.result;
-          if (!db.objectStoreNames.contains(STORE)) {
-            db.createObjectStore(STORE, { keyPath: 'id' });
-          }
-          // paliekam vietos kitoms lentelėms ateičiai
-        };
-        req.onsuccess = () => res(req.result);
-        req.onerror = () => rej(req.error);
-      });
-    }
-
-    async function saveOffer(offer) {
-      const db = await openDB();
-      return new Promise((res, rej) => {
-        const tx = db.transaction(STORE, 'readwrite');
-        tx.objectStore(STORE).put(offer);
-        tx.oncomplete = () => res();
-        tx.onerror = () => rej(tx.error);
-      });
-    }
-
-    async function getAllOffers() {
-      const db = await openDB();
-      return new Promise((res, rej) => {
-        const tx = db.transaction(STORE, 'readonly');
-        const req = tx.objectStore(STORE).getAll();
-        req.onsuccess = () => res(req.result || []);
-        req.onerror = () => rej(req.error);
-      });
-    }
-
-    async function deleteOffer(id) {
-      const db = await openDB();
-      return new Promise((res, rej) => {
-        const tx = db.transaction(STORE, 'readwrite');
-        tx.objectStore(STORE).delete(id);
-        tx.oncomplete = () => res();
-        tx.onerror = () => rej(tx.error);
-      });
-    }
-
-    // UI valdymas
     const form = document.querySelector('#offerForm');
     const list = document.querySelector('#offersList');
     const seedBtn = document.querySelector('#seedBtn');
@@ -157,6 +108,10 @@
     function uuid() {
       return (crypto && crypto.randomUUID) ? crypto.randomUUID() :
         'id-' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
     }
 
     function card(o) {
@@ -176,10 +131,6 @@
           </div>
           <hr style="border:none; border-top:1px solid #e2e8f0; margin:12px 0 0 0;">
         </div>`;
-    }
-
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
     }
 
     async function render() {
@@ -213,10 +164,10 @@
       e.preventDefault();
       const offer = {
         id: uuid(),
-        title:  form.elements.title?.value?.trim()  || 'Be pavadinimo',
-        city:   form.elements.city?.value?.trim()   || '',
-        company:form.elements.company?.value?.trim()|| '',
-        desc:   form.elements.desc?.value?.trim()   || ''
+        title:  form.elements.title?.value?.trim()   || 'Be pavadinimo',
+        city:   form.elements.city?.value?.trim()    || '',
+        company:form.elements.company?.value?.trim() || '',
+        desc:   form.elements.desc?.value?.trim()    || ''
       };
       await saveOffer(offer);
       form.reset();
@@ -226,11 +177,11 @@
     // Pavyzdžiai (seed)
     seedBtn.addEventListener('click', async () => {
       const demo = [
-        { id: uuid(), title: 'Mūrininkas', city: 'Vilnius', company: 'UAB Statyba', desc: 'Objektas Pilaitėje, 3 sav. terminas.' },
-        { id: uuid(), title: 'Apdailininkas', city: 'Kaunas', company: 'MB Namų Meistrai', desc: 'Butų apdaila, lankstus grafikas.' },
-        { id: uuid(), title: 'Elektrikas', city: 'Klaipėda', company: 'Baltic Elektra', desc: 'Pramoniniai objektai, reikia pažymėjimo.' }
+        { id: uuid(), title: 'Mūrininkas',    city: 'Vilnius',   company: 'UAB Statyba',     desc: 'Objektas Pilaitėje, 3 sav. terminas.' },
+        { id: uuid(), title: 'Apdailininkas', city: 'Kaunas',    company: 'MB Namų Meistrai',desc: 'Butų apdaila, lankstus grafikas.' },
+        { id: uuid(), title: 'Elektrikas',    city: 'Klaipėda',  company: 'Baltic Elektra',  desc: 'Pramoniniai objektai, reikia pažymėjimo.' }
       ];
-      for (const o of demo) await saveOffer(o);
+      await seedOffers(demo);
       await render();
     });
 
