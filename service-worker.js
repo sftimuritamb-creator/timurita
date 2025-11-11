@@ -1,40 +1,38 @@
-/* Timurita PWA service worker
-   Strategija:
-   - HTML: network-first su cache fallback (offline veiks su paskutine versija)
-   - Static (CSS/PNG/JS): cache-first (greita ir offline)
-   - API/duomenys (workers.json): network-first su cache fallback
-*/
+// /timurita/service-worker.js
+// PWA service worker su App Shell cache + duomenų strategija
+// 2025-11-11 – v5
 
-const VERSION = 'v5-2025-11-11';
+const VERSION = 'v6-2025-11-11';
 const APP_CACHE = `timurita-app-${VERSION}`;
 const RUNTIME_CACHE = `timurita-runtime-${VERSION}`;
 
-// App shell – privalomi failai offline režimui
+// Visi pagrindiniai failai, kurie bus pasiekiami offline iškart
 const APP_SHELL = [
-  // Puslapiai
   '/timurita/',
   '/timurita/index.html',
-  '/timurita/darbuotojai.html',
-  '/timurita/pasiulymai.html',
-  '/timurita/profilis.html',
-  '/timurita/darbdavys.html',
-
-  // Stiliai / manifestas / piktogramos
   '/timurita/style.css',
   '/timurita/manifest.json',
   '/timurita/Timurita_logo_192x192.png',
-  '/timurita/Timurita_logo_512x512.png'
+  '/timurita/Timurita_logo_512x512.png',
+
+  // 🔹 nauji failai – kad iškart būtų offline
+  '/timurita/db.js',
+  '/timurita/pasiulymai.html',
+  '/timurita/profilis.html',
+  '/timurita/darbuotojai.html',
+  '/timurita/darbdavys.html'
 ];
 
-// Install – į talpyklą sudedame „app shell“
+// Instaliacija – cache pagrindinių failų
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(APP_CACHE).then((cache) => cache.addAll(APP_SHELL))
   );
   self.skipWaiting();
+  console.log('[SW] Installed', VERSION);
 });
 
-// Activate – išvalome senas talpyklas
+// Aktivacija – ištrinam senus cache
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -46,44 +44,35 @@ self.addEventListener('activate', (event) => {
     )
   );
   self.clients.claim();
+  console.log('[SW] Activated', VERSION);
 });
 
-function isSameOrigin(url) {
-  return url.origin === self.location.origin;
-}
-
+// Pagalbinės funkcijos
 function isHtmlRequest(req) {
-  const accept = req.headers.get('accept') || '';
-  return req.method === 'GET' && accept.includes('text/html');
+  return req.destination === 'document' || req.headers.get('accept')?.includes('text/html');
 }
-
 function isStaticAsset(url) {
-  // Paprastas tikrinimas pagal plėtinį – prireikus papildyk.
-  return /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$/i.test(url.pathname);
+  return (
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.jpeg') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.json') ||
+    url.pathname.endsWith('.ico')
+  );
 }
 
+// Fetch logika
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Tik savo domeno užklausoms taikome SW strategijas
-  if (!isSameOrigin(url)) return;
+  // Tik saugojimui aktualūs prašymai
+  if (req.method !== 'GET' || !url.origin.includes('github.io')) return;
 
-  // 1) API/duomenys – network-first (pvz., workers.json)
-  if (url.pathname.startsWith('/timurita/workers.json')) {
-    event.respondWith(
-      fetch(req)
-        .then((resp) => {
-          const copy = resp.clone();
-          caches.open(RUNTIME_CACHE).then((c) => c.put(req, copy));
-          return resp;
-        })
-        .catch(() => caches.match(req))
-    );
-    return;
-  }
-
-  // 2) HTML – network-first su fallback į cache (offline)
+  // HTML – network-first su fallback į cache
   if (isHtmlRequest(req)) {
     event.respondWith(
       fetch(req)
@@ -93,7 +82,6 @@ self.addEventListener('fetch', (event) => {
           return resp;
         })
         .catch(async () => {
-          // Pirmiausia bandome tikslų puslapį, tada – index.html
           const cached = await caches.match(req);
           return cached || caches.match('/timurita/index.html');
         })
@@ -101,7 +89,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3) Static turtas – cache-first
+  // Statiniai failai – cache-first
   if (isStaticAsset(url)) {
     event.respondWith(
       caches.match(req).then((cached) => {
@@ -116,13 +104,38 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 4) Numatyta – bandome cache, tada network (saugus default)
+  // Dinaminiai JSON (pvz., workers.json) – network-first
+  if (url.pathname.startsWith('/timurita/workers.json')) {
+    event.respondWith(
+      fetch(req)
+        .then((resp) => {
+          const copy = resp.clone();
+          caches.open(RUNTIME_CACHE).then((c) => c.put(req, copy));
+          return resp;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Numatyta strategija – bandyti iš cache, jei nepavyksta iš tinklo
   event.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req))
+    caches.match(req).then((cached) => {
+      return (
+        cached ||
+        fetch(req)
+          .then((resp) => {
+            const copy = resp.clone();
+            caches.open(RUNTIME_CACHE).then((c) => c.put(req, copy));
+            return resp;
+          })
+          .catch(() => new Response('Offline', { status: 503 }))
+      );
+    })
   );
 });
 
-// Paprastas „postMessage“ listenerys (jei norėsi force-update iš UI)
+// „skip waiting“ – SW atnaujinimui iš karto
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') {
     self.skipWaiting();
