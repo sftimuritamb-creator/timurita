@@ -1,21 +1,21 @@
 {
-  "id": "/timurita/",
-  "name": "Timurita",
+  "name": "Timurita – Trumpalaikio darbo platforma",
   "short_name": "Timurita",
-  "description": "Sujungiame darbdavius ir statybų specialistus.",
+  "description": "Trumpalaikio darbo platforma statybų sektoriuje. Sujungiame darbdavius ir statybų specialistus.",
+  "lang": "lt",
   "start_url": "/timurita/index.html",
   "scope": "/timurita/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#1a2a44",
-  "lang": "lt",
+  "dir": "ltr",
+
   "icons": [
     {
       "src": "/timurita/Timurita_logo_192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
       "src": "/timurita/Timurita_logo_512x512.png",
@@ -23,5 +23,70 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Darbo pasiūlymai",
+      "short_name": "Pasiūlymai",
+      "description": "Peržiūrėkite naujausius darbo pasiūlymus.",
+      "url": "/timurita/pasiulymai.html",
+      "icons": [
+        {
+          "src": "/timurita/Timurita_logo_192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Profilis",
+      "short_name": "Profilis",
+      "description": "Redaguokite savo naudotojo profilį.",
+      "url": "/timurita/profilis.html",
+      "icons": [
+        {
+          "src": "/timurita/Timurita_logo_192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Darbuotojai",
+      "short_name": "Darbuotojai",
+      "description": "Peržiūrėkite darbuotojų sąrašą.",
+      "url": "/timurita/darbuotojai.html",
+      "icons": [
+        {
+          "src": "/timurita/Timurita_logo_192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Darbdavys",
+      "short_name": "Darbdavys",
+      "description": "Darbdavių valdymo puslapis.",
+      "url": "/timurita/darbdavys.html",
+      "icons": [
+        {
+          "src": "/timurita/Timurita_logo_192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+
+  "categories": ["work", "productivity", "business"],
+  "screenshots": [
+    {
+      "src": "/timurita/screenshot1.png",
+      "sizes": "1080x1920",
+      "type": "image/png"
+    }
+  ],
+  "id": "/timurita/"
 }
