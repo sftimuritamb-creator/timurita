@@ -1,156 +1,257 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="lt">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Darbuotojai – Timurita</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Timurita – Darbuotojai</title>
+  <meta name="description" content="Darbuotojų sąrašas – kurkite, filtruokite ir raskite specialistus." />
+
+  <!-- PWA -->
+  <link rel="manifest" href="/timurita/manifest.json">
+  <meta name="theme-color" content="#1a2a44">
+  <link rel="icon" href="/timurita/Timurita_logo_192x192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/timurita/Timurita_logo_512x512.png">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/timurita/style.css">
   <style>
-    :root {
-      --bg: #f4f5f7;
-      --card: #ffffff;
-      --accent: #0b67ff;
-      --text: #222;
-    }
-
-    body {
-      margin: 0;
-      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      background: var(--card);
-      padding: 10px 16px;
-      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
-    }
-
-    header img {
-      height: 40px;
-      margin-right: 10px;
-    }
-
-    header h1 {
-      font-size: 20px;
-      color: var(--accent);
-      margin: 0;
-    }
-
-    main {
-      flex: 1;
-      padding: 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-    }
-
-    .worker-card {
-      background: var(--card);
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-      padding: 20px;
-      text-align: center;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .worker-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    }
-
-    .worker-card img {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 10px;
-    }
-
-    .worker-card h2 {
-      font-size: 18px;
-      color: var(--accent);
-      margin: 8px 0 4px;
-    }
-
-    .worker-card p {
-      margin: 4px 0;
-      font-size: 14px;
-    }
-
-    footer {
-      background: var(--card);
-      padding: 10px 0;
-      display: flex;
-      justify-content: space-around;
-      box-shadow: 0 -1px 5px rgba(0,0,0,0.1);
-    }
-
-    footer a {
-      text-decoration: none;
-      color: var(--text);
-      font-size: 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    footer a.active {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f8fafc; margin:0; color:#0f172a; }
+    .app-header { display:flex; align-items:center; gap:10px; padding:12px 16px; background:#fff; border-bottom:1px solid #e2e8f0; }
+    .app-header img { width:40px; height:40px; border-radius:8px; }
+    .container { max-width:1000px; margin:0 auto; padding:16px; }
+    .grid { display:grid; grid-template-columns: 1fr 2fr; gap:16px; }
+    @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+    .card { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+    .muted { color:#475569; }
+    label { display:block; margin-top:12px; font-weight:600; color:#334155; }
+    input, textarea, select { width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-top:4px; }
+    textarea { min-height:80px; resize:vertical; }
+    .row { display:flex; gap:10px; }
+    .row > * { flex:1; }
+    .btn { padding:10px 14px; font-size:14px; font-weight:600; border:none; border-radius:10px; cursor:pointer; }
+    .btn.primary { background:#0f766e; color:#fff; }
+    .btn.secondary { background:#fff; color:#0f172a; border:1px solid #cbd5e1; }
+    .filters { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px; }
+    .filters input, .filters select { min-width:160px; }
+    .chip { display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #cbd5e1; background:#f8fafc; font-size:12px; margin-right:6px; }
+    .worker { display:flex; flex-direction:column; gap:6px; }
+    .worker h3 { margin:0; }
+    .worker .meta { font-size:13px; color:#475569; }
+    .worker .actions { display:flex; gap:8px; margin-top:6px; }
+    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:#ffffffcc; backdrop-filter: blur(6px); border-top:1px solid #e2e8f0; padding:10px; }
+    .bottom-nav a { text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:#0f172a; font-weight:600; background:#fff; border:1px solid #e2e8f0; }
   </style>
 </head>
-<body>
 
-  <header>
-    <img src="https://cdn-icons-png.flaticon.com/512/2965/2965879.png" alt="Timurita logotipas">
-    <h1>Darbuotojai</h1>
+<body>
+  <header class="app-header">
+    <a href="/timurita/index.html" style="display:flex;align-items:center;text-decoration:none;color:inherit">
+      <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita logotipas" width="40" height="40" loading="lazy" decoding="async">
+      <div>
+        <h3 style="margin:0;">Timurita</h3>
+        <div style="font-size:12px;color:#475569;">Sujungiame darbdavius ir statybų specialistus</div>
+      </div>
+    </a>
   </header>
 
-  <main id="workers-container">
-    <p>Kraunama...</p>
+  <main class="container">
+    <h1>Darbuotojai</h1>
+    <p class="muted">Kurkite darbuotojų korteles ir filtruokite pagal miestą, specialybę ar įgūdžius. Viskas veikia offline (IndexedDB).</p>
+
+    <div class="grid">
+      <!-- Kairė: naujo darbuotojo forma -->
+      <section class="card">
+        <h2 style="margin:0;">Naujas darbuotojas</h2>
+        <form id="workerForm" novalidate>
+          <label>Vardas, pavardė *
+            <input name="name" required placeholder="Pvz. Jonas Statybininkas">
+          </label>
+
+          <div class="row">
+            <label>Miestas
+              <input name="city" placeholder="Pvz. Vilnius">
+            </label>
+            <label>Telefonas
+              <input name="phone" type="tel" placeholder="+3706..." autocomplete="tel">
+            </label>
+          </div>
+
+          <div class="row">
+            <label>Specialybė
+              <select name="role">
+                <option value="">– Pasirinkite –</option>
+                <option>Mūrininkas</option>
+                <option>Apdailininkas</option>
+                <option>Elektrikas</option>
+                <option>Santechnikas</option>
+                <option>Stogdengys</option>
+                <option>Pagalbinis darbininkas</option>
+              </select>
+            </label>
+            <label>Patirtis (metais)
+              <input name="exp" type="number" min="0" step="1" placeholder="Pvz. 3">
+            </label>
+          </div>
+
+          <label>Įgūdžiai (kableliais)
+            <input name="skills" placeholder="Pvz. glaistymas, dažymas, gipsas">
+          </label>
+
+          <div class="row">
+            <label>Trumpas aprašymas
+              <textarea name="about" placeholder="Apie patirtį, objektus, pažymėjimus..."></textarea>
+            </label>
+          </div>
+
+          <div class="row" style="margin-top:8px;">
+            <button class="btn primary" type="submit">Išsaugoti</button>
+            <button class="btn secondary" type="button" id="seedBtn">Įkelti pavyzdžius</button>
+          </div>
+          <div id="formMsg" class="muted" aria-live="polite" style="margin-top:8px;"></div>
+        </form>
+      </section>
+
+      <!-- Dešinė: sąrašas + filtrai -->
+      <section>
+        <div class="card">
+          <h2 style="margin:0 0 10px 0;">Filtrai</h2>
+          <div class="filters">
+            <input id="fCity" placeholder="Miestas...">
+            <input id="fRole" placeholder="Specialybė...">
+            <input id="fSkill" placeholder="Įgūdis (pvz. dažymas)...">
+            <button id="refreshBtn" class="btn primary" type="button">🔄 Atnaujinti</button>
+          </div>
+        </div>
+
+        <div id="list" class="list"></div>
+      </section>
+    </div>
   </main>
 
-  <footer>
-    <a href="index.html">Pagrindinis</a>
-    <a href="darbuotojai.html" class="active">Darbuotojai</a>
-    <a href="pasiulymai.html">Pasiūlymai</a>
-    <a href="profilis.html">Profilis</a>
-    <a href="darbdavys.html">Darbdavys</a>
-  </footer>
+  <nav class="bottom-nav" aria-label="Apatinė navigacija">
+    <a href="/timurita/darbuotojai.html" aria-current="page">Darbuotojai</a>
+    <a href="/timurita/pasiulymai.html">Pasiūlymai</a>
+    <a href="/timurita/profilis.html">Profilis</a>
+    <a href="/timurita/darbdavys.html">Darbdavys</a>
+  </nav>
 
-  <script>
-    fetch('workers.json')
-      .then(response => response.json())
-      .then(data => {
-        const container = document.getElementById('workers-container');
-        container.innerHTML = '';
+  <!-- Logika: naudojame bendrą db.js 'profiles' store'ą -->
+  <script type="module">
+    import { getAll, put, remove } from '/timurita/db.js';
 
-        data.forEach(worker => {
-          const card = document.createElement('div');
-          card.className = 'worker-card';
-          card.innerHTML = `
-            <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Avataras">
-            <h2>${worker.name}</h2>
-            <p><strong>Amžius:</strong> ${worker.age}</p>
-            <p><strong>Specialybė:</strong> ${worker.skill}</p>
-            <p><strong>Miestas:</strong> ${worker.city}</p>
-            <p><strong>IV numeris:</strong> ${worker.tax}</p>
-          `;
-          container.appendChild(card);
+    const listEl   = document.getElementById('list');
+    const form     = document.getElementById('workerForm');
+    const formMsg  = document.getElementById('formMsg');
+    const seedBtn  = document.getElementById('seedBtn');
+    const fCity    = document.getElementById('fCity');
+    const fRole    = document.getElementById('fRole');
+    const fSkill   = document.getElementById('fSkill');
+    const refresh  = document.getElementById('refreshBtn');
+
+    const uuid = () => (crypto?.randomUUID?.() || 'id-' + Math.random().toString(36).slice(2, 10));
+    const esc  = (s) => String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const parseSkills = (txt) => (txt||'').split(',').map(s => s.trim()).filter(Boolean);
+
+    // Rodo vieną darbuotojo kortelę
+    function workerCard(w) {
+      const skills = (w.skills||[]).map(s => `<span class="chip">${esc(s)}</span>`).join(' ');
+      return `
+        <article class="card worker" data-id="${w.id}">
+          <h3>${esc(w.name || '(be vardo)')}</h3>
+          <div class="meta">${esc(w.role || 'Specialybė nenurodyta')} • ${esc(w.city || 'Miestas nenurodytas')} ${w.exp ? '• '+esc(w.exp)+' m.' : ''}</div>
+          ${w.about ? `<div>${esc(w.about)}</div>` : ''}
+          ${skills ? `<div>${skills}</div>` : ''}
+          <div class="meta">Kontaktai: ${w.phone ? '📞 '+esc(w.phone) : ''}</div>
+          <div class="actions">
+            <button class="btn secondary" data-action="delete">Šalinti</button>
+          </div>
+        </article>
+      `;
+    }
+
+    // Užkrauna ir atvaizduoja sąrašą su filtrais
+    async function render() {
+      const all = await getAll('profiles'); // panaudojame bendrą 'profiles' store
+      // filtruojame: neįtraukiam demo naudotojo 'user-1' jei jis yra
+      let list = all.filter(w => w && w.id && w.id !== 'user-1');
+
+      const city  = fCity.value.trim().toLowerCase();
+      const role  = fRole.value.trim().toLowerCase();
+      const skill = fSkill.value.trim().toLowerCase();
+
+      if (city)  list = list.filter(w => (w.city || '').toLowerCase().includes(city));
+      if (role)  list = list.filter(w => (w.role || '').toLowerCase().includes(role));
+      if (skill) list = list.filter(w => parseSkills(w.skills).some(s => s.toLowerCase().includes(skill)));
+
+      listEl.innerHTML = list.length
+        ? list.map(workerCard).join('')
+        : '<div class="card muted" style="text-align:center;">🕐 Kol kas nėra darbuotojų.</div>';
+
+      // užkabinam veiksmus
+      listEl.querySelectorAll('[data-action="delete"]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.target.closest('[data-id]').dataset.id;
+          await remove('profiles', id);
+          render();
         });
-      })
-      .catch(error => {
-        document.getElementById('workers-container').innerHTML = '<p>Klaida kraunant duomenis.</p>';
-        console.error('Klaida:', error);
       });
+    }
+
+    // Formos pateikimas
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!form.name.value.trim()) {
+        formMsg.textContent = '✋ Įrašykite vardą ir pavardę.';
+        form.name.focus();
+        return;
+      }
+      const worker = {
+        id: uuid(),
+        name: form.name.value.trim(),
+        city: form.city.value.trim(),
+        phone: form.phone.value.trim(),
+        role: form.role.value.trim(),
+        exp: form.exp.value ? parseInt(form.exp.value, 10) : 0,
+        skills: parseSkills(form.skills.value),
+        about: form.about.value.trim()
+      };
+      try {
+        await put('profiles', worker);
+        form.reset();
+        formMsg.textContent = '✅ Darbuotojas išsaugotas (IndexedDB).';
+        render();
+      } catch (err) {
+        console.warn('Nepavyko išsaugoti darbuotojo:', err);
+        formMsg.textContent = '⚠️ Nepavyko išsaugoti darbuotojo.';
+      }
+    });
+
+    // Pavyzdiniai įrašai
+    seedBtn.addEventListener('click', async () => {
+      const sample = [
+        { id: uuid(), name:'Mantas Petrauskas', city:'Vilnius', role:'Mūrininkas',   exp:4, skills:['mūras','skiedinys'], phone:'+3706...', about:'Daugiabučiai, pramoniniai objektai.' },
+        { id: uuid(), name:'Andrius Kairys',    city:'Kaunas',  role:'Apdailininkas', exp:6, skills:['glaistymas','dažymas','gipsas'], phone:'+3706...', about:'Butų apdaila, greitas grafikas.' },
+        { id: uuid(), name:'Lina Jankauskė',    city:'Klaipėda',role:'Elektrikas',    exp:5, skills:['skydinės','instaliacija'], phone:'+3706...', about:'Sertifikatas B, pramonė.' }
+      ];
+      for (const w of sample) await put('profiles', w);
+      render();
+    });
+
+    // Filtrai/atnaujinimas
+    [fCity, fRole, fSkill].forEach(el => el.addEventListener('input', render));
+    document.getElementById('refreshBtn').addEventListener('click', render);
+
+    // Pirminis užkrovimas
+    render();
   </script>
 
+  <!-- Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/timurita/service-worker.js')
+        .then(()=>console.log('Service worker registered'))
+        .catch(e=>console.log('SW error', e));
+    }
+  </script>
 </body>
 </html>
