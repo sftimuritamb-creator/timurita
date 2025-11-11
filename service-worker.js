@@ -2,7 +2,7 @@
 // PWA service worker su App Shell cache + duomenų strategija
 // 2025-11-11 – v5
 
-const VERSION = 'v6-2025-11-11';
+const VERSION = 'v7-2025-11-11';
 const APP_CACHE = `timurita-app-${VERSION}`;
 const RUNTIME_CACHE = `timurita-runtime-${VERSION}`;
 
