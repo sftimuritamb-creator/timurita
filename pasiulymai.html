@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Timurita – Darbo pasiūlymai</title>
-  <meta name="description" content="Darbo pasiūlymų sąrašas – peržiūrėkite, filtruokite, eksportuokite ir importuokite JSON." />
+  <meta name="description" content="Darbo pasiūlymų sąrašas – peržiūrėkite, filtruokite, eksportuokite ir importuokite JSON. Veikia offline.">
 
   <!-- PWA -->
   <link rel="manifest" href="/timurita/manifest.json">
@@ -14,46 +14,30 @@
 
   <link rel="stylesheet" href="/timurita/style.css">
   <style>
-    :root{
-      --bg:#f8fafc; --fg:#0f172a; --muted:#475569; --line:#e2e8f0; --card:#fff; --primary:#0f766e;
-    }
-    [data-theme="dark"]{
-      --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --card:#101826; --primary:#10b981;
-    }
-    body{ font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--fg); margin:0;}
-    .app-header{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line); }
-    .left { display:flex; align-items:center; gap:10px;}
-    .app-header img{ width:40px; height:40px; border-radius:8px; }
-    .container{ max-width:960px; margin:0 auto; padding:16px; }
-    .card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.04); margin-bottom:14px; }
-    .card h2{ margin:0 0 8px 0; }
-    .muted{ color:var(--muted); }
-    .filters{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px; }
-    .filters input{ flex:1; min-width:160px; padding:8px 10px; border:1px solid var(--line); background:var(--card); color:var(--fg); border-radius:8px; }
-    .filters button{ padding:8px 14px; border:none; border-radius:8px; background:var(--primary); color:#fff; font-weight:600; cursor:pointer; }
-    .filters .outline{ background:transparent; color:var(--fg); border:1px solid var(--line); }
-    .filters .ghost{ background:transparent; color:var(--fg); border:1px dashed var(--line); }
-    .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
-    .empty{ text-align:center; color:var(--muted); padding:40px 0; }
-    .salary{ color:#16a34a; font-weight:600; }
-    nav.bottom-nav{ position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:color-mix(in oklab, var(--card) 92%, transparent); backdrop-filter: blur(6px); border-top:1px solid var(--line); padding:10px; }
-    .bottom-nav a{ text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:var(--fg); font-weight:600; background:var(--card); border:1px solid var(--line); }
-    .theme-btn{ padding:8px 12px; border:1px solid var(--line); background:var(--card); color:var(--fg); border-radius:10px; cursor:pointer; }
-    @media (max-width: 720px){
-      .filters input{ flex:1 1 100%; }
-      .filters button{ flex:1 1 auto; }
-    }
+    :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#475569; --line:#e2e8f0; --card:#fff; --primary:#0f766e; }
+    [data-theme="dark"]{ --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --card:#101826; --primary:#10b981; }
+    body{ font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; margin:0; background:var(--bg); color:var(--fg);}
+    .app-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--line);}
+    .app-header img{width:40px;height:40px;border-radius:8px;}
+    .theme-btn{padding:8px 12px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;cursor:pointer;}
+    .container{max-width:960px;margin:0 auto;padding:16px;}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,0.05);margin-bottom:14px;}
+    .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px;}
+    .filters input{flex:1;min-width:160px;padding:8px 10px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;}
+    .filters button{padding:8px 14px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;}
+    nav.bottom-nav{position:sticky;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);background:color-mix(in oklab,var(--card) 92%,transparent);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:10px;}
+    .bottom-nav a{text-align:center;text-decoration:none;padding:10px;border-radius:10px;color:var(--fg);font-weight:600;background:var(--card);border:1px solid var(--line);}
   </style>
 </head>
 
 <body>
   <header class="app-header">
-    <div class="left">
+    <div style="display:flex;align-items:center;gap:10px;">
       <a href="/timurita/index.html" style="display:flex;align-items:center;text-decoration:none;color:inherit">
-        <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita logotipas" width="40" height="40" loading="lazy" decoding="async">
+        <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita">
         <div>
           <h3 style="margin:0;">Timurita</h3>
-          <div style="font-size:12px;color:var(--muted)">Sujungiame darbdavius ir statybų specialistus</div>
+          <div style="font-size:12px;color:var(--muted)">Darbo pasiūlymai</div>
         </div>
       </a>
     </div>
@@ -62,23 +46,18 @@
 
   <main class="container">
     <h1>Darbo pasiūlymai</h1>
-    <p class="muted">Peržiūrėkite visus išsaugotus pasiūlymus (veikia offline). Filtruokite, <strong>eksportuokite</strong> ar <strong>importuokite</strong> JSON.</p>
 
     <div class="filters">
       <input id="filterCity" placeholder="Filtruoti pagal miestą...">
       <input id="filterCompany" placeholder="Filtruoti pagal įmonę...">
       <button id="refreshBtn">🔄 Atnaujinti</button>
-      <button id="exportBtn" class="outline">⬇️ Eksportuoti JSON</button>
-
-      <input id="fileInput" type="file" accept="application/json" hidden>
-      <button id="importAddBtn" class="ghost" title="Pridėti į esamus">⬆️ Importuoti (pridėti)</button>
-      <button id="importReplaceBtn" class="ghost" title="Pakeisti visus">♻️ Importuoti (pakeisti)</button>
+      <button id="exportBtn">⬇️ Eksportuoti JSON</button>
     </div>
 
     <div id="offersList"></div>
   </main>
 
-  <nav class="bottom-nav" aria-label="Apatinė navigacija">
+  <nav class="bottom-nav" aria-label="Navigacija">
     <a href="/timurita/darbuotojai.html">Darbuotojai</a>
     <a href="/timurita/pasiulymai.html" aria-current="page">Pasiūlymai</a>
     <a href="/timurita/profilis.html">Profilis</a>
@@ -86,133 +65,45 @@
   </nav>
 
   <script type="module">
-    import { getAllOffers, saveOffer, clear, setSetting, getSetting } from '/timurita/db.js';
+    import { getAllOffers } from '/timurita/db.js';
+    import { initTheme } from '/timurita/theme.js';
+    initTheme();
 
-    // ---- Tema (tamsi/šviesi) per settings.theme ----
-    const themeBtn = document.getElementById('themeBtn');
-    const applyTheme = (name) => {
-      document.documentElement.setAttribute('data-theme', name);
-      themeBtn.textContent = name === 'dark' ? '☀️ Šviesus' : '🌙 Tamsus';
-    };
-    (async () => {
-      const saved = await getSetting('theme');
-      const initial = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      applyTheme(initial);
-    })();
-    themeBtn.addEventListener('click', async () => {
-      const cur = document.documentElement.getAttribute('data-theme') || 'light';
-      const next = cur === 'dark' ? 'light' : 'dark';
-      applyTheme(next);
-      await setSetting('theme', next);
-    });
-
-    // ---- Pasiūlymų sąrašas + filtrai ----
     const listEl = document.getElementById('offersList');
-    const fCity  = document.getElementById('filterCity');
-    const fComp  = document.getElementById('filterCompany');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const exportBtn  = document.getElementById('exportBtn');
+    const fCity = document.getElementById('filterCity');
+    const fComp = document.getElementById('filterCompany');
+    const refresh = document.getElementById('refreshBtn');
 
-    const renderOffers = (offers) => {
-      listEl.innerHTML = '';
-      if (!offers || offers.length === 0) {
-        listEl.innerHTML = `<div class="card empty">🕐 Kol kas nėra pasiūlymų.</div>`;
-        return;
-      }
-      for (const o of offers) {
-        const el = document.createElement('article');
-        el.className = 'card';
-        el.innerHTML = `
-          <h2>${o.title || '(be pavadinimo)'}</h2>
-          <p><strong>${o.company || 'Nežinoma įmonė'}</strong> – ${o.city || 'nenurodytas miestas'}</p>
-          ${o.salary ? `<p class="salary">💶 ${o.salary}</p>` : ''}
-          <p>${o.desc || ''}</p>
-          <p class="muted" style="font-size:13px;">Kontaktai: ${o.contact || ''} ${o.phone ? '📞 '+o.phone : ''} ${o.email ? '✉️ '+o.email : ''}</p>
-        `;
-        listEl.appendChild(el);
-      }
-    };
-
-    async function loadOffers() {
-      const all = await getAllOffers();
-      let filtered = all;
-      const cityVal = fCity.value.trim().toLowerCase();
-      const compVal = fComp.value.trim().toLowerCase();
-      if (cityVal) filtered = filtered.filter(o => (o.city || '').toLowerCase().includes(cityVal));
-      if (compVal) filtered = filtered.filter(o => (o.company || '').toLowerCase().includes(compVal));
-      renderOffers(filtered);
+    async function load() {
+      const offers = await getAllOffers();
+      let list = offers;
+      const city = fCity.value.toLowerCase();
+      const comp = fComp.value.toLowerCase();
+      if (city) list = list.filter(o => (o.city||'').toLowerCase().includes(city));
+      if (comp) list = list.filter(o => (o.company||'').toLowerCase().includes(comp));
+      listEl.innerHTML = list.length
+        ? list.map(o => `
+          <article class="card">
+            <h2>${o.title||'(be pavadinimo)'}</h2>
+            <p><strong>${o.company||'Nežinoma įmonė'}</strong> – ${o.city||''}</p>
+            <p>${o.desc||''}</p>
+            ${o.salary?`<p><b>${o.salary}</b></p>`:''}
+          </article>
+        `).join('')
+        : '<div class="card">🕐 Kol kas nėra pasiūlymų.</div>';
     }
 
-    // ---- Eksportas JSON ----
-    function download(filename, data) {
-      const blob = new Blob([data], { type: 'application/json;charset=utf-8' });
-      const url  = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filename;
-      document.body.appendChild(a); a.click();
-      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
-    }
-    exportBtn.addEventListener('click', async () => {
-      const all = await getAllOffers();
-      download('pasiulymai.json', JSON.stringify(all, null, 2));
-    });
-
-    // ---- Importas JSON (pridėti / pakeisti) ----
-    const fileInput = document.getElementById('fileInput');
-    const importAddBtn = document.getElementById('importAddBtn');
-    const importReplaceBtn = document.getElementById('importReplaceBtn');
-
-    async function handleImport(replaceAll=false) {
-      const file = fileInput.files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const arr = JSON.parse(text);
-        if (!Array.isArray(arr)) throw new Error('JSON turi būti masyvas.');
-        if (replaceAll) await clear('offers');
-        for (const raw of arr) {
-          const o = {
-            id: raw.id || (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2,10)),
-            title: raw.title || '',
-            city: raw.city || '',
-            company: raw.company || '',
-            desc: raw.desc || raw.description || '',
-            salary: raw.salary || '',
-            contact: raw.contact || '',
-            phone: raw.phone || '',
-            email: raw.email || ''
-          };
-          await saveOffer(o);
-        }
-        await loadOffers();
-        alert('✅ Importas baigtas.');
-      } catch (e) {
-        alert('⚠️ Importo klaida: ' + e.message);
-      } finally {
-        fileInput.value = '';
-      }
-    }
-    importAddBtn.addEventListener('click', () => { fileInput.onchange = () => handleImport(false); fileInput.click(); });
-    importReplaceBtn.addEventListener('click', () => {
-      if (!confirm('Ar tikrai pakeisti visus dabartinius pasiūlymus importuojamais?')) return;
-      fileInput.onchange = () => handleImport(true);
-      fileInput.click();
-    });
-
-    // Eventai
-    fCity.addEventListener('input', loadOffers);
-    fComp.addEventListener('input', loadOffers);
-    refreshBtn.addEventListener('click', loadOffers);
-
-    // start
-    loadOffers();
+    fCity.addEventListener('input', load);
+    fComp.addEventListener('input', load);
+    refresh.addEventListener('click', load);
+    load();
   </script>
 
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
-        .then(()=>console.log('Service worker registered'))
-        .catch(e=>console.log('SW error', e));
+        .then(()=>console.log('SW registered'))
+        .catch(e=>console.log('SW err', e));
     }
   </script>
 </body>
