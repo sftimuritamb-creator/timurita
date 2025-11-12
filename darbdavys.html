@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="lt">
+<html lang="lt" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -12,52 +12,60 @@
   <link rel="icon" href="/timurita/Timurita_logo_192x192.png" type="image/png">
   <link rel="apple-touch-icon" href="/timurita/Timurita_logo_512x512.png">
 
-  <!-- Stiliai -->
   <link rel="stylesheet" href="/timurita/style.css">
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f8fafc; margin:0; color:#0f172a; }
-    .app-header { display:flex; align-items:center; gap:10px; padding:12px 16px; background:#fff; border-bottom:1px solid #e2e8f0; }
+    :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#475569; --line:#e2e8f0; --card:#fff; --primary:#0f766e; }
+    [data-theme="dark"]{ --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --card:#101826; --primary:#10b981; }
+
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); margin:0; color:var(--fg); }
+    .app-header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line); }
+    .left { display:flex; align-items:center; gap:10px; }
     .app-header img { width:40px; height:40px; border-radius:8px; }
+    .theme-btn { padding:8px 12px; border:1px solid var(--line); background:var(--card); color:var(--fg); border-radius:10px; cursor:pointer; }
     .container { max-width:980px; margin:0 auto; padding:16px; }
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-    .card { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
-    .muted { color:#475569; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+    .muted { color:var(--muted); }
     label { display:block; margin-top:12px; font-weight:600; color:#334155; }
-    input, textarea { width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-top:4px; }
+    [data-theme="dark"] label{ color:#cbd5e1; }
+    input, textarea { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; margin-top:4px; background:var(--card); color:var(--fg); }
     textarea { min-height:100px; resize:vertical; }
     .row { display:flex; gap:10px; }
     .row > * { flex:1; }
     .btn { padding:10px 14px; font-size:14px; font-weight:600; border:none; border-radius:10px; cursor:pointer; }
-    .btn.primary { background:#0f766e; color:#fff; }
-    .btn.secondary { background:#fff; color:#0f172a; border:1px solid #cbd5e1; }
+    .btn.primary { background:var(--primary); color:#fff; }
+    .btn.secondary { background:transparent; color:var(--fg); border:1px solid var(--line); }
     .actions { display:flex; gap:10px; margin-top:14px; }
-    .hint { font-size:12px; color:#64748b; margin-top:4px; }
-    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:#ffffffcc; backdrop-filter: blur(6px); border-top:1px solid #e2e8f0; padding:10px; }
-    .bottom-nav a { text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:#0f172a; font-weight:600; background:#fff; border:1px solid #e2e8f0; }
+    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:color-mix(in oklab, var(--card) 92%, transparent); backdrop-filter: blur(6px); border-top:1px solid var(--line); padding:10px; }
+    .bottom-nav a { text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:var(--fg); font-weight:600; background:var(--card); border:1px solid var(--line); }
+    .hint { font-size:12px; color:var(--muted); margin-top:4px; }
   </style>
 </head>
 
 <body>
   <header class="app-header">
-    <a href="/timurita/index.html" style="display:flex;align-items:center;text-decoration:none;color:inherit">
-      <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita logotipas" width="40" height="40" loading="lazy" decoding="async" fetchpriority="low">
-      <div>
-        <h3 style="margin:0;">Timurita</h3>
-        <div style="font-size:12px;color:#475569;">Sujungiame darbdavius ir statybų specialistus</div>
-      </div>
-    </a>
+    <div class="left">
+      <a href="/timurita/index.html" style="display:flex;align-items:center;text-decoration:none;color:inherit">
+        <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita" loading="lazy" decoding="async">
+        <div>
+          <h3 style="margin:0;">Timurita</h3>
+          <div style="font-size:12px;color:var(--muted)">Sujungiame darbdavius ir statybų specialistus</div>
+        </div>
+      </a>
+    </div>
+    <button id="themeBtn" class="theme-btn" type="button">🌙 Tamsus</button>
   </header>
 
   <main class="container">
     <h1>Darbdavio valdymas</h1>
-    <p class="muted">Užpildykite savo įmonės profilį ir kurkite darbo pasiūlymus. Viskas saugoma jūsų įrenginyje (IndexedDB) ir veikia offline.</p>
+    <p class="muted">Užpildykite įmonės profilį ir kurkite darbo pasiūlymus. Viskas saugoma jūsų įrenginyje (IndexedDB) ir veikia offline.</p>
 
     <div class="grid">
-      <!-- Kairė: Darbdavio profilis -->
+      <!-- Įmonės profilis -->
       <section class="card">
         <h2 style="margin:0;">Įmonės profilis</h2>
-        <p class="hint">Ši informacija automatiškai bus įrašoma į jūsų paskelbtus pasiūlymus.</p>
+        <p class="hint">Ši informacija automatiškai bus įrašoma į paskelbtus pasiūlymus.</p>
 
         <form id="employerForm" novalidate>
           <label>Įmonės pavadinimas
@@ -95,7 +103,7 @@
         </form>
       </section>
 
-      <!-- Dešinė: Naujas pasiūlymas -->
+      <!-- Naujas pasiūlymas -->
       <section class="card">
         <h2 style="margin:0;">Naujas darbo pasiūlymas</h2>
         <p class="hint">Laukai su žvaigždute privalomi. Darbdavio duomenys užpildomi automatiškai iš profilio.</p>
@@ -135,9 +143,10 @@
     <a href="/timurita/darbdavys.html" aria-current="page">Darbdavys</a>
   </nav>
 
-  <!-- Logika: bendras db.js -->
   <script type="module">
     import { setSetting, getSetting, saveOffer } from '/timurita/db.js';
+    import { initTheme } from '/timurita/theme.js';
+    initTheme();
 
     const empForm  = document.getElementById('employerForm');
     const offerForm= document.getElementById('offerForm');
@@ -147,12 +156,10 @@
     const seedOne  = document.getElementById('seedOne');
 
     const EMP_KEY = 'employer_profile';
-
-    // helpers
     const uuid = () => (crypto?.randomUUID?.() || 'id-' + Math.random().toString(36).slice(2,10));
     const val  = (el) => el?.value?.trim() || '';
 
-    // 1) Užkrauti darbdavio profilį
+    // Įkrauti profilį
     (async () => {
       try {
         const data = await getSetting(EMP_KEY);
@@ -165,19 +172,14 @@
           empForm.about.value   = data.about ?? '';
           empMsg.textContent = '✅ Įkeltas anksčiau išsaugotas profilis.';
         }
-      } catch (e) {
-        console.warn('Nepavyko užkrauti darbdavio profilio:', e);
-        empMsg.textContent = '⚠️ Nepavyko užkrauti profilio.';
-      }
+      } catch (e) { empMsg.textContent = '⚠️ Nepavyko užkrauti profilio.'; }
     })();
 
-    // 2) Išsaugoti darbdavio profilį
+    // Išsaugoti profilį
     empForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!val(empForm.company)) {
-        empMsg.textContent = '✋ Įrašykite įmonės pavadinimą.';
-        empForm.company.focus();
-        return;
+        empMsg.textContent = '✋ Įrašykite įmonės pavadinimą.'; empForm.company.focus(); return;
       }
       const payload = {
         company: val(empForm.company),
@@ -187,32 +189,21 @@
         email:   val(empForm.email),
         about:   val(empForm.about)
       };
-      try {
-        await setSetting(EMP_KEY, payload);
-        empMsg.textContent = '✅ Profilis išsaugotas (IndexedDB).';
-      } catch (e) {
-        console.warn('Nepavyko išsaugoti profilio:', e);
-        empMsg.textContent = '⚠️ Nepavyko išsaugoti profilio.';
-      }
+      try { await setSetting(EMP_KEY, payload); empMsg.textContent = '✅ Profilis išsaugotas (IndexedDB).'; }
+      catch { empMsg.textContent = '⚠️ Nepavyko išsaugoti profilio.'; }
     });
 
-    // 3) Išvalyti profilį (lokaliai)
+    // Išvalyti profilį
     clearBtn.addEventListener('click', async () => {
       empForm.reset();
       await setSetting(EMP_KEY, { company:'', contact:'', city:'', phone:'', email:'', about:'' });
       empMsg.textContent = '🧹 Profilio laukai išvalyti.';
     });
 
-    // 4) Skelbti pasiūlymą (įrašo į offers su darbdavio kontaktais)
+    // Skelbti pasiūlymą
     offerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!val(offerForm.title)) {
-        offerMsg.textContent = '✋ Įrašykite pasiūlymo pavadinimą.';
-        offerForm.title.focus();
-        return;
-      }
-
-      // paimame darbdavio profilį
+      if (!val(offerForm.title)) { offerMsg.textContent = '✋ Įrašykite pasiūlymo pavadinimą.'; offerForm.title.focus(); return; }
       const emp = (await getSetting(EMP_KEY)) || {};
       const offer = {
         id: uuid(),
@@ -221,23 +212,15 @@
         company:emp.company || '',
         desc:   val(offerForm.desc),
         salary: val(offerForm.salary),
-        // papildoma kontaktinė informacija (nebūtina rodyti sąraše, bet naudinga ateičiai)
         contact: emp.contact || '',
         phone:   emp.phone || '',
         email:   emp.email || ''
       };
-
-      try {
-        await saveOffer(offer);
-        offerForm.reset();
-        offerMsg.textContent = '✅ Pasiūlymas išsaugotas (IndexedDB). Žiūrėti „Pasiūlymai“.';
-      } catch (e) {
-        console.warn('Nepavyko išsaugoti pasiūlymo:', e);
-        offerMsg.textContent = '⚠️ Nepavyko išsaugoti pasiūlymo.';
-      }
+      try { await saveOffer(offer); offerForm.reset(); offerMsg.textContent = '✅ Pasiūlymas išsaugotas. Žiūrėti „Pasiūlymai“.'; }
+      catch { offerMsg.textContent = '⚠️ Nepavyko išsaugoti pasiūlymo.'; }
     });
 
-    // 5) Greitas pavyzdys
+    // Pavyzdys
     seedOne.addEventListener('click', async () => {
       const emp = (await getSetting(EMP_KEY)) || {};
       const demo = {
@@ -251,22 +234,16 @@
         phone: emp.phone || '+3706...',
         email: emp.email || 'info@imone.lt'
       };
-      try {
-        await saveOffer(demo);
-        offerMsg.textContent = '✅ Pavyzdinis pasiūlymas įkeltas. Žiūrėti „Pasiūlymai“.';
-      } catch (e) {
-        console.warn('Nepavyko įkelti pavyzdžio:', e);
-        offerMsg.textContent = '⚠️ Nepavyko įkelti pavyzdžio.';
-      }
+      try { await saveOffer(demo); offerMsg.textContent = '✅ Pavyzdinis pasiūlymas įkeltas.'; }
+      catch { offerMsg.textContent = '⚠️ Nepavyko įkelti pavyzdžio.'; }
     });
   </script>
 
-  <!-- Service Worker registracija -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
-        .then(() => console.log('Service worker registered'))
-        .catch(err => console.warn('SW error', err));
+        .then(()=>console.log('Service worker registered'))
+        .catch(e=>console.log('SW error', e));
     }
   </script>
 </body>
