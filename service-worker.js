@@ -1,6 +1,6 @@
 // /timurita/service-worker.js
 // App Shell + stale cache + offline fallback
-const VERSION = 'v19-2025-11-12';
+const VERSION = 'v20-2025-11-12';
 const APP_CACHE = `timurita-app-${VERSION}`;
 const RUNTIME_CACHE = `timurita-runtime-${VERSION}`;
 
