@@ -1,70 +1,96 @@
 <!doctype html>
-<html lang="lt">
+<html lang="lt" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Timurita – Profilis</title>
-  <meta name="description" content="Naudotojo profilis – Timurita platforma." />
+  <meta name="description" content="Naudotojo profilis – saugomas IndexedDB, veikia offline." />
 
-  <!-- PWA ir stiliai -->
+  <!-- PWA -->
   <link rel="manifest" href="/timurita/manifest.json">
   <meta name="theme-color" content="#1a2a44">
   <link rel="icon" href="/timurita/Timurita_logo_192x192.png" type="image/png">
-  <link rel="stylesheet" href="/timurita/style.css">
+  <link rel="apple-touch-icon" href="/timurita/Timurita_logo_512x512.png">
 
+  <link rel="stylesheet" href="/timurita/style.css">
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f8fafc; margin:0; color:#0f172a; }
-    .app-header { display:flex; align-items:center; gap:10px; padding:12px 16px; background:#fff; border-bottom:1px solid #e2e8f0; }
-    .app-header img { width:40px; height:40px; border-radius:8px; }
-    .container { max-width:640px; margin:0 auto; padding:16px; }
-    .card { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
-    label { display:block; margin-top:12px; font-weight:600; color:#334155; }
-    input { width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-top:4px; }
-    .hint { font-size:12px; color:#64748b; margin-top:4px; }
-    .row { display:flex; gap:10px; }
-    .row > * { flex:1; }
-    button.btn { width:100%; margin-top:16px; padding:12px; font-size:16px; font-weight:600; background:#0f766e; color:#fff; border:none; border-radius:10px; cursor:pointer; }
-    button.btn:hover { background:#115e59; }
-    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:#ffffffcc; backdrop-filter: blur(6px); border-top:1px solid #e2e8f0; padding:10px; }
-    .bottom-nav a { text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:#0f172a; font-weight:600; background:#fff; border:1px solid #e2e8f0; }
-    .muted { color:#475569; }
+    :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#475569; --line:#e2e8f0; --card:#fff; --primary:#0f766e; }
+    [data-theme="dark"]{ --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --card:#101826; --primary:#10b981; }
+
+    body{ font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; margin:0; background:var(--bg); color:var(--fg); }
+    .app-header{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line); }
+    .left{ display:flex; align-items:center; gap:10px; }
+    .app-header img{ width:40px; height:40px; border-radius:8px; }
+    .theme-btn{ padding:8px 12px; border:1px solid var(--line); background:var(--card); color:var(--fg); border-radius:10px; cursor:pointer; }
+    .container{ max-width:760px; margin:0 auto; padding:16px; }
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+    label{ display:block; margin-top:12px; font-weight:600; color:#334155; }
+    [data-theme="dark"] label{ color:#cbd5e1; }
+    input, textarea, select{ width:100%; padding:10px; border:1px solid var(--line); background:var(--card); color:var(--fg); border-radius:8px; margin-top:4px; }
+    textarea{ min-height:100px; resize:vertical; }
+    .row{ display:flex; gap:10px; }
+    .row > *{ flex:1; }
+    .btn{ padding:10px 14px; font-size:14px; font-weight:600; border:none; border-radius:10px; cursor:pointer; }
+    .btn.primary{ background:var(--primary); color:#fff; }
+    .btn.secondary{ background:transparent; color:var(--fg); border:1px solid var(--line); }
+    nav.bottom-nav{ position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:color-mix(in oklab, var(--card) 92%, transparent); backdrop-filter: blur(6px); border-top:1px solid var(--line); padding:10px; }
+    .bottom-nav a{ text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:var(--fg); font-weight:600; background:var(--card); border:1px solid var(--line); }
+    .hint{ font-size:12px; color:var(--muted); margin-top:6px; }
   </style>
 </head>
 
 <body>
   <header class="app-header">
-    <a href="/timurita/index.html" style="display:flex;align-items:center;text-decoration:none;color:inherit">
-      <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita logotipas" width="40" height="40">
-      <div>
-        <h3 style="margin:0;">Timurita</h3>
-        <div style="font-size:12px;color:#475569;">Sujungiame darbdavius ir statybų specialistus</div>
-      </div>
-    </a>
+    <div class="left">
+      <a href="/timurita/index.html" style="display:flex;align-items:center;text-decoration:none;color:inherit">
+        <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita" loading="lazy" decoding="async">
+        <div>
+          <h3 style="margin:0;">Timurita</h3>
+          <div style="font-size:12px;color:var(--muted)">Sujungiame darbdavius ir statybų specialistus</div>
+        </div>
+      </a>
+    </div>
+    <button id="themeBtn" class="theme-btn" type="button">🌙 Tamsus</button>
   </header>
 
   <main class="container">
-    <h1>Naudotojo profilis</h1>
-    <p class="muted">Duomenys saugomi jūsų įrenginyje (IndexedDB) ir veiks offline.</p>
+    <h1>Mano profilis</h1>
+    <p class="hint">Šie duomenys saugomi tik jūsų įrenginyje (IndexedDB) ir veikia offline.</p>
 
-    <form id="profileForm" class="card" novalidate>
-      <label for="name">Vardas ir pavardė
-        <input id="name" name="name" required placeholder="Pvz. Jonas Statybininkas" autocomplete="name" />
-      </label>
-
-      <div class="row">
-        <label for="phone">Telefonas
-          <input id="phone" name="phone" type="tel" placeholder="+370..." autocomplete="tel" />
-          <div class="hint">Formatas: +3706xxxxxxx (nebūtina)</div>
+    <section class="card">
+      <form id="profileForm" novalidate>
+        <label>Vardas, pavardė *
+          <input name="name" required placeholder="Pvz. Jonas Statybininkas">
         </label>
 
-        <label for="city">Miestas
-          <input id="city" name="city" placeholder="Pvz. Vilnius" autocomplete="address-level2" />
-        </label>
-      </div>
+        <div class="row">
+          <label>Miestas
+            <input name="city" placeholder="Pvz. Vilnius">
+          </label>
+          <label>Telefonas
+            <input name="phone" type="tel" placeholder="+3706..." autocomplete="tel">
+          </label>
+        </div>
 
-      <button class="btn" type="submit">Išsaugoti</button>
-      <div id="msg" class="hint" aria-live="polite" style="margin-top:8px;"></div>
-    </form>
+        <label>Specialybė
+          <input name="role" placeholder="Pvz. Apdailininkas">
+        </label>
+
+        <label>Įgūdžiai (kableliais)
+          <input name="skills" placeholder="Pvz. glaistymas, dažymas, gipsas">
+        </label>
+
+        <label>Trumpas aprašymas
+          <textarea name="about" placeholder="Apie patirtį, objektus, pažymėjimus..."></textarea>
+        </label>
+
+        <div class="row" style="margin-top:8px;">
+          <button class="btn primary" type="submit">Išsaugoti</button>
+          <button class="btn secondary" type="button" id="clearBtn">Išvalyti</button>
+        </div>
+        <div id="msg" class="hint" aria-live="polite"></div>
+      </form>
+    </section>
   </main>
 
   <nav class="bottom-nav" aria-label="Apatinė navigacija">
@@ -74,63 +100,63 @@
     <a href="/timurita/darbdavys.html">Darbdavys</a>
   </nav>
 
-  <!-- IndexedDB: bendras helperis -->
   <script type="module">
-    import { saveProfile, loadProfile } from '/timurita/db.js';
+    import { put, getById } from '/timurita/db.js';
+    import { initTheme } from '/timurita/theme.js';
+    initTheme();
 
-    const form = document.querySelector('#profileForm');
-    const msg = document.querySelector('#msg');
-    const ID = 'user-1'; // demo naudotojo ID (kol nėra auth)
+    const form = document.getElementById('profileForm');
+    const msg  = document.getElementById('msg');
+    const KEY  = 'user-1';
 
-    // Užkraunam esamus duomenis
+    const parseSkills = (txt) => (txt||'').split(',').map(s => s.trim()).filter(Boolean);
+
+    // užkrauti
     (async () => {
-      try {
-        const existing = await loadProfile(ID);
-        if (existing) {
-          if (form.elements.name)  form.elements.name.value  = existing.name  ?? '';
-          if (form.elements.phone) form.elements.phone.value = existing.phone ?? '';
-          if (form.elements.city)  form.elements.city.value  = existing.city  ?? '';
-        }
-      } catch (e) {
-        console.warn('Nepavyko užkrauti profilio:', e);
-        msg.textContent = '⚠️ Nepavyko užkrauti profilio duomenų.';
+      const data = await getById('profiles', KEY);
+      if (data) {
+        form.name.value  = data.name  || '';
+        form.city.value  = data.city  || '';
+        form.phone.value = data.phone || '';
+        form.role.value  = data.role  || '';
+        form.skills.value= Array.isArray(data.skills) ? data.skills.join(', ') : (data.skills || '');
+        form.about.value = data.about || '';
+        msg.textContent = '✅ Profilis įkeltas iš IndexedDB.';
       }
     })();
 
-    // Išsaugojam
+    // išsaugoti
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      // paprasta validacija
-      if (!form.elements.name.value.trim()) {
+      if (!form.name.value.trim()) {
         msg.textContent = '✋ Įrašykite vardą ir pavardę.';
-        form.elements.name.focus();
-        return;
+        form.name.focus(); return;
       }
-
-      const profile = {
-        id: ID,
-        name:  form.elements.name?.value?.trim()  || '',
-        phone: form.elements.phone?.value?.trim() || '',
-        city:  form.elements.city?.value?.trim()  || ''
+      const payload = {
+        id: KEY,
+        name: form.name.value.trim(),
+        city: form.city.value.trim(),
+        phone: form.phone.value.trim(),
+        role: form.role.value.trim(),
+        skills: parseSkills(form.skills.value),
+        about: form.about.value.trim()
       };
+      await put('profiles', payload);
+      msg.textContent = '✅ Profilis išsaugotas (IndexedDB).';
+    });
 
-      try {
-        await saveProfile(profile);
-        msg.textContent = '✅ Profilis išsaugotas (IndexedDB).';
-      } catch (e) {
-        console.warn('Nepavyko išsaugoti profilio:', e);
-        msg.textContent = '⚠️ Nepavyko išsaugoti profilio.';
-      }
+    // išvalyti
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      form.reset();
+      msg.textContent = '🧹 Laukai išvalyti (duomenys DB liko).';
     });
   </script>
 
-  <!-- Service Worker registracija -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
-        .then(() => console.log('Service worker registered'))
-        .catch(err => console.warn('SW error', err));
+        .then(()=>console.log('SW registered'))
+        .catch(e=>console.log('SW error', e));
     }
   </script>
 </body>
