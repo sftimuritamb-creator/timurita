@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="lt" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Timurita – Prisijungimas</title>
+  <link rel="manifest" href="/timurita/manifest.json">
+  <meta name="theme-color" content="#1a2a44">
+  <link rel="icon" href="/timurita/Timurita_logo_192x192.png" type="image/png">
+  <link rel="stylesheet" href="/timurita/style.css">
+  <style>
+    :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#64748b; --line:#e2e8f0; --card:#fff; --primary:#0f766e; }
+    [data-theme="dark"]{ --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --card:#101826; --primary:#10b981; }
+    body{ font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; margin:0; background:var(--bg); color:var(--fg); }
+    .wrap{ max-width:420px; margin:40px auto; padding:16px; }
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+    label{ display:block; margin-top:12px; font-weight:600; }
+    input{ width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; margin-top:4px; background:var(--card); color:var(--fg); }
+    .btn{ width:100%; padding:10px; border:none; border-radius:10px; font-weight:700; cursor:pointer; }
+    .btn.primary{ background:var(--primary); color:#fff; margin-top:12px; }
+    .row{ display:flex; gap:10px; margin-top:12px;}
+    .row .btn{ flex:1; }
+    .muted{ color:var(--muted); font-size:13px; margin-top:8px; }
+    .top-nav{ display:flex; justify-content:center; gap:12px; margin-top:12px; flex-wrap:wrap;}
+    .top-nav a{ text-decoration:none; color:var(--fg); border:1px solid var(--line); padding:8px 12px; border-radius:10px; background:var(--card); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Prisijungimas / Registracija</h1>
+    <div class="card">
+      <form id="authForm">
+        <label>El. paštas
+          <input type="email" name="email" required placeholder="vardas@pastas.lt">
+        </label>
+        <label>Slaptažodis
+          <input type="password" name="password" required placeholder="••••••••">
+        </label>
+        <div class="row">
+          <button class="btn primary" id="loginBtn" type="submit">Prisijungti</button>
+          <button class="btn" id="signupBtn" type="button">Registruotis</button>
+        </div>
+        <div class="muted" id="msg"></div>
+      </form>
+    </div>
+
+    <div class="top-nav">
+      <a href="/timurita/index.html">🏠 Pradžia</a>
+      <a href="/timurita/pasiulymai.html">Pasiūlymai</a>
+      <a href="/timurita/darbdavys.html">Darbdavys</a>
+      <a href="/timurita/profilis.html">Profilis</a>
+    </div>
+
+    <div class="card" style="margin-top:12px; display:none;" id="whoami">
+      <div id="userInfo" class="muted">Neprisijungęs</div>
+      <div class="row">
+        <button class="btn" id="logoutBtn" type="button">Atsijungti</button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { supabase } from '/timurita/supabase.js';
+
+    const form = document.getElementById('authForm');
+    const msg  = document.getElementById('msg');
+    const signupBtn = document.getElementById('signupBtn');
+    const who      = document.getElementById('whoami');
+    const userInfo = document.getElementById('userInfo');
+    const logoutBtn= document.getElementById('logoutBtn');
+
+    async function refreshUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        who.style.display = 'block';
+        userInfo.textContent = `Prisijungęs: ${user.email}`;
+      } else {
+        who.style.display = 'none';
+        userInfo.textContent = 'Neprisijungęs';
+      }
+    }
+
+    // Prisijungimas
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+      const email = form.email.value.trim();
+      const password = form.password.value;
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      msg.textContent = error ? ('Klaida: ' + error.message) : '✅ Prisijungta';
+      refreshUser();
+    });
+
+    // Registracija
+    signupBtn.addEventListener('click', async () => {
+      msg.textContent = '';
+      const email = form.email.value.trim();
+      const password = form.password.value;
+
+      const { error } = await supabase.auth.signUp({ email, password });
+      msg.textContent = error ? ('Klaida: ' + error.message)
+                              : '✅ Registracija sėkminga. Patvirtinkite el. paštą (jei reikalinga).';
+      refreshUser();
+    });
+
+    // Atsijungti
+    logoutBtn.addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      msg.textContent = '✅ Atsijungta';
+      refreshUser();
+    });
+
+    refreshUser();
+  </script>
+</body>
+</html>
