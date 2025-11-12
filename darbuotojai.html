@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Timurita – Darbuotojai</title>
-  <meta name="description" content="Darbuotojų sąrašas – kurkite, filtruokite ir raskite specialistus." />
+  <meta name="description" content="Darbuotojų sąrašas – kurkite, filtruokite, eksportuokite ir raskite specialistus." />
 
   <!-- PWA -->
   <link rel="manifest" href="/timurita/manifest.json">
@@ -12,7 +12,6 @@
   <link rel="icon" href="/timurita/Timurita_logo_192x192.png" type="image/png">
   <link rel="apple-touch-icon" href="/timurita/Timurita_logo_512x512.png">
 
-  <!-- CSS -->
   <link rel="stylesheet" href="/timurita/style.css">
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#f8fafc; margin:0; color:#0f172a; }
@@ -56,10 +55,9 @@
 
   <main class="container">
     <h1>Darbuotojai</h1>
-    <p class="muted">Kurkite darbuotojų korteles ir filtruokite pagal miestą, specialybę ar įgūdžius. Viskas veikia offline (IndexedDB).</p>
+    <p class="muted">Kurkite darbuotojų korteles ir filtruokite pagal miestą, specialybę ar įgūdžius. Taip pat galite <strong>atsisiųsti JSON</strong>. Viskas veikia offline (IndexedDB).</p>
 
     <div class="grid">
-      <!-- Kairė: naujo darbuotojo forma -->
       <section class="card">
         <h2 style="margin:0;">Naujas darbuotojas</h2>
         <form id="workerForm" novalidate>
@@ -97,11 +95,9 @@
             <input name="skills" placeholder="Pvz. glaistymas, dažymas, gipsas">
           </label>
 
-          <div class="row">
-            <label>Trumpas aprašymas
-              <textarea name="about" placeholder="Apie patirtį, objektus, pažymėjimus..."></textarea>
-            </label>
-          </div>
+          <label>Trumpas aprašymas
+            <textarea name="about" placeholder="Apie patirtį, objektus, pažymėjimus..."></textarea>
+          </label>
 
           <div class="row" style="margin-top:8px;">
             <button class="btn primary" type="submit">Išsaugoti</button>
@@ -111,7 +107,6 @@
         </form>
       </section>
 
-      <!-- Dešinė: sąrašas + filtrai -->
       <section>
         <div class="card">
           <h2 style="margin:0 0 10px 0;">Filtrai</h2>
@@ -120,6 +115,7 @@
             <input id="fRole" placeholder="Specialybė...">
             <input id="fSkill" placeholder="Įgūdis (pvz. dažymas)...">
             <button id="refreshBtn" class="btn primary" type="button">🔄 Atnaujinti</button>
+            <button id="exportBtn" class="btn secondary" type="button">⬇️ Atsisiųsti JSON</button>
           </div>
         </div>
 
@@ -135,7 +131,6 @@
     <a href="/timurita/darbdavys.html">Darbdavys</a>
   </nav>
 
-  <!-- Logika: naudojame bendrą db.js 'profiles' store'ą -->
   <script type="module">
     import { getAll, put, remove } from '/timurita/db.js';
 
@@ -147,12 +142,12 @@
     const fRole    = document.getElementById('fRole');
     const fSkill   = document.getElementById('fSkill');
     const refresh  = document.getElementById('refreshBtn');
+    const exportBtn= document.getElementById('exportBtn');
 
     const uuid = () => (crypto?.randomUUID?.() || 'id-' + Math.random().toString(36).slice(2, 10));
     const esc  = (s) => String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     const parseSkills = (txt) => (txt||'').split(',').map(s => s.trim()).filter(Boolean);
 
-    // Rodo vieną darbuotojo kortelę
     function workerCard(w) {
       const skills = (w.skills||[]).map(s => `<span class="chip">${esc(s)}</span>`).join(' ');
       return `
@@ -169,12 +164,9 @@
       `;
     }
 
-    // Užkrauna ir atvaizduoja sąrašą su filtrais
     async function render() {
-      const all = await getAll('profiles'); // panaudojame bendrą 'profiles' store
-      // filtruojame: neįtraukiam demo naudotojo 'user-1' jei jis yra
-      let list = all.filter(w => w && w.id && w.id !== 'user-1');
-
+      const all = await getAll('profiles');
+      let list = all.filter(w => w && w.id && w.id !== 'user-1'); // nerodom demo profilio
       const city  = fCity.value.trim().toLowerCase();
       const role  = fRole.value.trim().toLowerCase();
       const skill = fSkill.value.trim().toLowerCase();
@@ -187,7 +179,6 @@
         ? list.map(workerCard).join('')
         : '<div class="card muted" style="text-align:center;">🕐 Kol kas nėra darbuotojų.</div>';
 
-      // užkabinam veiksmus
       listEl.querySelectorAll('[data-action="delete"]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           const id = e.target.closest('[data-id]').dataset.id;
@@ -197,7 +188,6 @@
       });
     }
 
-    // Formos pateikimas
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!form.name.value.trim()) {
@@ -226,7 +216,6 @@
       }
     });
 
-    // Pavyzdiniai įrašai
     seedBtn.addEventListener('click', async () => {
       const sample = [
         { id: uuid(), name:'Mantas Petrauskas', city:'Vilnius', role:'Mūrininkas',   exp:4, skills:['mūras','skiedinys'], phone:'+3706...', about:'Daugiabučiai, pramoniniai objektai.' },
@@ -237,15 +226,30 @@
       render();
     });
 
-    // Filtrai/atnaujinimas
+    // Eksportas į JSON
+    function download(filename, data) {
+      const blob = new Blob([data], { type: 'application/json;charset=utf-8' });
+      const url  = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+    }
+    exportBtn.addEventListener('click', async () => {
+      const all = await getAll('profiles');
+      const list = all.filter(w => w && w.id && w.id !== 'user-1');
+      const json = JSON.stringify(list, null, 2);
+      download('darbuotojai.json', json);
+    });
+
     [fCity, fRole, fSkill].forEach(el => el.addEventListener('input', render));
     document.getElementById('refreshBtn').addEventListener('click', render);
 
-    // Pirminis užkrovimas
     render();
   </script>
 
-  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
