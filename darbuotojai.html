@@ -1,78 +1,272 @@
 <!doctype html>
-<html lang="lt" data-theme="light">
+<html lang="lt">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Timurita – Darbuotojai</title>
-  <meta name="description" content="Darbuotojų sąrašas – kurkite, filtruokite, eksportuokite ir importuokite JSON.">
+  <title>Timurita – Darbuotojas</title>
+  <meta name="description" content="Darbuotojo skydelis – peržiūrėkite darbo pasiūlymus ir tvarkykite savo profilį.">
 
+  <!-- PWA -->
   <link rel="manifest" href="/timurita/manifest.json">
   <meta name="theme-color" content="#1a2a44">
   <link rel="icon" href="/timurita/Timurita_logo_192x192.png" type="image/png">
 
   <link rel="stylesheet" href="/timurita/style.css">
-  <style>
-    :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#475569; --line:#e2e8f0; --card:#fff; --primary:#0f766e; }
-    [data-theme="dark"]{ --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --card:#101826; --primary:#10b981; }
-    body{ font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; margin:0; background:var(--bg); color:var(--fg);}
-    .app-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--line);}
-    .app-header img{width:40px;height:40px;border-radius:8px;}
-    .theme-btn{padding:8px 12px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;cursor:pointer;}
-    .container{max-width:960px;margin:0 auto;padding:16px;}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,0.05);margin-bottom:14px;}
-    nav.bottom-nav{position:sticky;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);background:color-mix(in oklab,var(--card) 92%,transparent);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:10px;}
-    .bottom-nav a{text-align:center;text-decoration:none;padding:10px;border-radius:10px;color:var(--fg);font-weight:600;background:var(--card);border:1px solid var(--line);}
-  </style>
-</head>
 
+  <style>
+    :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#64748b; --line:#e2e8f0; --card:#ffffff; --primary:#0f766e; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); margin:0; color:var(--fg); }
+    .app-header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line); }
+    .left { display:flex; align-items:center; gap:10px; }
+    .app-header img { width:40px; height:40px; border-radius:8px; }
+    .header-actions { display:flex; gap:8px; align-items:center; }
+    .logout-btn { padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#fee2e2; color:#b91c1c; font-size:12px; font-weight:600; cursor:pointer; }
+
+    .container { max-width:980px; margin:0 auto; padding:16px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(15,23,42,0.05); margin-bottom:16px; }
+    .muted { color:var(--muted); }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#dcfce7; color:#166534; font-size:12px; font-weight:700; }
+
+    .guard-banner {
+      background:#fef2f2;
+      border:1px solid #fecaca;
+      color:#b91c1c;
+      border-radius:12px;
+      padding:10px 12px; font-size:13px; margin-bottom:12px;
+    }
+    .guard-ok {
+      background:#ecfdf5;
+      border-color:#bbf7d0;
+      color:#166534;
+    }
+    .disabled-overlay {
+      position:relative;
+      opacity:0.5;
+      pointer-events:none;
+    }
+
+    .grid { display:grid; grid-template-columns:2fr 1.3fr; gap:16px; }
+    @media (max-width: 900px) { .grid { grid-template-columns:1fr; } }
+
+    .btn { padding:8px 12px; font-size:14px; font-weight:600; border-radius:10px; border:1px solid var(--line); background:var(--card); cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+    .btn.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .btn.link { background:transparent; border:none; padding:0; color:#0f766e; font-size:13px; }
+
+    .quick-links { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+    .profile-summary { font-size:14px; }
+    .profile-summary .label { font-size:12px; color:var(--muted); }
+    .profile-summary strong { font-weight:600; }
+
+    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:rgba(248,250,252,0.95); border-top:1px solid var(--line); padding:10px; backdrop-filter:blur(6px); }
+    .bottom-nav a { text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:var(--fg); font-weight:600; background:var(--card); border:1px solid var(--line); font-size:14px; }
+    .bottom-nav a[aria-current="page"] { background:var(--primary); color:#fff; border-color:var(--primary); }
+  </style>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
+</head>
 <body>
   <header class="app-header">
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div class="left">
       <a href="/timurita/index.html" style="display:flex;align-items:center;text-decoration:none;color:inherit">
-        <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita">
+        <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita" loading="lazy">
         <div>
           <h3 style="margin:0;">Timurita</h3>
-          <div style="font-size:12px;color:var(--muted)">Darbuotojų sąrašas</div>
+          <div style="font-size:12px;color:var(--muted)">Sujungiame darbdavius ir statybų specialistus</div>
         </div>
       </a>
     </div>
-    <button id="themeBtn" class="theme-btn" type="button">🌙 Tamsus</button>
+    <div class="header-actions">
+      <button class="logout-btn" type="button" id="logoutBtn">Atsijungti</button>
+    </div>
   </header>
 
   <main class="container">
-    <h1>Darbuotojai</h1>
-    <p class="muted">Darbuotojų duomenys saugomi lokaliai (IndexedDB). Filtruokite, eksportuokite ar importuokite JSON.</p>
+    <div id="guardBox" class="guard-banner">
+      🔐 Šis puslapis skirtas tik prisijungusiems darbuotojams. Tikrinamas prisijungimas...
+    </div>
 
-    <div id="list"></div>
+    <h1>Darbuotojo skydelis</h1>
+    <p class="muted">
+      Čia galite trumpai matyti savo informaciją ir greitai pereiti prie darbo pasiūlymų bei profilio pildymo.
+    </p>
+
+    <div id="contentWrapper" class="grid">
+      <!-- Kairė: pasiūlymų peržiūra -->
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <h2 style="margin:0;">Darbo pasiūlymai</h2>
+          <span class="badge">Kandidatavimas</span>
+        </div>
+        <p class="muted" style="margin-top:6px;">
+          Eikite į „Pasiūlymai“ puslapį, kad matytumėte visus pasiūlymus ir galėtumėte kandidatuoti.
+        </p>
+        <div class="quick-links">
+          <button class="btn primary" type="button" onclick="window.location.href='/timurita/pasiulymai.html'">
+            📄 Peržiūrėti pasiūlymus
+          </button>
+          <button class="btn" type="button" onclick="window.location.href='/timurita/profilis.html'">
+            🧾 Tvarkyti mano profilį
+          </button>
+        </div>
+        <p class="muted" style="margin-top:10px;font-size:13px;">
+          Patarimas: pirmiausia užpildykite savo profilį, tada kandidatuodami darbdaviai matys jūsų kontaktus ir trumpą aprašymą.
+        </p>
+      </section>
+
+      <!-- Dešinė: mano profilio santrauka -->
+      <section class="card">
+        <h2 style="margin:0;">Mano profilis (santrauka)</h2>
+        <p class="muted" style="margin-top:6px;">Trumpa informacija iš jūsų profilio, saugomo šiame įrenginyje.</p>
+
+        <div id="profileSummary" class="profile-summary" style="margin-top:10px;">
+          <div class="muted" id="profileEmpty">Profilis dar neužpildytas. Eikite į „Profilis“ ir įrašykite savo duomenis.</div>
+        </div>
+
+        <button class="btn link" type="button" onclick="window.location.href='/timurita/profilis.html'">
+          ✏️ Redaguoti profilį
+        </button>
+      </section>
+    </div>
   </main>
 
-  <nav class="bottom-nav" aria-label="Navigacija">
+  <nav class="bottom-nav" aria-label="Apatinė navigacija">
     <a href="/timurita/darbuotojai.html" aria-current="page">Darbuotojai</a>
     <a href="/timurita/pasiulymai.html">Pasiūlymai</a>
     <a href="/timurita/profilis.html">Profilis</a>
     <a href="/timurita/darbdavys.html">Darbdavys</a>
   </nav>
 
-  <script type="module">
-    import { getAll } from '/timurita/db.js';
-    import { initTheme } from '/timurita/theme.js';
-    initTheme();
-
-    const listEl = document.getElementById('list');
-    async function render() {
-      const data = await getAll('profiles');
-      listEl.innerHTML = data.length
-        ? data.map(p => `<article class="card"><h2>${p.name||''}</h2><p>${p.role||''} • ${p.city||''}</p><p>${p.about||''}</p></article>`).join('')
-        : '<div class="card">🕐 Kol kas nėra darbuotojų.</div>';
-    }
-    render();
-  </script>
-
   <script>
+    let supabaseClient = null;
+    let currentUser = null;
+
+    try {
+      if (window.supabase) {
+        const supabaseUrl = 'https://qnczakppadjxbicgjzcy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY';
+        supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+      } else {
+        console.warn('Supabase biblioteka neužsikrovė');
+      }
+    } catch (e) {
+      console.warn('Supabase createClient klaida darbuotojai.html:', e);
+    }
+
+    const guardBox = document.getElementById('guardBox');
+    const contentWrapper = document.getElementById('contentWrapper');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // Apsauga: tik prisijungęs DARBUOTOJAS (role=worker)
+    async function guardAuth() {
+      if (!supabaseClient) {
+        guardBox.innerHTML = '⚠️ Supabase klientas nepasileido. Prisijungimas nebus tikrinamas.';
+        contentWrapper.classList.add('disabled-overlay');
+        return;
+      }
+
+      try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        if (error) {
+          console.warn('auth.getUser klaida:', error);
+          guardBox.innerHTML = '⚠️ Nepavyko patikrinti prisijungimo. Prisijunkite per <a href="/timurita/auth.html">prisijungimo puslapį</a>.';
+          contentWrapper.classList.add('disabled-overlay');
+          return;
+        }
+
+        if (!user) {
+          guardBox.innerHTML = '🔐 Reikia prisijungti. Nukreipiama į prisijungimo puslapį...';
+          contentWrapper.classList.add('disabled-overlay');
+          setTimeout(() => { window.location.href = '/timurita/auth.html'; }, 1500);
+          return;
+        }
+
+        const role = user.user_metadata?.role || 'worker';
+        if (role !== 'worker') {
+          guardBox.innerHTML = '⛔ Šis puslapis skirtas tik darbuotojams. Jus nukreipiame į darbdavio skydelį.';
+          contentWrapper.classList.add('disabled-overlay');
+          setTimeout(() => { window.location.href = '/timurita/darbdavys.html'; }, 1500);
+          return;
+        }
+
+        currentUser = user;
+        guardBox.classList.add('guard-ok');
+        guardBox.innerHTML = '✅ Prisijungta kaip darbuotojas: <strong>' + (user.email || '') + '</strong>.';
+        loadWorkerProfileSummary();
+      } catch (e) {
+        console.warn('guardAuth klaida:', e);
+        guardBox.innerHTML = '⚠️ Nepavyko patikrinti prisijungimo. Pabandykite atnaujinti puslapį.';
+        contentWrapper.classList.add('disabled-overlay');
+      }
+    }
+
+    function loadWorkerProfileSummary() {
+      const summaryEl = document.getElementById('profileSummary');
+      const emptyEl = document.getElementById('profileEmpty');
+      summaryEl.innerHTML = '';
+
+      let profile = null;
+      const keys = ['timurita_worker_profile','timurita_profile','worker_profile'];
+      for (const k of keys) {
+        try {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            profile = JSON.parse(raw);
+            break;
+          }
+        } catch(e) {
+          console.warn('Nepavyko perskaityti profilio iš', k, e);
+        }
+      }
+
+      if (!profile) {
+        emptyEl.style.display = 'block';
+        emptyEl.textContent = 'Profilis dar neužpildytas. Eikite į „Profilis“ ir įrašykite savo duomenis.';
+        return;
+      }
+
+      emptyEl.style.display = 'none';
+
+      const name = profile.fullName || profile.name || '(vardas nenurodytas)';
+      const city = profile.city || '';
+      const phone = profile.phone || '';
+      const email = profile.email || '';
+      const about = profile.about || profile.description || '';
+
+      const ul = document.createElement('div');
+      ul.innerHTML = `
+        <div><span class="label">Vardas ir pavardė:</span><br><strong>${name}</strong></div>
+        ${city ? `<div style="margin-top:6px;"><span class="label">Miestas:</span><br><strong>${city}</strong></div>` : ''}
+        ${phone ? `<div style="margin-top:6px;"><span class="label">Telefonas:</span><br><strong>${phone}</strong></div>` : ''}
+        ${email ? `<div style="margin-top:6px;"><span class="label">El. paštas:</span><br><strong>${email}</strong></div>` : ''}
+        ${about ? `<div style="margin-top:6px;"><span class="label">Trumpai apie mane:</span><br>${about}</div>` : ''}
+      `;
+      summaryEl.appendChild(ul);
+    }
+
+    // Atsijungimas
+    logoutBtn.addEventListener('click', async () => {
+      if (!supabaseClient) {
+        window.location.href = '/timurita/auth.html';
+        return;
+      }
+      try {
+        await supabaseClient.auth.signOut();
+      } catch (e) {
+        console.warn('signOut klaida:', e);
+      }
+      try { localStorage.removeItem('timurita_role'); } catch {}
+      window.location.href = '/timurita/auth.html';
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      guardAuth();
+    });
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
-        .then(()=>console.log('SW registered'))
-        .catch(e=>console.log('SW err', e));
+        .then(()=>console.log('SW registered (darbuotojai.html)'))
+        .catch(e=>console.log('SW error', e));
     }
   </script>
 </body>
