@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="/timurita/style.css">
 
   <style>
-    :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#475569; --line:#e2e8f0; --card:#fff; --primary:#0f766e; }
+    :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#64748b; --line:#e2e8f0; --card:#ffffff; --primary:#0f766e; --danger:#b91c1c; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); margin:0; color:var(--fg); }
     .app-header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line); }
     .left { display:flex; align-items:center; gap:10px; }
@@ -22,7 +22,7 @@
     .container { max-width:980px; margin:0 auto; padding:16px; }
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(15,23,42,0.05); }
     .muted { color:var(--muted); }
     label { display:block; margin-top:12px; font-weight:600; color:#334155; }
     input, textarea { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; margin-top:4px; background:var(--card); color:var(--fg); }
@@ -35,11 +35,32 @@
     .actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
     nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:rgba(248,250,252,0.9); border-top:1px solid var(--line); padding:10px; }
     .bottom-nav a { text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:var(--fg); font-weight:600; background:var(--card); border:1px solid var(--line); }
+    .bottom-nav a[aria-current="page"] { background:var(--primary); color:#fff; border-color:var(--primary); }
     .hint { font-size:12px; color:var(--muted); margin-top:4px; }
-    .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#dbeafe; color:#1e3a8a; font-size:12px; font-weight:700; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#e0f2fe; color:#0369a1; font-size:12px; font-weight:700; }
+
+    .guard-banner {
+      background:#fef2f2;
+      border:1px solid #fecaca;
+      color:#b91c1c;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      margin-bottom:12px;
+    }
+    .guard-ok {
+      background:#ecfdf5;
+      border-color:#bbf7d0;
+      color:#166534;
+    }
+    .disabled-overlay {
+      position:relative;
+      opacity:0.5;
+      pointer-events:none;
+    }
   </style>
 
-  <!-- Supabase biblioteka per CDN -->
+  <!-- Supabase UMD biblioteka -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 </head>
 
@@ -57,17 +78,21 @@
   </header>
 
   <main class="container">
+    <div id="guardBox" class="guard-banner">
+      🔐 Šis puslapis skirtas tik prisijungusiems darbdaviams. Tikrinamas prisijungimas...
+    </div>
+
     <h1>Darbdavio valdymas</h1>
     <p class="muted">
-      Užpildykite įmonės profilį ir kurkite darbo pasiūlymus. Duomenys saugomi jūsų naršyklėje (localStorage).
-      Jei esate <strong>prisijungę</strong> per <span class="badge">/auth.html</span>, pasiūlymai papildomai įrašomi į Supabase.
+      Čia galite tvarkyti įmonės profilį ir kurti darbo pasiūlymus.
+      <br>Norint skelbimus išsaugoti serveryje (Supabase) ir matyti juos „Pasiūlymai“ puslapyje, būtina būti prisijungus.
     </p>
 
-    <div class="grid">
+    <div id="formsWrapper" class="grid">
       <!-- Įmonės profilis -->
       <section class="card">
         <h2 style="margin:0;">Įmonės profilis</h2>
-        <p class="hint">Šie duomenys automatiškai naudojami pasiūlymo kontaktams.</p>
+        <p class="hint">Šie duomenys automatiškai naudojami kontaktams pasiūlyme.</p>
 
         <form id="employerForm">
           <label>Įmonės pavadinimas
@@ -144,27 +169,67 @@
   </nav>
 
   <script>
-    // --- 1. Supabase klientas (apsaugotas) ---
+    // --- Supabase klientas (tas pats projektas) ---
     let supabaseClient = null;
     try {
       if (window.supabase) {
         const supabaseUrl = 'https://qnczakppadjxbicgjzcy.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY';
         supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('Supabase klientas sukurtas');
+        console.log('Supabase klientas (darbdavys.html) sukurtas');
       } else {
-        console.warn('Supabase biblioteka neužsikrovė – veiks tik lokalus saugojimas.');
+        console.warn('Supabase biblioteka neužsikrovė');
       }
     } catch (e) {
-      console.warn('Supabase createClient klaida:', e);
+      console.warn('Supabase createClient klaida darbdavys.html:', e);
     }
 
-    // --- 2. LocalStorage key'ai ---
     const EMP_KEY = 'timurita_employer_profile';
     const OFFERS_KEY = 'timurita_offers';
     const v = (el) => el.value.trim();
 
-    // --- 3. Įmonės profilis (localStorage) ---
+    const guardBox = document.getElementById('guardBox');
+    const formsWrapper = document.getElementById('formsWrapper');
+
+    // --- Apsauga: tik prisijungus ---
+    async function guardAuth() {
+      if (!supabaseClient) {
+        guardBox.classList.remove('guard-ok');
+        guardBox.innerHTML = '🚫 Nepavyko užkrauti Supabase kliento. Šis puslapis veiks tik šiame įrenginyje (lokaliai).';
+        // Jei nori, galim čia išjungti formą – kol kas paliekam lokaliam naudojimui
+        return;
+      }
+
+      try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        if (error) {
+          console.warn('auth.getUser klaida:', error);
+          guardBox.innerHTML = '⚠️ Nepavyko patikrinti prisijungimo. Bandykite dar kartą arba prisijunkite iš naujo per <a href="/timurita/auth.html">prisijungimo puslapį</a>.';
+          formsWrapper.classList.add('disabled-overlay');
+          return;
+        }
+
+        if (!user) {
+          guardBox.innerHTML = '🔐 Reikia prisijungti kaip darbdaviui. Nukreipiama į prisijungimo puslapį...';
+          formsWrapper.classList.add('disabled-overlay');
+          // nedidelis vėlavimas, kad matytum žinutę
+          setTimeout(() => {
+            window.location.href = '/timurita/auth.html';
+          }, 1500);
+          return;
+        }
+
+        // Vartotojas prisijungęs – leidžiam naudotis
+        guardBox.classList.add('guard-ok');
+        guardBox.innerHTML = '✅ Prisijungta. Galite kurti ir tvarkyti darbo pasiūlymus.';
+      } catch (e) {
+        console.warn('guardAuth klaida:', e);
+        guardBox.innerHTML = '⚠️ Nepavyko patikrinti prisijungimo. Pabandykite atnaujinti puslapį.';
+        formsWrapper.classList.add('disabled-overlay');
+      }
+    }
+
+    // --- Įmonės profilis (localStorage) ---
     function loadProfile() {
       const form = document.getElementById('employerForm');
       const msg = document.getElementById('empMsg');
@@ -222,7 +287,7 @@
       msg.textContent = '🧹 Profilis išvalytas.';
     }
 
-    // --- 4. Naujas pasiūlymas ---
+    // --- Naujas pasiūlymas ---
     async function submitOffer(e) {
       e.preventDefault();
       const form = document.getElementById('offerForm');
@@ -258,7 +323,7 @@
         msg.textContent = '⚠️ Nepavyko išsaugoti lokaliai. Bandoma įrašyti į Supabase...';
       }
 
-      // 2) Supabase, jei klientas yra
+      // 2) Supabase – tik jei klientas yra
       if (!supabaseClient) {
         msg.textContent = '✅ Išsaugota lokaliai. Supabase šiuo metu nepasiekiamas (klientas nesukurtas).';
         form.reset();
@@ -305,19 +370,20 @@
       form.reset();
     }
 
-    // --- 5. Inicializacija ---
+    // --- Inicializacija ---
     document.addEventListener('DOMContentLoaded', () => {
+      guardAuth();
       loadProfile();
       document.getElementById('employerForm').addEventListener('submit', saveProfile);
       document.getElementById('clearEmployer').addEventListener('click', clearProfile);
       document.getElementById('offerForm').addEventListener('submit', submitOffer);
-      console.log('Darbdavys puslapio JS užkrautas');
+      console.log('Darbdavys puslapis paruoštas');
     });
 
     // Service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
-        .then(()=>console.log('SW registered'))
+        .then(()=>console.log('SW registered (darbdavys.html)'))
         .catch(e=>console.log('SW error', e));
     }
   </script>
