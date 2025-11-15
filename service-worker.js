@@ -7,7 +7,7 @@
  * - „Skip waiting“: per postMessage('SKIP_WAITING')
  */
 
-const VERSION = 'v31-2025-11-15'; // ⬅️ PAKEISK kai atnaujini SW
+const VERSION = 'v32-2025-11-15'; // ⬅️ PAKEISK kai atnaujini SW
 const BASE = '/timurita';
 
 const CACHE_STATIC  = `timurita-static-${VERSION}`;
