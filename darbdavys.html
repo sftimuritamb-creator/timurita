@@ -39,7 +39,7 @@
     .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#dbeafe; color:#1e3a8a; font-size:12px; font-weight:700; }
   </style>
 
-  <!-- Supabase UMD biblioteka (nereikia atskiro supabase.js) -->
+  <!-- Supabase biblioteka per CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 </head>
 
@@ -59,7 +59,7 @@
   <main class="container">
     <h1>Darbdavio valdymas</h1>
     <p class="muted">
-      Užpildykite įmonės profilį ir kurkite darbo pasiūlymus. Informacija saugoma jūsų naršyklėje (localStorage).
+      Užpildykite įmonės profilį ir kurkite darbo pasiūlymus. Duomenys saugomi jūsų naršyklėje (localStorage).
       Jei esate <strong>prisijungę</strong> per <span class="badge">/auth.html</span>, pasiūlymai papildomai įrašomi į Supabase.
     </p>
 
@@ -67,7 +67,7 @@
       <!-- Įmonės profilis -->
       <section class="card">
         <h2 style="margin:0;">Įmonės profilis</h2>
-        <p class="hint">Šie duomenys automatiškai naudojami kontaktams pasiūlyme.</p>
+        <p class="hint">Šie duomenys automatiškai naudojami pasiūlymo kontaktams.</p>
 
         <form id="employerForm">
           <label>Įmonės pavadinimas
@@ -144,17 +144,27 @@
   </nav>
 
   <script>
-    // Supabase klientas (naudojam tavo projektą ir anon key)
-    const supabaseUrl = 'https://qnczakppadjxbicgjzcy.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY';
-    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    // --- 1. Supabase klientas (apsaugotas) ---
+    let supabaseClient = null;
+    try {
+      if (window.supabase) {
+        const supabaseUrl = 'https://qnczakppadjxbicgjzcy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY';
+        supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        console.log('Supabase klientas sukurtas');
+      } else {
+        console.warn('Supabase biblioteka neužsikrovė – veiks tik lokalus saugojimas.');
+      }
+    } catch (e) {
+      console.warn('Supabase createClient klaida:', e);
+    }
 
+    // --- 2. LocalStorage key'ai ---
     const EMP_KEY = 'timurita_employer_profile';
     const OFFERS_KEY = 'timurita_offers';
-
     const v = (el) => el.value.trim();
 
-    // Užkraunam profilį iš localStorage
+    // --- 3. Įmonės profilis (localStorage) ---
     function loadProfile() {
       const form = document.getElementById('employerForm');
       const msg = document.getElementById('empMsg');
@@ -212,6 +222,7 @@
       msg.textContent = '🧹 Profilis išvalytas.';
     }
 
+    // --- 4. Naujas pasiūlymas ---
     async function submitOffer(e) {
       e.preventDefault();
       const form = document.getElementById('offerForm');
@@ -224,7 +235,6 @@
         return;
       }
 
-      // paimam darbdavio duomenis iš formos (nebebūtina IndexedDB)
       const offer = {
         title: v(form.title),
         city: v(form.city),
@@ -236,7 +246,7 @@
         email: v(empForm.email)
       };
 
-      // 1) Išsaugom lokaliai (localStorage)
+      // 1) lokaliai
       try {
         const raw = localStorage.getItem(OFFERS_KEY);
         const all = raw ? JSON.parse(raw) : [];
@@ -248,7 +258,13 @@
         msg.textContent = '⚠️ Nepavyko išsaugoti lokaliai. Bandoma įrašyti į Supabase...';
       }
 
-      // 2) Bandom įrašyti į Supabase (jei prisijungęs)
+      // 2) Supabase, jei klientas yra
+      if (!supabaseClient) {
+        msg.textContent = '✅ Išsaugota lokaliai. Supabase šiuo metu nepasiekiamas (klientas nesukurtas).';
+        form.reset();
+        return;
+      }
+
       try {
         const { data: { user }, error: authErr } = await supabaseClient.auth.getUser();
         if (authErr) {
@@ -289,15 +305,16 @@
       form.reset();
     }
 
-    // Init
+    // --- 5. Inicializacija ---
     document.addEventListener('DOMContentLoaded', () => {
       loadProfile();
       document.getElementById('employerForm').addEventListener('submit', saveProfile);
       document.getElementById('clearEmployer').addEventListener('click', clearProfile);
       document.getElementById('offerForm').addEventListener('submit', submitOffer);
+      console.log('Darbdavys puslapio JS užkrautas');
     });
 
-    // Service worker (paliekam kaip buvo)
+    // Service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
         .then(()=>console.log('SW registered'))
