@@ -1,112 +1,203 @@
-// /timurita/service-worker.js
-// App Shell + stale cache + offline fallback
-const VERSION = 'v27-2025-11-12';
-const APP_CACHE = `timurita-app-${VERSION}`;
-const RUNTIME_CACHE = `timurita-runtime-${VERSION}`;
+/* Timurita – Service Worker (pilnas)
+ * Strategijos:
+ * - HTML: network-first su offline fallback
+ * - Statiniai (CSS/JS/ikonos): stale-while-revalidate (cache-first su fone vykstančiu atnaujinimu)
+ * - Paveikslėliai: cache-first (su dydžio limitu)
+ * - Supabase: VISADA per tinklą (be cache)
+ * - „Skip waiting“: per postMessage('SKIP_WAITING')
+ */
 
+const VERSION = 'v31-2025-11-15'; // ⬅️ PAKEISK kai atnaujini SW
+const BASE = '/timurita';
+
+const CACHE_STATIC  = `timurita-static-${VERSION}`;
+const CACHE_RUNTIME = `timurita-runtime-${VERSION}`;
+const CACHE_IMAGES  = `timurita-images-${VERSION}`;
+
+/** App Shell – failai, kuriuos norime turėti offline iškart */
 const APP_SHELL = [
-  '/timurita/',
-  '/timurita/index.html',
-  '/timurita/style.css',
-  '/timurita/manifest.json',
-  '/timurita/Timurita_logo_192x192.png',
-  '/timurita/Timurita_logo_512x512.png',
-  '/timurita/db.js',
-  '/timurita/pasiulymai.html',
-  '/timurita/profilis.html',
-  '/timurita/darbuotojai.html',
-  '/timurita/darbdavys.html',
-  // 🔹 naujas atsarginis puslapis
-  '/timurita/offline.html'
+  `${BASE}/`,
+  `${BASE}/index.html`,
+  `${BASE}/offline.html`,
+  `${BASE}/auth.html`,
+  `${BASE}/darbdavys.html`,
+  `${BASE}/pasiulymai.html`,
+  `${BASE}/darbuotojai.html`,
+  `${BASE}/profilis.html`,
+  `${BASE}/style.css`,
+  `${BASE}/db.js`,
+  `${BASE}/theme.js`,
+  `${BASE}/supabase.js`,
+  `${BASE}/Timurita_logo_192x192.png`,
+  `${BASE}/Timurita_logo_512x512.png`,
+  `${BASE}/manifest.json`,
 ];
 
+/* Naudingos funkcijos */
+const isHTMLRequest = (req) =>
+  req.mode === 'navigate' ||
+  (req.headers.get('accept') || '').includes('text/html');
+
+const isImageRequest = (req) => {
+  const url = new URL(req.url);
+  return /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(url.pathname);
+};
+
+const isStaticAsset = (req) => {
+  const url = new URL(req.url);
+  return /\.(css|js|mjs|json|ico)$/i.test(url.pathname);
+};
+
+const fromCache = (cacheName, request) =>
+  caches.open(cacheName).then((cache) => cache.match(request));
+
+const putCache = (cacheName, request, response) =>
+  caches.open(cacheName).then((cache) => cache.put(request, response.clone()));
+
+async function staleWhileRevalidate(cacheName, request) {
+  const cachePromise = caches.open(cacheName);
+  const cached = await (await cachePromise).match(request);
+  const networkPromise = fetch(request)
+    .then((resp) => {
+      // Saugom tik 200 atsakymus
+      if (resp && resp.status === 200) {
+        cachePromise.then((cache) => cache.put(request, resp.clone()));
+      }
+      return resp;
+    })
+    .catch(() => null);
+
+  // Grąžinam iš cache, o fone atsinaujins
+  return cached || (await networkPromise);
+}
+
+async function cacheFirst(cacheName, request) {
+  const cached = await fromCache(cacheName, request);
+  if (cached) return cached;
+  const resp = await fetch(request);
+  if (resp && resp.status === 200) {
+    await putCache(cacheName, request, resp);
+  }
+  return resp;
+}
+
+async function networkFirstHTML(request) {
+  try {
+    // Navigation Preload atsakymas (jei įjungtas) yra greitesnis
+    const preload = await self.registration.navigationPreload?.getState?.()
+      .then((s) => s?.enabled ? event.preloadResponse : null)
+      .catch(() => null);
+
+    const resp = (preload ? await preload : null) || await fetch(request, { cache: 'no-store' });
+    // Į cache dedam tik sėkmingą atsakymą
+    if (resp && resp.status === 200) {
+      await putCache(CACHE_RUNTIME, request, resp);
+    }
+    return resp;
+  } catch (err) {
+    // Tinklas neveikia: bandome iš cache, tada offline.html
+    const cached = await fromCache(CACHE_RUNTIME, request) || await fromCache(CACHE_STATIC, request);
+    return cached || caches.match(`${BASE}/offline.html`);
+  }
+}
+
+/* Ribojam paveikslėlių cache, kad neaugtų be ribų */
+async function trimImageCache(maxEntries = 60) {
+  const cache = await caches.open(CACHE_IMAGES);
+  const keys = await cache.keys();
+  const surplus = keys.length - maxEntries;
+  if (surplus > 0) {
+    for (let i = 0; i < surplus; i++) {
+      await cache.delete(keys[i]);
+    }
+  }
+}
+
+/* INSTALL – sukaupiam App Shell */
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(APP_CACHE).then((c) => c.addAll(APP_SHELL)));
-  self.skipWaiting();
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE_STATIC);
+      await cache.addAll(APP_SHELL);
+      // aktyvuojam, nelaukiant seno SW
+      self.skipWaiting();
+    })()
+  );
 });
 
+/* ACTIVATE – išvalom senus cache + įjungiam navigation preload */
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter(k => k !== APP_CACHE && k !== RUNTIME_CACHE).map(k => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
-});
+    (async () => {
+      // Navigation Preload (greitesni HTML atsakymai)
+      if ('navigationPreload' in self.registration) {
+        try { await self.registration.navigationPreload.enable(); } catch {}
+      }
 
-function isHtml(req) {
-  return req.mode === 'navigate'
-    || (req.headers.get('accept') || '').includes('text/html');
-}
-
-function isStatic(url) {
-  return /\.(css|js|png|jpg|jpeg|svg|ico|webp|woff2?)$/i.test(url.pathname);
-}
-
-// Stale-while-revalidate helperis statikai
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(RUNTIME_CACHE);
-  const cached = await cache.match(request);
-  const network = fetch(request).then((resp) => {
-    if (resp && resp.status === 200) cache.put(request, resp.clone());
-    return resp;
-  }).catch(() => undefined);
-  return cached || network || new Response('', { status: 504 });
-}
-
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  const url = new URL(req.url);
-
-  // Tik GET ir tik savo kilmei
-  if (req.method !== 'GET' || url.origin !== self.location.origin) return;
-
-  // 1) HTML: network-first → cache → offline.html
-  if (isHtml(req)) {
-    event.respondWith(
-      fetch(req)
-        .then((resp) => {
-          const copy = resp.clone();
-          caches.open(RUNTIME_CACHE).then((c) => c.put(req, copy));
-          return resp;
+      const keys = await caches.keys();
+      await Promise.all(
+        keys.map((key) => {
+          if (![CACHE_STATIC, CACHE_RUNTIME, CACHE_IMAGES].includes(key)) {
+            return caches.delete(key);
+          }
         })
-        .catch(async () => {
-          const cached = await caches.match(req);
-          return cached || caches.match('/timurita/offline.html');
-        })
-    );
-    return;
-  }
-
-  // 2) JSON duomenys (pvz., workers.json): network-first su cache fallback
-  if (url.pathname.startsWith('/timurita/') && url.pathname.endsWith('.json')) {
-    event.respondWith(
-      fetch(req)
-        .then((resp) => {
-          const copy = resp.clone();
-          caches.open(RUNTIME_CACHE).then((c) => c.put(req, copy));
-          return resp;
-        })
-        .catch(() => caches.match(req))
-    );
-    return;
-  }
-
-  // 3) Statiniai failai: stale-while-revalidate
-  if (isStatic(url)) {
-    event.respondWith(staleWhileRevalidate(req));
-    return;
-  }
-
-  // 4) Numatytasis: cache-first, po to network; gilaus offline atveju – offline.html tik navigacijoms
-  event.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req).catch(() => {
-      return isHtml(req) ? caches.match('/timurita/offline.html') : new Response('', { status: 504 });
-    }))
+      );
+      // perimam kontrolę iškart
+      await self.clients.claim();
+    })()
   );
 });
 
-// Leisti atsinaujinti iš UI (update banner)
+/* PRANEŠIMAS iš puslapio – leidžia „Skip Waiting“ iš UI */
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
+});
+
+/* FETCH – maršrutizacija pagal tipą ir domeną */
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // 1) Supabase – VISADA per tinklą (be cache)
+  if (url.hostname.endsWith('.supabase.co')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // 2) HTML (navigacijos) – network-first su offline fallback
+  if (isHTMLRequest(request)) {
+    event.respondWith(networkFirstHTML(request));
+    return;
+  }
+
+  // 3) Paveikslėliai – cache-first su dydžio ribojimu
+  if (isImageRequest(request)) {
+    event.respondWith(
+      (async () => {
+        const resp = await cacheFirst(CACHE_IMAGES, request);
+        trimImageCache().catch(()=>{});
+        return resp;
+      })()
+    );
+    return;
+  }
+
+  // 4) Statiniai assetai (CSS/JS/JSON/ICO) – stale-while-revalidate
+  if (isStaticAsset(request) || url.pathname.startsWith(`${BASE}/`)) {
+    event.respondWith(staleWhileRevalidate(CACHE_STATIC, request));
+    return;
+  }
+
+  // 5) Visi kiti – bandome tinklą, jei failina – cache
+  event.respondWith(
+    (async () => {
+      try {
+        const resp = await fetch(request);
+        return resp;
+      } catch {
+        const cached = await fromCache(CACHE_RUNTIME, request) || await fromCache(CACHE_STATIC, request);
+        return cached || new Response('Offline', { status: 503, statusText: 'Offline' });
+      }
+    })()
+  );
 });
