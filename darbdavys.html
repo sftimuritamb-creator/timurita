@@ -19,6 +19,8 @@
     .app-header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line); }
     .left { display:flex; align-items:center; gap:10px; }
     .app-header img { width:40px; height:40px; border-radius:8px; }
+    .header-actions { display:flex; gap:8px; align-items:center; }
+    .logout-btn { padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#fee2e2; color:#b91c1c; font-size:12px; font-weight:600; cursor:pointer; }
     .container { max-width:980px; margin:0 auto; padding:16px; }
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
@@ -47,9 +49,7 @@
       border:1px solid #fecaca;
       color:#b91c1c;
       border-radius:12px;
-      padding:10px 12px;
-      font-size:13px;
-      margin-bottom:12px;
+      padding:10px 12px; font-size:13px; margin-bottom:12px;
     }
     .guard-ok {
       background:#ecfdf5;
@@ -62,7 +62,6 @@
       pointer-events:none;
     }
 
-    /* Mano pasiūlymų sąrašas */
     #myOffersSection h2 { margin-top:0; }
     .my-offers-header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
     .my-offers-status { font-size:12px; color:var(--muted); }
@@ -74,7 +73,6 @@
     .my-offer-date { font-size:11px; color:var(--muted); }
     .empty { font-size:13px; color:var(--muted); font-style:italic; margin-top:6px; }
 
-    /* Kandidatai */
     #candidatesSection h2 { margin-top:0; }
     .cand-status { font-size:12px; color:var(--muted); }
     .cand-list { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
@@ -84,7 +82,6 @@
     .cand-id { font-family:monospace; font-size:11px; color:#0f172a; }
   </style>
 
-  <!-- Supabase UMD biblioteka -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 </head>
 
@@ -99,6 +96,9 @@
         </div>
       </a>
     </div>
+    <div class="header-actions">
+      <button class="logout-btn" type="button" id="logoutBtn">Atsijungti</button>
+    </div>
   </header>
 
   <main class="container">
@@ -112,7 +112,6 @@
     </p>
 
     <div id="formsWrapper" class="grid">
-      <!-- Įmonės profilis -->
       <section class="card">
         <h2 style="margin:0;">Įmonės profilis</h2>
         <p class="hint">Šie duomenys automatiškai naudojami kontaktams pasiūlyme. Saugojama šiame įrenginyje (localStorage).</p>
@@ -152,7 +151,6 @@
         </form>
       </section>
 
-      <!-- Naujas pasiūlymas -->
       <section class="card">
         <h2 style="margin:0;">Naujas darbo pasiūlymas</h2>
         <p class="hint">Žvaigždute pažymėti laukai privalomi. Sukurtas pasiūlymas atsiras „Jūsų paskelbti pasiūlymai“ ir „Pasiūlymai“ puslapyje.</p>
@@ -183,7 +181,6 @@
       </section>
     </div>
 
-    <!-- Mano paskelbti pasiūlymai -->
     <section class="card" id="myOffersSection">
       <div class="my-offers-header">
         <h2>Jūsų paskelbti pasiūlymai</h2>
@@ -197,7 +194,6 @@
       <div class="empty" id="myOffersEmpty" style="display:none;">Dar nesate paskelbę jokių pasiūlymų.</div>
     </section>
 
-    <!-- Kandidatai į mano pasiūlymus -->
     <section class="card" id="candidatesSection">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
         <h2>Kandidatai į mano pasiūlymus</h2>
@@ -220,7 +216,6 @@
   </nav>
 
   <script>
-    // Supabase klientas
     let supabaseClient = null;
     let currentUser = null;
 
@@ -229,7 +224,6 @@
         const supabaseUrl = 'https://qnczakppadjxbicgjzcy.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY';
         supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('Supabase klientas (darbdavys.html) sukurtas');
       } else {
         console.warn('Supabase biblioteka neužsikrovė');
       }
@@ -250,8 +244,8 @@
     const candList = document.getElementById('candList');
     const candEmpty = document.getElementById('candEmpty');
     const offerMsg = document.getElementById('offerMsg');
+    const logoutBtn = document.getElementById('logoutBtn');
 
-    // --- Apsauga: tik prisijungęs DARBDAVYS ---
     async function guardAuth() {
       if (!supabaseClient) {
         guardBox.innerHTML = '⚠️ Supabase klientas nepasileido. Pasiūlymai bus saugomi tik šiame įrenginyje, kandidatai neveiks.';
@@ -277,9 +271,7 @@
           formsWrapper.classList.add('disabled-overlay');
           myOffersStatus.textContent = 'Prisijungimas nenustatytas.';
           candStatus.textContent = 'Prisijungimas nenustatytas.';
-          setTimeout(() => {
-            window.location.href = '/timurita/auth.html';
-          }, 1500);
+          setTimeout(() => { window.location.href = '/timurita/auth.html'; }, 1500);
           return;
         }
 
@@ -289,9 +281,7 @@
           formsWrapper.classList.add('disabled-overlay');
           myOffersStatus.textContent = 'Netinkama rolė.';
           candStatus.textContent = 'Netinkama rolė.';
-          setTimeout(() => {
-            window.location.href = '/timurita/darbuotojai.html';
-          }, 1500);
+          setTimeout(() => { window.location.href = '/timurita/darbuotojai.html'; }, 1500);
           return;
         }
 
@@ -299,6 +289,7 @@
         guardBox.classList.add('guard-ok');
         guardBox.innerHTML = '✅ Prisijungta kaip darbdavys: <strong>' + (user.email || '') + '</strong>.';
 
+        loadProfile();
         loadMyOffers();
         loadMyCandidates();
       } catch (e) {
@@ -310,7 +301,6 @@
       }
     }
 
-    // --- Įmonės profilis (localStorage) ---
     function loadProfile() {
       const form = document.getElementById('employerForm');
       const msg = document.getElementById('empMsg');
@@ -368,7 +358,6 @@
       msg.textContent = '🧹 Profilis išvalytas.';
     }
 
-    // --- Naujas pasiūlymas ---
     async function submitOffer(e) {
       e.preventDefault();
       const form = document.getElementById('offerForm');
@@ -391,7 +380,6 @@
         email: v(empForm.email)
       };
 
-      // 1) Lokaliai
       try {
         const raw = localStorage.getItem(OFFERS_KEY);
         const all = raw ? JSON.parse(raw) : [];
@@ -403,24 +391,13 @@
         offerMsg.textContent = '⚠️ Nepavyko išsaugoti lokaliai. Bandoma įrašyti į Supabase...';
       }
 
-      // 2) Supabase
-      if (!supabaseClient) {
-        offerMsg.textContent = '✅ Išsaugota lokaliai. Supabase šiuo metu nepasiekiamas.';
+      if (!supabaseClient || !currentUser) {
+        offerMsg.textContent = '✅ Išsaugota lokaliai. Supabase šiuo metu nepasiekiamas arba neprisijungta.';
         form.reset();
         return;
       }
 
       try {
-        if (!currentUser) {
-          const { data: { user } } = await supabaseClient.auth.getUser();
-          currentUser = user || null;
-        }
-        if (!currentUser) {
-          offerMsg.textContent = '✅ Išsaugota lokaliai. Prisijunkite iš naujo, kad būtų išsaugota serveryje.';
-          form.reset();
-          return;
-        }
-
         const { error } = await supabaseClient.from('offers').insert({
           owner_id: currentUser.id,
           title: offer.title,
@@ -458,7 +435,6 @@
       }
     }
 
-    // --- „Mano pasiūlymai“ iš Supabase ---
     async function loadMyOffers() {
       myOffersList.innerHTML = '';
       myOffersEmpty.style.display = 'none';
@@ -521,9 +497,7 @@
           deleteBtn.type = 'button';
           deleteBtn.className = 'btn small danger';
           deleteBtn.textContent = '🗑 Ištrinti';
-          deleteBtn.addEventListener('click', () => {
-            deleteOffer(o.id);
-          });
+          deleteBtn.addEventListener('click', () => { deleteOffer(o.id); });
 
           btnRow.appendChild(deleteBtn);
           actionsRow.appendChild(dateEl);
@@ -562,7 +536,7 @@
         } else {
           myOffersStatus.textContent = 'Pasiūlymas ištrintas.';
           loadMyOffers();
-          loadMyCandidates(); // atnaujinam kandidatų sąrašą
+          loadMyCandidates();
         }
       } catch (e) {
         console.warn('deleteOffer klaida:', e);
@@ -571,7 +545,6 @@
       }
     }
 
-    // --- Kandidatai į mano pasiūlymus ---
     async function loadMyCandidates() {
       candList.innerHTML = '';
       candEmpty.style.display = 'none';
@@ -658,19 +631,30 @@
       }
     }
 
-    // --- Inicializacija ---
+    // ATSIJUNGIMAS
+    logoutBtn.addEventListener('click', async () => {
+      if (!supabaseClient) {
+        window.location.href = '/timurita/auth.html';
+        return;
+      }
+      try {
+        await supabaseClient.auth.signOut();
+      } catch (e) {
+        console.warn('signOut klaida:', e);
+      }
+      try {
+        localStorage.removeItem('timurita_role');
+      } catch {}
+      window.location.href = '/timurita/auth.html';
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
       guardAuth();
-      loadProfile();
-
       document.getElementById('employerForm').addEventListener('submit', saveProfile);
       document.getElementById('clearEmployer').addEventListener('click', clearProfile);
       document.getElementById('offerForm').addEventListener('submit', submitOffer);
-
-      console.log('Darbdavys puslapis su rolės apsauga ir kandidatais paruoštas');
     });
 
-    // Service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
         .then(()=>console.log('SW registered (darbdavys.html)'))
