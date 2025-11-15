@@ -7,7 +7,7 @@
  *   - Supabase – visada per tinklą (be cache)
  */
 
-const VERSION = 'v35-2025-11-15';
+const VERSION = 'v36-2025-11-15';
 const BASE = '/timurita';
 
 const CACHE_STATIC = `timurita-static-${VERSION}`;
