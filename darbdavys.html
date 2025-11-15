@@ -80,7 +80,7 @@
     .cand-list { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
     .cand-card { border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--card); }
     .cand-title { font-size:14px; font-weight:700; margin:0; }
-    .cand-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+    .cand-meta { font-size:12px; color:var(--muted); margin-top:4px; }
     .cand-id { font-family:monospace; font-size:11px; color:#0f172a; }
   </style>
 
@@ -201,10 +201,10 @@
     <section class="card" id="candidatesSection">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
         <h2>Kandidatai į mano pasiūlymus</h2>
-        <span class="badge">Demo kandidatūros</span>
+        <span class="badge">Kandidatų sąrašas</span>
       </div>
       <p class="hint">
-        Čia rodomi visi kandidatai, kurie paspaudė „Kandidatuoti“ į jūsų pasiūlymus. Šiuo metu matomas tik kandidato ID (Supabase vartotojo ID).
+        Čia rodomi visi kandidatai, kurie paspaudė „Kandidatuoti“ į jūsų pasiūlymus. Rodomi kandidato kontaktiniai duomenys (iš jo profilio).
       </p>
       <div class="cand-status" id="candStatus">Kraunami kandidatai...</div>
       <div class="cand-list" id="candList"></div>
@@ -220,9 +220,8 @@
   </nav>
 
   <script>
-    // --- Supabase klientas (tas pats projektas) ---
     let supabaseClient = null;
-    let currentUser = null; // prisijungęs vartotojas (darbdavys)
+    let currentUser = null;
 
     try {
       if (window.supabase) {
@@ -251,7 +250,6 @@
     const candEmpty = document.getElementById('candEmpty');
     const offerMsg = document.getElementById('offerMsg');
 
-    // --- Apsauga: tik prisijungus ---
     async function guardAuth() {
       if (!supabaseClient) {
         guardBox.innerHTML = '⚠️ Supabase klientas nepasileido. Pasiūlymai bus saugomi tik šiame įrenginyje, kandidatai neveiks.';
@@ -286,7 +284,6 @@
         guardBox.classList.add('guard-ok');
         guardBox.innerHTML = '✅ Prisijungta. Šiuo metu prisijungęs darbdavys: <strong>' + (user.email || '') + '</strong>.';
 
-        // kai jau žinom user, užkraunam jo pasiūlymus ir kandidatus
         loadMyOffers();
         loadMyCandidates();
       } catch (e) {
@@ -298,7 +295,6 @@
       }
     }
 
-    // --- Įmonės profilis (localStorage) ---
     function loadProfile() {
       const form = document.getElementById('employerForm');
       const msg = document.getElementById('empMsg');
@@ -356,7 +352,6 @@
       msg.textContent = '🧹 Profilis išvalytas.';
     }
 
-    // --- Naujas pasiūlymas ---
     async function submitOffer(e) {
       e.preventDefault();
       const form = document.getElementById('offerForm');
@@ -379,7 +374,6 @@
         email: v(empForm.email)
       };
 
-      // 1) Lokaliai
       try {
         const raw = localStorage.getItem(OFFERS_KEY);
         const all = raw ? JSON.parse(raw) : [];
@@ -391,7 +385,6 @@
         offerMsg.textContent = '⚠️ Nepavyko išsaugoti lokaliai. Bandoma įrašyti į Supabase...';
       }
 
-      // 2) Supabase
       if (!supabaseClient) {
         offerMsg.textContent = '✅ Išsaugota lokaliai. Supabase šiuo metu nepasiekiamas.';
         form.reset();
@@ -446,7 +439,6 @@
       }
     }
 
-    // --- „Mano pasiūlymai“ iš Supabase ---
     async function loadMyOffers() {
       myOffersList.innerHTML = '';
       myOffersEmpty.style.display = 'none';
@@ -550,7 +542,7 @@
         } else {
           myOffersStatus.textContent = 'Pasiūlymas ištrintas.';
           loadMyOffers();
-          loadMyCandidates(); // perkraunam ir kandidatus, jei buvo į šį pasiūlymą
+          loadMyCandidates();
         }
       } catch (e) {
         console.warn('deleteOffer klaida:', e);
@@ -559,15 +551,10 @@
       }
     }
 
-    // --- Kandidatai į mano pasiūlymus ---
-    function shortId(uid) {
-      if (!uid) return '';
-      return uid.slice(0, 8) + '…';
-    }
-
     async function loadMyCandidates() {
       candList.innerHTML = '';
-      candEmpty.style.display = 'false';
+      candEmpty.style.display = 'none';
+
       if (!supabaseClient || !currentUser) {
         candStatus.textContent = 'Supabase ar prisijungimas nepasiekiamas.';
         candEmpty.style.display = 'block';
@@ -579,7 +566,7 @@
       try {
         const { data, error } = await supabaseClient
           .from('applications')
-          .select('id, offer_id, worker_id, created_at, offers!inner(id, title, owner_id)')
+          .select('id, offer_id, worker_id, worker_name, worker_city, worker_phone, worker_email, worker_note, created_at, offers!inner(id, title, owner_id)')
           .eq('offers.owner_id', currentUser.id)
           .order('created_at', { ascending: false });
 
@@ -609,8 +596,36 @@
 
           const metaEl = document.createElement('p');
           metaEl.className = 'cand-meta';
-          metaEl.innerHTML = 'Kandidatas: <span class="cand-id">' + shortId(app.worker_id) + '</span><br>Sukurta: ' + formatDate(app.created_at);
+
+          const name  = app.worker_name  || '(vardas nenurodytas)';
+          const city  = app.worker_city  || '';
+          const phone = app.worker_phone || '';
+          const email = app.worker_email || '';
+          const note  = app.worker_note  || '';
+
+          let html = '';
+          html += '<strong>Kandidatas:</strong> ' + name;
+          if (city)  html += ' • ' + city;
+          if (phone) html += '<br><strong>Tel.:</strong> ' + phone;
+          if (email) html += '<br><strong>El. paštas:</strong> ' + email;
+          html += '<br><strong>Kandidatavo:</strong> ' + formatDate(app.created_at);
+          if (note) {
+            html += '<br><strong>Apie kandidatą:</strong> ' + note;
+          }
+
+          metaEl.innerHTML = html;
           card.appendChild(metaEl);
+
+          if (email) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn small secondary';
+            btn.textContent = '✉ Rašyti el. laišką';
+            btn.addEventListener('click', () => {
+              window.location.href = 'mailto:' + email + '?subject=' + encodeURIComponent('Dėl darbo pasiūlymo: ' + offerTitle);
+            });
+            card.appendChild(btn);
+          }
 
           candList.appendChild(card);
         });
@@ -621,7 +636,6 @@
       }
     }
 
-    // --- Inicializacija ---
     document.addEventListener('DOMContentLoaded', () => {
       guardAuth();
       loadProfile();
@@ -633,7 +647,6 @@
       console.log('Darbdavys puslapis su kandidatais paruoštas');
     });
 
-    // Service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
         .then(()=>console.log('SW registered (darbdavys.html)'))
