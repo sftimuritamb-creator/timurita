@@ -143,7 +143,7 @@
   </nav>
 
   <script type="module">
-    import { setSetting, getSetting, saveOffer } from '/timurita/db.js';
+    import { setSetting, getSetting, saveOffer, put } from '/timurita/db.js';
     import { initTheme } from '/timurita/theme.js';
     import { supabase } from '/timurita/supabase.js';
 
@@ -159,6 +159,52 @@
     const EMP_KEY = 'employer_profile';
     const uuid = () => (crypto?.randomUUID?.() || 'id-' + Math.random().toString(36).slice(2,10));
     const v = (el) => el?.value?.trim() || '';
+
+    // ---- Tvirtas lokalaus įrašo helperis (naudoja saveOffer arba put) ----
+    async function saveOfferLocal(offer) {
+      try {
+        if (typeof saveOffer === 'function') {
+          console.log('[Local] saveOffer()');
+          return await saveOffer(offer);
+        }
+      } catch (e) {
+        console.warn('saveOffer() klaida, bandau put("offers"):', e);
+      }
+      if (typeof put === 'function') {
+        console.log('[Local] put("offers") fallback');
+        return await put('offers', offer);
+      }
+      throw new Error('Nėra saveOffer/put funkcijų db.js faile');
+    }
+
+    // ---- Supabase įrašas su timeout (kad neužstrigtų UI) ----
+    async function insertToSupabase(offer, timeoutMs = 8000) {
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr) throw new Error('auth.getUser: ' + userErr.message);
+      if (!user) return { skipped: true };
+
+      const toInsert = {
+        owner_id: user.id,
+        title: offer.title,
+        city: offer.city,
+        company: offer.company,
+        description: offer.desc,   // svarbu: serverio stulpelis "description"
+        salary: offer.salary,
+        contact: offer.contact,
+        phone: offer.phone,
+        email: offer.email
+      };
+
+      const op = supabase.from('offers').insert(toInsert);
+      const race = Promise.race([
+        op,
+        new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout (Supabase insert)')), timeoutMs))
+      ]);
+
+      const { error } = await race;
+      if (error) throw new Error(error.message || String(error));
+      return { ok: true };
+    }
 
     // === Įmonės profilis (lokalus)
     (async () => {
@@ -202,7 +248,7 @@
     // === Naujas pasiūlymas
     offerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      offerMsg.textContent = '⏳ Išsaugoma...';
+      offerMsg.textContent = '⏳ Išsaugoma (lokaliai)...';
 
       if (!v(offerForm.title)) { offerMsg.textContent = '✋ Įrašykite pasiūlymo pavadinimą.'; offerForm.title.focus(); return; }
 
@@ -221,42 +267,31 @@
 
       try {
         // 1) visada – lokaliai
-        await saveOffer(localOffer);
+        await saveOfferLocal(localOffer);
+        offerMsg.textContent = '✅ Išsaugota lokaliai. Bandau įrašyti į Supabase...';
 
-        // 2) jei prisijungęs – bandome į Supabase
-        const { data: { user }, error: userErr } = await supabase.auth.getUser();
-        if (userErr) console.warn('auth.getUser error:', userErr);
-        if (user) {
-          const { error } = await supabase.from('offers').insert({
-            owner_id: user.id,
-            title: localOffer.title,
-            city: localOffer.city,
-            company: localOffer.company,
-            description: localOffer.desc, // svarbu: "description", ne "desc"
-            salary: localOffer.salary,
-            contact: localOffer.contact,
-            phone: localOffer.phone,
-            email: localOffer.email
-          });
-          if (error) {
-            console.warn('Supabase insert error:', error);
-            offerMsg.textContent = '⚠️ Lokaliai išsaugota. Į Supabase nepavyko: ' + (error.message || error);
-          } else {
+        // 2) bandome į Supabase
+        try {
+          const res = await insertToSupabase(localOffer);
+          if (res?.ok) {
             offerMsg.textContent = '✅ Pasiūlymas išsaugotas (lokaliai ir Supabase).';
+          } else {
+            offerMsg.textContent = '✅ Išsaugota lokaliai. (Neprisijungęs prie Supabase – prisijunkite per /auth.html)';
           }
-        } else {
-          offerMsg.textContent = '✅ Pasiūlymas išsaugotas (lokaliai). Norint talpinti į Supabase – prisijunkite per /auth.html';
+        } catch (netErr) {
+          console.warn('Supabase insert:', netErr);
+          offerMsg.textContent = '✅ Išsaugota lokaliai. ⚠️ Į Supabase nepavyko: ' + netErr.message;
         }
 
         offerForm.reset();
       } catch (err) {
-        console.error('Save offer fatal:', err);
+        console.error('Save offer:', err);
         offerMsg.textContent = '⚠️ Nepavyko išsaugoti pasiūlymo: ' + (err?.message || err);
       }
     });
 
     // Pavyzdys
-    document.getElementById('seedOne').addEventListener('click', async () => {
+    seedOne.addEventListener('click', async () => {
       const emp = (await getSetting(EMP_KEY)) || {};
       const demo = {
         id: uuid(),
@@ -270,22 +305,8 @@
         email: emp.email || 'info@imone.lt'
       };
       try {
-        await saveOffer(demo);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { error } = await supabase.from('offers').insert({
-            owner_id: user.id,
-            title: demo.title,
-            city: demo.city,
-            company: demo.company,
-            description: demo.desc,
-            salary: demo.salary,
-            contact: demo.contact,
-            phone: demo.phone,
-            email: demo.email
-          });
-          if (error) console.warn('Seed insert error:', error);
-        }
+        await saveOfferLocal(demo);
+        try { await insertToSupabase(demo); } catch (e) { console.warn('seed supabase:', e.message); }
         offerMsg.textContent = '✅ Pavyzdinis pasiūlymas įkeltas.';
       } catch (e) {
         offerMsg.textContent = '⚠️ Nepavyko įkelti pavyzdžio.';
