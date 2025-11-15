@@ -11,29 +11,18 @@
   <link rel="stylesheet" href="/timurita/style.css">
 
   <style>
-    :root{ --bg:#0f172a; --card:#020617; --fg:#e5e7eb; --muted:#94a3b8; --accent:#22c55e; --line:#1e293b;}
+    :root{ --bg:#0f172a; --card:#020617; --fg:#e5e7eb; --muted:#94a3b8;}
     body { margin:0; font-family:system-ui,-apple-system,segoe ui,roboto,sans-serif; background:radial-gradient(circle at top,#1e293b,#020617); color:var(--fg); min-height:100vh; display:flex; flex-direction:column; }
     .app-header { display:flex; align-items:center; justify-content:center; padding:16px; }
     .app-header a { display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
     .app-header img { width:40px; height:40px; border-radius:12px; }
     .app-header h1 { margin:0; font-size:20px; }
     .app-header .subtitle { font-size:12px; color:var(--muted); }
-
     .main-wrap { flex:1; display:flex; justify-content:center; align-items:center; padding:16px; }
-    .card { background:rgba(15,23,42,0.96); border-radius:18px; border:1px solid rgba(148,163,184,0.3); max-width:480px; width:100%; padding:20px 18px 18px; box-shadow:0 20px 40px rgba(15,23,42,0.8); }
+    .card { background:rgba(15,23,42,0.96); border-radius:18px; border:1px solid rgba(148,163,184,0.3); max-width:420px; width:100%; padding:20px 18px 18px; box-shadow:0 20px 40px rgba(15,23,42,0.8); text-align:center; }
     .card h2 { margin:0 0 6px; }
     .card p { margin:0; font-size:13px; color:var(--muted); }
-
-    .actions { margin-top:16px; display:flex; flex-direction:column; gap:8px; }
-    .btn { padding:10px 12px; border-radius:12px; border:1px solid var(--line); cursor:pointer; font-weight:600; font-size:14px; display:flex; align-items:center; justify-content:center; gap:8px; background:#020617; color:var(--fg); }
-    .btn.primary { background:var(--accent); border-color:var(--accent); color:#022c22; }
-    .btn.secondary { background:transparent; }
-    .small { font-size:12px; color:var(--muted); margin-top:8px; }
-    .pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid rgba(148,163,184,0.4); }
-    .status { font-size:12px; color:var(--muted); margin-top:6px; min-height:14px; }
   </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 </head>
 <body>
   <header class="app-header">
@@ -48,112 +37,16 @@
 
   <main class="main-wrap">
     <section class="card">
-      <h2>Paleidžiama Timurita</h2>
-      <p>Trumpalaikio darbo platforma statybų sektoriuje. Tikrinamas prisijungimas...</p>
-
-      <div class="actions" id="actions" style="display:none;">
-        <button class="btn primary" type="button" id="goMain">Atidaryti mano skydelį</button>
-        <button class="btn secondary" type="button" id="goAuth">Prisijungti / Registruotis</button>
-      </div>
-      <div class="small">
-        <span class="pill">PWA • Veikia telefone ir kompiuteryje</span>
-      </div>
-      <div id="status" class="status"></div>
+      <h2>Kraunama...</h2>
+      <p>Jus netrukus nukreipsime į prisijungimo langą.</p>
     </section>
   </main>
 
   <script>
-    let supabaseClient = null;
-    try {
-      if (window.supabase) {
-        const supabaseUrl = 'https://qnczakppadjxbicgjzcy.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY';
-        supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-      } else {
-        console.warn('Supabase biblioteka neužsikrovė');
-      }
-    } catch (e) {
-      console.warn('Supabase createClient klaida index.html:', e);
-    }
-
-    const statusEl = document.getElementById('status');
-    const actionsEl = document.getElementById('actions');
-    const goMainBtn = document.getElementById('goMain');
-    const goAuthBtn = document.getElementById('goAuth');
-
-    function saveRoleLocally(role) {
-      try { localStorage.setItem('timurita_role', role); } catch {}
-    }
-
-    function redirectByRole(role) {
-      if (role === 'employer') {
-        window.location.href = '/timurita/darbdavys.html';
-      } else {
-        window.location.href = '/timurita/darbuotojai.html';
-      }
-    }
-
-    async function checkAuth() {
-      if (!supabaseClient) {
-        statusEl.textContent = 'Supabase klientas nepasiekiamas. Atidarykite prisijungimo langą.';
-        actionsEl.style.display = 'flex';
-        return;
-      }
-
-      statusEl.textContent = 'Tikrinamas prisijungimas...';
-
-      try {
-        const { data: { user }, error } = await supabaseClient.auth.getUser();
-        if (error) {
-          console.warn('getUser klaida', error);
-          statusEl.textContent = 'Nepavyko tikrinti prisijungimo. Galite prisijungti iš naujo.';
-          actionsEl.style.display = 'flex';
-          return;
-        }
-
-        if (!user) {
-          statusEl.textContent = 'Neprisijungta. Prašome prisijungti arba užsiregistruoti.';
-          actionsEl.style.display = 'flex';
-          return;
-        }
-
-        const role = user.user_metadata?.role || 'worker';
-        saveRoleLocally(role);
-        statusEl.textContent = 'Prisijungta kaip ' + (role === 'employer' ? 'darbdavys' : 'darbuotojas') + '. Nukreipiama...';
-
-        setTimeout(() => {
-          redirectByRole(role);
-        }, 700);
-      } catch (e) {
-        console.warn('checkAuth klaida', e);
-        statusEl.textContent = 'Klaida tikrinant prisijungimą: ' + e.message;
-        actionsEl.style.display = 'flex';
-      }
-    }
-
-    goAuthBtn.addEventListener('click', () => {
+    // Tiesiog nukreipiam į prisijungimo/registracijos puslapį.
+    document.addEventListener('DOMContentLoaded', () => {
       window.location.href = '/timurita/auth.html';
     });
-
-    goMainBtn.addEventListener('click', async () => {
-      if (!supabaseClient) {
-        window.location.href = '/timurita/auth.html';
-        return;
-      }
-      try {
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (!user) {
-          window.location.href = '/timurita/auth.html';
-          return;
-        }
-        const role = user.user_metadata?.role || 'worker';
-        redirectByRole(role);
-      } catch {
-        window.location.href = '/timurita/auth.html';
-      }
-    });
-
-    document.addEventListener('DOMContentLoaded', checkAuth);
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
