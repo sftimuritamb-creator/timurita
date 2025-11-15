@@ -147,7 +147,7 @@
     <section>
       <div class="section-title">
         <h2 style="margin:20px 0 4px;">Vieši pasiūlymai (Supabase)</h2>
-      <span class="badge badge-remote">Galima kandidatuoti</span>
+        <span class="badge badge-remote">Galima kandidatuoti</span>
       </div>
       <div id="remoteOffers" class="offers-list"></div>
       <div id="remoteEmpty" class="empty" style="display:none;">Kol kas nėra pasiūlymų iš Supabase, arba nepavyko prisijungti.</div>
@@ -197,6 +197,27 @@
 
     function escapeText(text) {
       return (text || '').toString();
+    }
+
+    // Pabandome paimti darbuotojo profilį iš localStorage
+    function loadWorkerProfileFromLocal() {
+      const possibleKeys = [
+        'timurita_worker_profile',
+        'timurita_profile',
+        'worker_profile'
+      ];
+      for (const key of possibleKeys) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const data = JSON.parse(raw);
+            if (data && typeof data === 'object') return data;
+          }
+        } catch(e) {
+          console.warn('Nepavyko perskaityti profilio iš localStorage („' + key + '“):', e);
+        }
+      }
+      return null;
     }
 
     function renderOfferCard(offer, source) {
@@ -449,12 +470,25 @@
           return;
         }
 
+        // Pabandom paimti profilį iš localStorage
+        const profile = loadWorkerProfileFromLocal();
+        const workerName  = profile?.fullName || profile?.name || '';
+        const workerCity  = profile?.city  || '';
+        const workerPhone = profile?.phone || '';
+        const workerEmail = profile?.email || user.email || '';
+        const workerNote  = profile?.about || profile?.description || '';
+
         const { error: insertError } = await supabaseClient
           .from('applications')
           .insert({
             offer_id: offer.id,
             worker_id: user.id,
-            note: null
+            note: null,
+            worker_name:  workerName  || null,
+            worker_city:  workerCity  || null,
+            worker_phone: workerPhone || null,
+            worker_email: workerEmail || null,
+            worker_note:  workerNote  || null
           });
 
         if (insertError) {
@@ -467,7 +501,7 @@
           return;
         }
 
-        alert('✅ Jūsų kandidatas užregistruotas. Darbdavys matys jus savo sistemoje.');
+        alert('✅ Jūsų kandidatas užregistruotas. Darbdavys matys jūsų kontaktinius duomenis.');
       } catch (e) {
         console.warn('handleApply klaida:', e);
         alert('Klaida kandidatuojant: ' + e.message);
