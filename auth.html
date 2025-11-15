@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/timurita/style.css">
 
   <style>
-    :root{ --bg:#0f172a; --card:#020617; --fg:#e5e7eb; --muted:#94a3b8; --accent:#0ea5e9; --line:#1e293b; --danger:#f97373;}
+    :root{ --bg:#0f172a; --card:#020617; --fg:#e5e7eb; --muted:#94a3b8; --accent:#0ea5e9; --line:#1e293b;}
     body { margin:0; font-family:system-ui,-apple-system,segoe ui,roboto,sans-serif; background:radial-gradient(circle at top,#1e293b,#020617); color:var(--fg); min-height:100vh; display:flex; flex-direction:column; }
     .app-header { display:flex; align-items:center; justify-content:center; padding:16px; }
     .app-header a { display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
@@ -54,6 +54,11 @@
 
     .foot { margin-top:10px; font-size:11px; color:#64748b; text-align:center; }
     .foot a { color:#38bdf8; text-decoration:none; }
+
+    /* Reset slaptažodžio forma */
+    #resetForm { margin-top:4px; }
+    #resetFormTitle { font-size:15px; font-weight:600; margin-bottom:4px; }
+    #resetHint { font-size:12px; color:var(--muted); margin-bottom:10px; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
@@ -71,7 +76,7 @@
 
   <main class="auth-wrapper">
     <section class="card">
-      <div class="tabs">
+      <div class="tabs" id="tabsBar">
         <button class="tab-btn active" id="tabLogin" type="button">Prisijungti</button>
         <button class="tab-btn" id="tabRegister" type="button">Registruotis</button>
       </div>
@@ -119,6 +124,23 @@
         </p>
       </form>
 
+      <!-- Naujo slaptažodžio forma (atsidarius iš el. pašto nuorodos) -->
+      <div id="resetBox" style="display:none;">
+        <div id="resetFormTitle">Nustatyti naują slaptažodį</div>
+        <div id="resetHint">Įveskite naują slaptažodį savo paskyrai. Ši forma atidaryta iš slaptažodžio atstatymo nuorodos el. pašte.</div>
+
+        <form id="resetForm">
+          <label>Naujas slaptažodis
+            <input type="password" name="password1" placeholder="Naujas slaptažodis" required minlength="6">
+          </label>
+          <label>Pakartokite naują slaptažodį
+            <input type="password" name="password2" placeholder="Pakartokite slaptažodį" required minlength="6">
+          </label>
+          <button class="btn primary" type="submit">Išsaugoti naują slaptažodį</button>
+          <div id="resetMsg" class="msg"></div>
+        </form>
+      </div>
+
       <p class="foot">
         Prisijungęs vartotojas bus nukreiptas pagal rolę:<br>
         <strong>Darbdavys → Darbdavio skydelis</strong>, <strong>Darbuotojas → Darbuotojo puslapis</strong>.
@@ -149,11 +171,17 @@
     const loginMsg = document.getElementById('loginMsg');
     const registerMsg = document.getElementById('registerMsg');
     const forgotBtn = document.getElementById('forgotBtn');
+    const tabsBar = document.getElementById('tabsBar');
+
+    const resetBox = document.getElementById('resetBox');
+    const resetForm = document.getElementById('resetForm');
+    const resetMsg = document.getElementById('resetMsg');
 
     const roleWorkerBox = document.getElementById('roleWorkerBox');
     const roleEmployerBox = document.getElementById('roleEmployerBox');
 
     function setTab(which) {
+      if (!which) return; // naudojam, kai recovery režimas – tab'ų nerodom
       if (which === 'login') {
         tabLogin.classList.add('active');
         tabRegister.classList.remove('active');
@@ -244,7 +272,7 @@
       }
     });
 
-    // „Pamiršau slaptažodį“
+    // „Pamiršau slaptažodį“ – išsiunčiam laišką
     forgotBtn.addEventListener('click', async () => {
       loginMsg.className = 'msg';
       loginMsg.textContent = '';
@@ -307,9 +335,7 @@
         const { data, error } = await supabaseClient.auth.signUp({
           email,
           password,
-          options: {
-            data: { role }
-          }
+          options: { data: { role } }
         });
 
         if (error) {
@@ -330,8 +356,122 @@
       }
     });
 
-    // Jei jau prisijungęs – nukreipiam pagal rolę
+    // REŽIMAS: slaptažodžio atstatymas (iš el. pašto nuorodos)
+    async function handleRecoveryMode() {
+      console.log('Recovery režimas: atidaryta per reset nuorodą');
+
+      // paslepiam tabs ir login/registracija, rodome tik reset formą
+      if (tabsBar) tabsBar.style.display = 'none';
+      loginForm.style.display = 'none';
+      registerForm.style.display = 'none';
+      resetBox.style.display = '';
+
+      resetMsg.className = 'msg';
+      resetMsg.textContent = 'Tikrinama nuoroda...';
+
+      if (!supabaseClient) {
+        resetMsg.classList.add('err');
+        resetMsg.textContent = 'Supabase klientas nepasiekiamas. Pabandykite atidaryti nuorodą dar kartą.';
+        return;
+      }
+
+      // Supabase turėtų automatiškai sukurti sesiją iš URL fragmento (#access_token=...)
+      try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        if (error || !user) {
+          console.warn('getUser recovery režime klaida', error);
+          resetMsg.classList.add('err');
+          resetMsg.textContent = 'Nuoroda negaliojanti arba jau panaudota. Paprašykite naujo slaptažodžio atstatymo laiško.';
+          return;
+        }
+
+        resetMsg.className = 'msg ok';
+        resetMsg.textContent = '✅ Nuoroda patvirtinta. Įveskite naują slaptažodį.';
+      } catch (e) {
+        console.warn('handleRecoveryMode klaida', e);
+        resetMsg.classList.add('err');
+        resetMsg.textContent = 'Klaida tikrinant nuorodą: ' + e.message;
+      }
+    }
+
+    // Naujo slaptažodžio išsaugojimas
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resetMsg.className = 'msg';
+      resetMsg.textContent = '';
+
+      if (!supabaseClient) {
+        resetMsg.classList.add('err');
+        resetMsg.textContent = 'Supabase klientas nepasiekiamas.';
+        return;
+      }
+
+      const p1 = resetForm.password1.value.trim();
+      const p2 = resetForm.password2.value.trim();
+
+      if (!p1 || !p2) {
+        resetMsg.classList.add('err');
+        resetMsg.textContent = 'Įveskite ir pakartokite naują slaptažodį.';
+        return;
+      }
+      if (p1.length < 6) {
+        resetMsg.classList.add('err');
+        resetMsg.textContent = 'Slaptažodis turi būti bent 6 simbolių.';
+        return;
+      }
+      if (p1 !== p2) {
+        resetMsg.classList.add('err');
+        resetMsg.textContent = 'Slaptažodžiai nesutampa.';
+        return;
+      }
+
+      try {
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+        if (userError || !user) {
+          resetMsg.classList.add('err');
+          resetMsg.textContent = 'Nuoroda nebegalioja. Paprašykite naujo laiško.';
+          return;
+        }
+
+        const { error } = await supabaseClient.auth.updateUser({ password: p1 });
+        if (error) {
+          console.warn('updateUser klaida', error);
+          resetMsg.classList.add('err');
+          resetMsg.textContent = error.message || 'Nepavyko atnaujinti slaptažodžio.';
+          return;
+        }
+
+        resetMsg.classList.add('ok');
+        resetMsg.textContent = '✅ Slaptažodis atnaujintas. Dabar galite prisijungti su nauju slaptažodžiu.';
+
+        // išvalom hash, parodom normalų login
+        setTimeout(() => {
+          window.location.hash = '';
+          resetBox.style.display = 'none';
+          if (tabsBar) tabsBar.style.display = '';
+          loginForm.style.display = '';
+          setTab('login');
+        }, 1200);
+      } catch (e2) {
+        console.warn('reset password submit klaida', e2);
+        resetMsg.classList.add('err');
+        resetMsg.textContent = 'Klaida atnaujinant slaptažodį: ' + e2.message;
+      }
+    });
+
+    // Puslapio startas
     document.addEventListener('DOMContentLoaded', async () => {
+      const hash = window.location.hash || '';
+      const isRecovery = hash.includes('type=recovery');
+
+      // jei atėjom per slaptažodžio atstatymo nuorodą – NEREDIRECTINAM pagal rolę,
+      // o rodome reset formą
+      if (isRecovery) {
+        await handleRecoveryMode();
+        return;
+      }
+
+      // standartinis elgesys: jei jau prisijungęs – nukreipiam pagal rolę
       if (!supabaseClient) return;
       try {
         const { data: { user } } = await supabaseClient.auth.getUser();
