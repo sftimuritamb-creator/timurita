@@ -1,130 +1,165 @@
 <!doctype html>
-<html lang="lt" data-theme="light">
+<html lang="lt">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Timurita</title>
-  <meta name="description" content="Trumpalaikio darbo platforma statybų sektoriuje. Sujungiame darbdavius ir statybų specialistus." />
-  <meta http-equiv="Cache-Control" content="public, max-age=31536000" />
-
-  <!-- OG/Twitter -->
-  <meta property="og:title" content="Timurita – trumpalaikio darbo platforma">
-  <meta property="og:description" content="Raskite statybų specialistus ar darbo pasiūlymus. Veikia offline kaip PWA.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://sftimuritamb-creator.github.io/timurita/">
-  <meta property="og:image" content="https://sftimuritamb-creator.github.io/timurita/Timurita_logo_512x512.png">
-  <meta name="twitter:card" content="summary_large_image">
-
-  <!-- PWA -->
+  <meta name="description" content="Trumpalaikio darbo platforma statybų sektoriuje." />
   <link rel="manifest" href="/timurita/manifest.json">
   <meta name="theme-color" content="#1a2a44">
   <link rel="icon" href="/timurita/Timurita_logo_192x192.png" type="image/png">
-  <link rel="apple-touch-icon" href="/timurita/Timurita_logo_512x512.png">
-
-  <!-- CSS -->
-  <link rel="preload" href="/timurita/style.css" as="style" onload="this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/timurita/style.css"></noscript>
+  <link rel="stylesheet" href="/timurita/style.css">
 
   <style>
-    :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#64748b; --line:#e2e8f0; --card:#fff; --primary:#0f766e; }
-    [data-theme="dark"]{ --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --card:#101826; --primary:#10b981; }
+    :root{ --bg:#0f172a; --card:#020617; --fg:#e5e7eb; --muted:#94a3b8; --accent:#22c55e; --line:#1e293b;}
+    body { margin:0; font-family:system-ui,-apple-system,segoe ui,roboto,sans-serif; background:radial-gradient(circle at top,#1e293b,#020617); color:var(--fg); min-height:100vh; display:flex; flex-direction:column; }
+    .app-header { display:flex; align-items:center; justify-content:center; padding:16px; }
+    .app-header a { display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
+    .app-header img { width:40px; height:40px; border-radius:12px; }
+    .app-header h1 { margin:0; font-size:20px; }
+    .app-header .subtitle { font-size:12px; color:var(--muted); }
 
-    body { font-family: system-ui,-apple-system,Segoe UI,Roboto,sans-serif; margin:0; background:var(--bg); color:var(--fg); }
-    .app-header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line); }
-    .header-left { display:flex; align-items:center; gap:10px; }
-    .app-header img { border-radius:8px; width:40px; height:40px; }
-    .theme-btn { padding:8px 12px; border:1px solid var(--line); background:var(--card); color:var(--fg); border-radius:10px; cursor:pointer; }
-    .container { max-width:720px; margin:0 auto; padding:16px; }
-    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,.05); }
-    .grid-actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
-    .btn { width:100%; padding:12px; font-size:16px; font-weight:600; border:none; border-radius:10px; cursor:pointer; }
-    .btn.big { background:var(--primary); color:#fff; }
-    .btn.install { margin-top:20px; background:#1d4ed8; color:#fff; }
-    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:color-mix(in oklab, var(--card) 92%, transparent); backdrop-filter: blur(6px); border-top:1px solid var(--line); padding:10px; }
-    .bottom-nav a { text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:var(--fg); font-weight:600; background:var(--card); border:1px solid var(--line); }
-    .small { font-size:12px; color:var(--muted); }
-    .update-banner { display:none; position:fixed; bottom:75px; left:10px; right:10px; background:#fde047; color:#0f172a; padding:12px; text-align:center; font-weight:600; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.15); }
-    .update-banner button { background:var(--primary); color:#fff; border:none; padding:8px 14px; margin-left:10px; border-radius:8px; cursor:pointer; font-weight:600; }
+    .main-wrap { flex:1; display:flex; justify-content:center; align-items:center; padding:16px; }
+    .card { background:rgba(15,23,42,0.96); border-radius:18px; border:1px solid rgba(148,163,184,0.3); max-width:480px; width:100%; padding:20px 18px 18px; box-shadow:0 20px 40px rgba(15,23,42,0.8); }
+    .card h2 { margin:0 0 6px; }
+    .card p { margin:0; font-size:13px; color:var(--muted); }
+
+    .actions { margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+    .btn { padding:10px 12px; border-radius:12px; border:1px solid var(--line); cursor:pointer; font-weight:600; font-size:14px; display:flex; align-items:center; justify-content:center; gap:8px; background:#020617; color:var(--fg); }
+    .btn.primary { background:var(--accent); border-color:var(--accent); color:#022c22; }
+    .btn.secondary { background:transparent; }
+    .small { font-size:12px; color:var(--muted); margin-top:8px; }
+    .pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid rgba(148,163,184,0.4); }
+    .status { font-size:12px; color:var(--muted); margin-top:6px; min-height:14px; }
   </style>
-</head>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
+</head>
 <body>
   <header class="app-header">
-    <div class="header-left">
-      <a href="/timurita/index.html" style="display:flex;align-items:center;text-decoration:none;color:inherit">
-        <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita" loading="lazy" decoding="async" fetchpriority="high">
-        <div>
-          <h3 style="margin:0;">Timurita</h3>
-          <div class="small">Sujungiame darbdavius ir statybų specialistus</div>
-        </div>
-      </a>
-    </div>
-    <button id="themeBtn" class="theme-btn" type="button">🌙 Tamsus</button>
+    <a href="/timurita/index.html">
+      <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita">
+      <div>
+        <h1>Timurita</h1>
+        <div class="subtitle">Sujungiame darbdavius ir statybų specialistus</div>
+      </div>
+    </a>
   </header>
 
-  <main class="container">
-    <div class="card">
-      <h1>Sveiki atvykę į Timurita</h1>
-      <p>Trumpalaikio darbo platforma statybų sektoriuje. Pasirinkite veiksmą apačioje arba žemiau.</p>
+  <main class="main-wrap">
+    <section class="card">
+      <h2>Paleidžiama Timurita</h2>
+      <p>Trumpalaikio darbo platforma statybų sektoriuje. Tikrinamas prisijungimas...</p>
 
-      <div class="grid-actions">
-        <button class="btn big" onclick="navigate('darbuotojai.html')">Darbuotojai</button>
-        <button class="btn big" onclick="navigate('pasiulymai.html')">Darbo pasiūlymai</button>
-        <button class="btn big" onclick="navigate('profilis.html')">Profilis</button>
-        <button class="btn big" onclick="navigate('darbdavys.html')">Darbdavys</button>
+      <div class="actions" id="actions" style="display:none;">
+        <button class="btn primary" type="button" id="goMain">Atidaryti mano skydelį</button>
+        <button class="btn secondary" type="button" id="goAuth">Prisijungti / Registruotis</button>
       </div>
-
-      <button id="installBtn" class="btn install" hidden>📲 Įdiegti Timurita</button>
-    </div>
-
-    <div class="card small">
-      <strong>Demo režimas:</strong> duomenys saugomi lokaliai (IndexedDB). Vėliau įdiegsiu registraciją ir serverinę dalį.
-    </div>
+      <div class="small">
+        <span class="pill">PWA • Veikia telefone ir kompiuteryje</span>
+      </div>
+      <div id="status" class="status"></div>
+    </section>
   </main>
 
-  <nav class="bottom-nav" aria-label="Apatinė navigacija">
-    <a href="/timurita/darbuotojai.html">Darbuotojai</a>
-    <a href="/timurita/pasiulymai.html">Pasiūlymai</a>
-    <a href="/timurita/profilis.html">Profilis</a>
-    <a href="/timurita/darbdavys.html">Darbdavys</a>
-  </nav>
-
-  <div id="updateBanner" class="update-banner">
-    Nauja versija prieinama. <button id="refreshBtn">Atnaujinti dabar</button>
-  </div>
-
-  <script defer>
-    function navigate(p){ location.href = '/timurita/' + p; }
-
-    // Install
-    let deferredPrompt = null;
-    const installBtn = document.getElementById('installBtn');
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.hidden = false; });
-    installBtn.addEventListener('click', async () => { if (!deferredPrompt) return; installBtn.hidden = true; await deferredPrompt.prompt(); deferredPrompt = null; });
-    window.addEventListener('appinstalled', () => { installBtn.hidden = true; });
-
-    // SW + Update
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/timurita/service-worker.js').then(reg => {
-        reg.addEventListener('updatefound', () => {
-          const sw = reg.installing;
-          sw?.addEventListener('statechange', () => {
-            if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-              const banner = document.getElementById('updateBanner');
-              banner.style.display = 'block';
-              document.getElementById('refreshBtn').onclick = () => sw.postMessage('SKIP_WAITING');
-            }
-          });
-        });
-      });
-      navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+  <script>
+    let supabaseClient = null;
+    try {
+      if (window.supabase) {
+        const supabaseUrl = 'https://qnczakppadjxbicgjzcy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY';
+        supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+      } else {
+        console.warn('Supabase biblioteka neužsikrovė');
+      }
+    } catch (e) {
+      console.warn('Supabase createClient klaida index.html:', e);
     }
-  </script>
 
-  <!-- Tema -->
-  <script type="module">
-    import { initTheme } from '/timurita/theme.js';
-    initTheme();
+    const statusEl = document.getElementById('status');
+    const actionsEl = document.getElementById('actions');
+    const goMainBtn = document.getElementById('goMain');
+    const goAuthBtn = document.getElementById('goAuth');
+
+    function saveRoleLocally(role) {
+      try { localStorage.setItem('timurita_role', role); } catch {}
+    }
+
+    function redirectByRole(role) {
+      if (role === 'employer') {
+        window.location.href = '/timurita/darbdavys.html';
+      } else {
+        window.location.href = '/timurita/darbuotojai.html';
+      }
+    }
+
+    async function checkAuth() {
+      if (!supabaseClient) {
+        statusEl.textContent = 'Supabase klientas nepasiekiamas. Atidarykite prisijungimo langą.';
+        actionsEl.style.display = 'flex';
+        return;
+      }
+
+      statusEl.textContent = 'Tikrinamas prisijungimas...';
+
+      try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        if (error) {
+          console.warn('getUser klaida', error);
+          statusEl.textContent = 'Nepavyko tikrinti prisijungimo. Galite prisijungti iš naujo.';
+          actionsEl.style.display = 'flex';
+          return;
+        }
+
+        if (!user) {
+          statusEl.textContent = 'Neprisijungta. Prašome prisijungti arba užsiregistruoti.';
+          actionsEl.style.display = 'flex';
+          return;
+        }
+
+        const role = user.user_metadata?.role || 'worker';
+        saveRoleLocally(role);
+        statusEl.textContent = 'Prisijungta kaip ' + (role === 'employer' ? 'darbdavys' : 'darbuotojas') + '. Nukreipiama...';
+
+        setTimeout(() => {
+          redirectByRole(role);
+        }, 700);
+      } catch (e) {
+        console.warn('checkAuth klaida', e);
+        statusEl.textContent = 'Klaida tikrinant prisijungimą: ' + e.message;
+        actionsEl.style.display = 'flex';
+      }
+    }
+
+    goAuthBtn.addEventListener('click', () => {
+      window.location.href = '/timurita/auth.html';
+    });
+
+    goMainBtn.addEventListener('click', async () => {
+      if (!supabaseClient) {
+        window.location.href = '/timurita/auth.html';
+        return;
+      }
+      try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) {
+          window.location.href = '/timurita/auth.html';
+          return;
+        }
+        const role = user.user_metadata?.role || 'worker';
+        redirectByRole(role);
+      } catch {
+        window.location.href = '/timurita/auth.html';
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', checkAuth);
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/timurita/service-worker.js')
+        .then(()=>console.log('SW registered (index.html)'))
+        .catch(e=>console.log('SW error', e));
+    }
   </script>
 </body>
 </html>
