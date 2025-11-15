@@ -37,6 +37,7 @@
 
     .btn { padding:8px 12px; font-size:13px; font-weight:600; border-radius:10px; border:1px solid var(--line); background:var(--card); cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
     .btn.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .btn.small { padding:6px 10px; font-size:12px; }
     .btn:disabled { opacity:0.6; cursor:default; }
 
     .status { font-size:12px; color:var(--muted); margin-top:4px; }
@@ -53,7 +54,7 @@
     .offer-meta { font-size:13px; color:var(--muted); margin-top:2px; }
     .offer-salary { font-size:14px; font-weight:600; color:#0f766e; }
     .offer-body { font-size:14px; margin-top:6px; white-space:pre-wrap; }
-    .offer-contact { font-size:13px; margin-top:8px; color:var(--muted); }
+    .offer-contact { font-size:13px; margin-top:8px; color:var(--muted); display:flex; flex-direction:column; gap:2px; }
 
     .pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); }
     .pill-local { background:#f0fdf4; color:#166534; }
@@ -104,7 +105,7 @@
     <p class="muted">
       Čia matysite:
       <br>• 🟢 pasiūlymus, išsaugotus šiame įrenginyje (ką sukūrė darbdaviai per šį kompiuterį),
-      <br>• 🔵 viešus pasiūlymus iš Supabase (bendras sąrašas).
+      <br>• 🔵 viešus pasiūlymus iš Supabase (bendras sąrašas). Prie viešų pasiūlymų galite paspausti „Kandidatuoti“.
     </p>
 
     <div class="filters">
@@ -146,7 +147,7 @@
     <section>
       <div class="section-title">
         <h2 style="margin:20px 0 4px;">Vieši pasiūlymai (Supabase)</h2>
-        <span class="badge">Pasiekiami visiems</span>
+      <span class="badge badge-remote">Galima kandidatuoti</span>
       </div>
       <div id="remoteOffers" class="offers-list"></div>
       <div id="remoteEmpty" class="empty" style="display:none;">Kol kas nėra pasiūlymų iš Supabase, arba nepavyko prisijungti.</div>
@@ -180,6 +181,7 @@
     let localOffersData = [];
     let remoteOffersData = [];
 
+    // Supabase klientas
     try {
       if (window.supabase) {
         const supabaseUrl = 'https://qnczakppadjxbicgjzcy.supabase.co';
@@ -249,14 +251,32 @@
         bottom.appendChild(salSpan);
       }
 
-      const lines = [];
-      if (contact) lines.push('Kontaktinis asmuo: ' + contact);
-      if (phone) lines.push('Tel.: ' + phone);
-      if (email) lines.push('El. paštas: ' + email);
-      if (lines.length) {
+      if (contact || phone || email) {
+        const lines = [];
+        if (contact) lines.push('Kontaktinis asmuo: ' + contact);
+        if (phone) lines.push('Tel.: ' + phone);
+        if (email) lines.push('El. paštas: ' + email);
         const contactP = document.createElement('div');
         contactP.textContent = lines.join(' • ');
         bottom.appendChild(contactP);
+      }
+
+      // „Kandidatuoti“ – tik Supabase pasiūlymams (remote) ir tik jei yra offer.id
+      if (source === 'remote' && offer.id && supabaseClient) {
+        const btnRow = document.createElement('div');
+        btnRow.style.marginTop = '6px';
+
+        const applyBtn = document.createElement('button');
+        applyBtn.type = 'button';
+        applyBtn.className = 'btn small primary';
+        applyBtn.textContent = '✅ Kandidatuoti';
+
+        applyBtn.addEventListener('click', () => {
+          handleApply(offer);
+        });
+
+        btnRow.appendChild(applyBtn);
+        bottom.appendChild(btnRow);
       }
 
       div.appendChild(header);
@@ -404,6 +424,53 @@
         refreshBtn.disabled = false;
         populateCityFilter();
         renderAllOffers();
+      }
+    }
+
+    // --- Kandidatavimo logika ---
+    async function handleApply(offer) {
+      if (!supabaseClient) {
+        alert('Supabase šiuo metu nepasiekiamas. Bandykite vėliau.');
+        return;
+      }
+
+      try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        if (error) {
+          console.warn('auth.getUser error', error);
+          alert('Nepavyko patikrinti prisijungimo. Bandykite dar kartą.');
+          return;
+        }
+        if (!user) {
+          const go = confirm('Norėdami kandidatuoti, turite prisijungti. Ar norite eiti į prisijungimo puslapį?');
+          if (go) {
+            window.location.href = '/timurita/auth.html';
+          }
+          return;
+        }
+
+        const { error: insertError } = await supabaseClient
+          .from('applications')
+          .insert({
+            offer_id: offer.id,
+            worker_id: user.id,
+            note: null
+          });
+
+        if (insertError) {
+          console.warn('applications insert error', insertError);
+          if (insertError.code === '23505') {
+            alert('Jūs jau kandidavote į šį pasiūlymą.');
+          } else {
+            alert('Nepavyko išsaugoti kandidatavimo: ' + insertError.message);
+          }
+          return;
+        }
+
+        alert('✅ Jūsų kandidatas užregistruotas. Darbdavys matys jus savo sistemoje.');
+      } catch (e) {
+        console.warn('handleApply klaida:', e);
+        alert('Klaida kandidatuojant: ' + e.message);
       }
     }
 
