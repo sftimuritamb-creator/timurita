@@ -12,7 +12,6 @@
   <link rel="icon" href="/timurita/Timurita_logo_192x192.png" type="image/png">
   <link rel="apple-touch-icon" href="/timurita/Timurita_logo_512x512.png">
 
-  <!-- Stiliai -->
   <link rel="stylesheet" href="/timurita/style.css">
   <style>
     :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#475569; --line:#e2e8f0; --card:#fff; --primary:#0f766e; }
@@ -61,13 +60,12 @@
 
   <main class="container">
     <h1>Darbdavio valdymas</h1>
-    <p class="muted">Užpildykite įmonės profilį ir kurkite darbo pasiūlymus. Viskas saugoma jūsų įrenginyje (IndexedDB). Jeigu būsite <strong>prisijungę</strong> per <span class="badge">/auth.html</span>, skelbimai papildomai bus įrašyti ir į <strong>Supabase</strong>.</p>
+    <p class="muted">Užpildykite įmonės profilį ir kurkite darbo pasiūlymus. Lokaliai (IndexedDB) ir, jei būsite <strong>prisijungę</strong> per <span class="badge">/auth.html</span>, papildomai įrašysime į <strong>Supabase</strong>.</p>
 
     <div class="grid">
-      <!-- Įmonės profilis (lokalus, kad nereikėtų kiekvieną kartą vesti kontaktų) -->
       <section class="card">
         <h2 style="margin:0;">Įmonės profilis</h2>
-        <p class="hint">Ši informacija automatiškai užpildoma skelbimų kontaktams.</p>
+        <p class="hint">Duomenys automatiškai pildys pasiūlymo kontaktus.</p>
 
         <form id="employerForm" novalidate>
           <label>Įmonės pavadinimas
@@ -105,10 +103,9 @@
         </form>
       </section>
 
-      <!-- Naujas pasiūlymas -->
       <section class="card">
         <h2 style="margin:0;">Naujas darbo pasiūlymas</h2>
-        <p class="hint">Laukai su žvaigždute privalomi. Kontaktai paimami iš „Įmonės profilio“.</p>
+        <p class="hint">Žvaigždute pažymėti laukai privalomi. Kontaktai – iš „Įmonės profilio“.</p>
 
         <form id="offerForm" novalidate>
           <label>Pavadinimas *
@@ -146,14 +143,12 @@
   </nav>
 
   <script type="module">
-    /* ===== IMPORTAI ===== */
     import { setSetting, getSetting, saveOffer } from '/timurita/db.js';
     import { initTheme } from '/timurita/theme.js';
     import { supabase } from '/timurita/supabase.js';
 
     initTheme();
 
-    /* ===== PAGALBINIAI ===== */
     const empForm  = document.getElementById('employerForm');
     const offerForm= document.getElementById('offerForm');
     const empMsg   = document.getElementById('empMsg');
@@ -165,7 +160,7 @@
     const uuid = () => (crypto?.randomUUID?.() || 'id-' + Math.random().toString(36).slice(2,10));
     const v = (el) => el?.value?.trim() || '';
 
-    /* ===== ĮMONĖS PROFILIS (lokalus settings store) ===== */
+    // === Įmonės profilis (lokalus)
     (async () => {
       try {
         const data = await getSetting(EMP_KEY);
@@ -204,18 +199,20 @@
       empMsg.textContent = '🧹 Profilio laukai išvalyti.';
     });
 
-    /* ===== NAUJAS PASIŪLYMAS (lokaliai + Supabase jei prisijungęs) ===== */
+    // === Naujas pasiūlymas
     offerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      offerMsg.textContent = '⏳ Išsaugoma...';
+
       if (!v(offerForm.title)) { offerMsg.textContent = '✋ Įrašykite pasiūlymo pavadinimą.'; offerForm.title.focus(); return; }
 
       const emp = (await getSetting(EMP_KEY)) || {};
       const localOffer = {
-        id: uuid(),                                // vietinis ID
+        id: uuid(),
         title:  v(offerForm.title),
         city:   v(offerForm.city) || emp.city || '',
         company:emp.company || '',
-        desc:   v(offerForm.desc),                 // lokalus pavadinimas "desc"
+        desc:   v(offerForm.desc),
         salary: v(offerForm.salary),
         contact: emp.contact || '',
         phone:   emp.phone || '',
@@ -223,26 +220,27 @@
       };
 
       try {
-        /* 1) Išsaugom lokaliai, kad veiktų offline */
+        // 1) visada – lokaliai
         await saveOffer(localOffer);
 
-        /* 2) Jei prisijungęs – papildomai įrašom į Supabase */
-        const { data: { user } } = await supabase.auth.getUser();
+        // 2) jei prisijungęs – bandome į Supabase
+        const { data: { user }, error: userErr } = await supabase.auth.getUser();
+        if (userErr) console.warn('auth.getUser error:', userErr);
         if (user) {
           const { error } = await supabase.from('offers').insert({
             owner_id: user.id,
             title: localOffer.title,
             city: localOffer.city,
             company: localOffer.company,
-            description: localOffer.desc,   // serverio laukas — "description"
+            description: localOffer.desc, // svarbu: "description", ne "desc"
             salary: localOffer.salary,
             contact: localOffer.contact,
             phone: localOffer.phone,
             email: localOffer.email
           });
           if (error) {
-            console.warn('Supabase insert error:', error.message);
-            offerMsg.textContent = '⚠️ Lokaliai išsaugota. Į Supabase įrašyti nepavyko: ' + error.message;
+            console.warn('Supabase insert error:', error);
+            offerMsg.textContent = '⚠️ Lokaliai išsaugota. Į Supabase nepavyko: ' + (error.message || error);
           } else {
             offerMsg.textContent = '✅ Pasiūlymas išsaugotas (lokaliai ir Supabase).';
           }
@@ -252,13 +250,13 @@
 
         offerForm.reset();
       } catch (err) {
-        console.error(err);
-        offerMsg.textContent = '⚠️ Nepavyko išsaugoti pasiūlymo.';
+        console.error('Save offer fatal:', err);
+        offerMsg.textContent = '⚠️ Nepavyko išsaugoti pasiūlymo: ' + (err?.message || err);
       }
     });
 
-    /* Pavyzdinis įrašas (patogiai testuoti) */
-    seedOne.addEventListener('click', async () => {
+    // Pavyzdys
+    document.getElementById('seedOne').addEventListener('click', async () => {
       const emp = (await getSetting(EMP_KEY)) || {};
       const demo = {
         id: uuid(),
@@ -275,7 +273,7 @@
         await saveOffer(demo);
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          await supabase.from('offers').insert({
+          const { error } = await supabase.from('offers').insert({
             owner_id: user.id,
             title: demo.title,
             city: demo.city,
@@ -286,19 +284,19 @@
             phone: demo.phone,
             email: demo.email
           });
+          if (error) console.warn('Seed insert error:', error);
         }
         offerMsg.textContent = '✅ Pavyzdinis pasiūlymas įkeltas.';
-      } catch {
+      } catch (e) {
         offerMsg.textContent = '⚠️ Nepavyko įkelti pavyzdžio.';
       }
     });
   </script>
 
   <script>
-    /* Service Worker registracija */
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
-        .then(()=>console.log('Service worker registered'))
+        .then(()=>console.log('SW registered'))
         .catch(e=>console.log('SW error', e));
     }
   </script>
