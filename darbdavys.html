@@ -220,6 +220,7 @@
   </nav>
 
   <script>
+    // Supabase klientas
     let supabaseClient = null;
     let currentUser = null;
 
@@ -250,9 +251,11 @@
     const candEmpty = document.getElementById('candEmpty');
     const offerMsg = document.getElementById('offerMsg');
 
+    // --- Apsauga: tik prisijungęs DARBDAVYS ---
     async function guardAuth() {
       if (!supabaseClient) {
         guardBox.innerHTML = '⚠️ Supabase klientas nepasileido. Pasiūlymai bus saugomi tik šiame įrenginyje, kandidatai neveiks.';
+        formsWrapper.classList.add('disabled-overlay');
         myOffersStatus.textContent = 'Supabase nepasiekiamas.';
         candStatus.textContent = 'Supabase nepasiekiamas.';
         return;
@@ -280,9 +283,21 @@
           return;
         }
 
+        const role = user.user_metadata?.role || 'worker';
+        if (role !== 'employer') {
+          guardBox.innerHTML = '⛔ Šis puslapis skirtas tik darbdaviams. Jus nukreipiame į darbuotojo puslapį.';
+          formsWrapper.classList.add('disabled-overlay');
+          myOffersStatus.textContent = 'Netinkama rolė.';
+          candStatus.textContent = 'Netinkama rolė.';
+          setTimeout(() => {
+            window.location.href = '/timurita/darbuotojai.html';
+          }, 1500);
+          return;
+        }
+
         currentUser = user;
         guardBox.classList.add('guard-ok');
-        guardBox.innerHTML = '✅ Prisijungta. Šiuo metu prisijungęs darbdavys: <strong>' + (user.email || '') + '</strong>.';
+        guardBox.innerHTML = '✅ Prisijungta kaip darbdavys: <strong>' + (user.email || '') + '</strong>.';
 
         loadMyOffers();
         loadMyCandidates();
@@ -295,6 +310,7 @@
       }
     }
 
+    // --- Įmonės profilis (localStorage) ---
     function loadProfile() {
       const form = document.getElementById('employerForm');
       const msg = document.getElementById('empMsg');
@@ -352,6 +368,7 @@
       msg.textContent = '🧹 Profilis išvalytas.';
     }
 
+    // --- Naujas pasiūlymas ---
     async function submitOffer(e) {
       e.preventDefault();
       const form = document.getElementById('offerForm');
@@ -374,6 +391,7 @@
         email: v(empForm.email)
       };
 
+      // 1) Lokaliai
       try {
         const raw = localStorage.getItem(OFFERS_KEY);
         const all = raw ? JSON.parse(raw) : [];
@@ -385,6 +403,7 @@
         offerMsg.textContent = '⚠️ Nepavyko išsaugoti lokaliai. Bandoma įrašyti į Supabase...';
       }
 
+      // 2) Supabase
       if (!supabaseClient) {
         offerMsg.textContent = '✅ Išsaugota lokaliai. Supabase šiuo metu nepasiekiamas.';
         form.reset();
@@ -439,6 +458,7 @@
       }
     }
 
+    // --- „Mano pasiūlymai“ iš Supabase ---
     async function loadMyOffers() {
       myOffersList.innerHTML = '';
       myOffersEmpty.style.display = 'none';
@@ -542,7 +562,7 @@
         } else {
           myOffersStatus.textContent = 'Pasiūlymas ištrintas.';
           loadMyOffers();
-          loadMyCandidates();
+          loadMyCandidates(); // atnaujinam kandidatų sąrašą
         }
       } catch (e) {
         console.warn('deleteOffer klaida:', e);
@@ -551,6 +571,7 @@
       }
     }
 
+    // --- Kandidatai į mano pasiūlymus ---
     async function loadMyCandidates() {
       candList.innerHTML = '';
       candEmpty.style.display = 'none';
@@ -584,6 +605,7 @@
         }
 
         candStatus.textContent = 'Kandidatų: ' + data.length;
+
         data.forEach(app => {
           const card = document.createElement('div');
           card.className = 'cand-card';
@@ -636,6 +658,7 @@
       }
     }
 
+    // --- Inicializacija ---
     document.addEventListener('DOMContentLoaded', () => {
       guardAuth();
       loadProfile();
@@ -644,9 +667,10 @@
       document.getElementById('clearEmployer').addEventListener('click', clearProfile);
       document.getElementById('offerForm').addEventListener('submit', submitOffer);
 
-      console.log('Darbdavys puslapis su kandidatais paruoštas');
+      console.log('Darbdavys puslapis su rolės apsauga ir kandidatais paruoštas');
     });
 
+    // Service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
         .then(()=>console.log('SW registered (darbdavys.html)'))
