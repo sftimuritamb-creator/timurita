@@ -38,12 +38,11 @@
     .role-row { display:flex; gap:10px; margin-top:6px; }
     .role-option { flex:1; border-radius:12px; border:1px solid #1e293b; background:#020617; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
     .role-option input { margin:0; }
-    .role-option span.tag { font-size:11px; border-radius:999px; padding:2px 6px; background:#0f172a; color:#38bdf8; }
-    .role-option.active { border-color:var(--accent); background:#020617; color:#e5e7eb; }
+    .role-option.active { border-color:var(--accent); color:#e5e7eb; }
 
-    .btn { width:100%; margin-top:16px; padding:9px 12px; border-radius:12px; border:none; cursor:pointer; font-weight:600; font-size:14px; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+    .btn { width:100%; margin-top:12px; padding:9px 12px; border-radius:12px; border:none; cursor:pointer; font-weight:600; font-size:14px; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
     .btn.primary { background:var(--accent); color:#0b1120; }
-    .btn.secondary { background:transparent; color:var(--fg); border:1px solid #1e293b; }
+    .btn.secondary-link { background:transparent; color:var(--muted); border:none; font-size:12px; text-decoration:underline; justify-content:flex-start; padding-left:0; }
     .btn:disabled { opacity:0.6; cursor:default; }
 
     .hint { margin-top:8px; font-size:12px; color:var(--muted); }
@@ -85,7 +84,10 @@
         <label>Slaptažodis
           <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
         </label>
+
         <button class="btn primary" type="submit">Prisijungti</button>
+        <button class="btn secondary-link" type="button" id="forgotBtn">Pamiršau slaptažodį</button>
+
         <div id="loginMsg" class="msg"></div>
       </form>
 
@@ -146,6 +148,7 @@
     const registerForm = document.getElementById('registerForm');
     const loginMsg = document.getElementById('loginMsg');
     const registerMsg = document.getElementById('registerMsg');
+    const forgotBtn = document.getElementById('forgotBtn');
 
     const roleWorkerBox = document.getElementById('roleWorkerBox');
     const roleEmployerBox = document.getElementById('roleEmployerBox');
@@ -190,7 +193,6 @@
       if (role === 'employer') {
         window.location.href = '/timurita/darbdavys.html';
       } else {
-        // default – darbuotojas
         window.location.href = '/timurita/darbuotojai.html';
       }
     }
@@ -239,6 +241,43 @@
         console.warn('login klaida', e2);
         loginMsg.classList.add('err');
         loginMsg.textContent = 'Klaida prisijungiant: ' + e2.message;
+      }
+    });
+
+    // „Pamiršau slaptažodį“
+    forgotBtn.addEventListener('click', async () => {
+      loginMsg.className = 'msg';
+      loginMsg.textContent = '';
+
+      if (!supabaseClient) {
+        loginMsg.classList.add('err');
+        loginMsg.textContent = 'Supabase klientas nepasiekiamas.';
+        return;
+      }
+
+      const email = loginForm.email.value.trim();
+      if (!email) {
+        loginMsg.classList.add('err');
+        loginMsg.textContent = 'Įrašykite el. paštą, kuriuo registravotės.';
+        return;
+      }
+
+      try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: 'https://sftimuritamb-creator.github.io/timurita/auth.html'
+        });
+        if (error) {
+          console.warn('resetPasswordForEmail klaida', error);
+          loginMsg.classList.add('err');
+          loginMsg.textContent = error.message || 'Nepavyko išsiųsti reset nuorodos.';
+          return;
+        }
+        loginMsg.classList.add('ok');
+        loginMsg.textContent = '📧 Jei toks el. paštas užregistruotas, išsiuntėme slaptažodžio atstatymo nuorodą.';
+      } catch (e) {
+        console.warn('forgot password klaida', e);
+        loginMsg.classList.add('err');
+        loginMsg.textContent = 'Klaida siunčiant nuorodą: ' + e.message;
       }
     });
 
