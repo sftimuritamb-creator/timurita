@@ -1,33 +1,30 @@
 <!doctype html>
-<html lang="lt" data-theme="light">
+<html lang="lt">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Timurita – Darbdavys</title>
-  <meta name="description" content="Darbdavio valdymo puslapis – kurkite profilį ir skelbkite darbo pasiūlymus. Lokaliai ir Supabase.">
+  <meta name="description" content="Darbdavio valdymo puslapis – kurkite profilį ir skelbkite darbo pasiūlymus.">
 
   <!-- PWA -->
   <link rel="manifest" href="/timurita/manifest.json">
   <meta name="theme-color" content="#1a2a44">
   <link rel="icon" href="/timurita/Timurita_logo_192x192.png" type="image/png">
-  <link rel="apple-touch-icon" href="/timurita/Timurita_logo_512x512.png">
 
   <link rel="stylesheet" href="/timurita/style.css">
+
   <style>
     :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#475569; --line:#e2e8f0; --card:#fff; --primary:#0f766e; }
-    [data-theme="dark"]{ --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --card:#101826; --primary:#10b981; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); margin:0; color:var(--fg); }
     .app-header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line); }
     .left { display:flex; align-items:center; gap:10px; }
     .app-header img { width:40px; height:40px; border-radius:8px; }
-    .theme-btn { padding:8px 12px; border:1px solid var(--line); background:var(--card); color:var(--fg); border-radius:10px; cursor:pointer; }
     .container { max-width:980px; margin:0 auto; padding:16px; }
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
     .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
     .muted { color:var(--muted); }
     label { display:block; margin-top:12px; font-weight:600; color:#334155; }
-    [data-theme="dark"] label{ color:#cbd5e1; }
     input, textarea { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; margin-top:4px; background:var(--card); color:var(--fg); }
     textarea { min-height:100px; resize:vertical; }
     .row { display:flex; gap:10px; }
@@ -36,39 +33,43 @@
     .btn.primary { background:var(--primary); color:#fff; }
     .btn.secondary { background:transparent; color:var(--fg); border:1px solid var(--line); }
     .actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
-    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:color-mix(in oklab, var(--card) 92%, transparent); backdrop-filter: blur(6px); border-top:1px solid var(--line); padding:10px; }
+    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:rgba(248,250,252,0.9); border-top:1px solid var(--line); padding:10px; }
     .bottom-nav a { text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:var(--fg); font-weight:600; background:var(--card); border:1px solid var(--line); }
     .hint { font-size:12px; color:var(--muted); margin-top:4px; }
     .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#dbeafe; color:#1e3a8a; font-size:12px; font-weight:700; }
-    [data-theme="dark"] .badge{ background:#0b3b2e; color:#a7f3d0; }
   </style>
+
+  <!-- Supabase UMD biblioteka (nereikia atskiro supabase.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 </head>
 
 <body>
   <header class="app-header">
     <div class="left">
       <a href="/timurita/index.html" style="display:flex;align-items:center;text-decoration:none;color:inherit">
-        <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita" loading="lazy" decoding="async">
+        <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita" loading="lazy">
         <div>
           <h3 style="margin:0;">Timurita</h3>
           <div style="font-size:12px;color:var(--muted)">Sujungiame darbdavius ir statybų specialistus</div>
         </div>
       </a>
     </div>
-    <button id="themeBtn" class="theme-btn" type="button">🌙 Tamsus</button>
   </header>
 
   <main class="container">
     <h1>Darbdavio valdymas</h1>
-    <p class="muted">Užpildykite įmonės profilį ir kurkite darbo pasiūlymus. Lokaliai (IndexedDB) ir, jei būsite <strong>prisijungę</strong> per <span class="badge">/auth.html</span>, papildomai įrašysime į <strong>Supabase</strong>.</p>
+    <p class="muted">
+      Užpildykite įmonės profilį ir kurkite darbo pasiūlymus. Informacija saugoma jūsų naršyklėje (localStorage).
+      Jei esate <strong>prisijungę</strong> per <span class="badge">/auth.html</span>, pasiūlymai papildomai įrašomi į Supabase.
+    </p>
 
     <div class="grid">
       <!-- Įmonės profilis -->
       <section class="card">
         <h2 style="margin:0;">Įmonės profilis</h2>
-        <p class="hint">Duomenys automatiškai pildys pasiūlymo kontaktus.</p>
+        <p class="hint">Šie duomenys automatiškai naudojami kontaktams pasiūlyme.</p>
 
-        <form id="employerForm" novalidate>
+        <form id="employerForm">
           <label>Įmonės pavadinimas
             <input name="company" required placeholder="Pvz. UAB Statyba">
           </label>
@@ -85,7 +86,6 @@
           <div class="row">
             <label>Telefonas
               <input name="phone" type="tel" placeholder="+3706..." autocomplete="tel">
-              <div class="hint">Rekomenduojama: +3706xxxxxxx</div>
             </label>
             <label>El. paštas
               <input name="email" type="email" placeholder="info@imone.lt" autocomplete="email">
@@ -93,23 +93,23 @@
           </div>
 
           <label>Trumpas aprašymas
-            <textarea name="about" placeholder="Ką darote, kokie objektai, darbuotojų skaičius ir pan."></textarea>
+            <textarea name="about" placeholder="Ką darote, kokie objektai ir pan."></textarea>
           </label>
 
           <div class="actions">
             <button class="btn primary" type="submit">Išsaugoti profilį</button>
             <button class="btn secondary" type="button" id="clearEmployer">Išvalyti</button>
           </div>
-          <div id="empMsg" class="hint" aria-live="polite" style="margin-top:8px;"></div>
+          <div id="empMsg" class="hint" aria-live="polite"></div>
         </form>
       </section>
 
       <!-- Naujas pasiūlymas -->
       <section class="card">
         <h2 style="margin:0;">Naujas darbo pasiūlymas</h2>
-        <p class="hint">Žvaigždute pažymėti laukai privalomi. Kontaktai – iš „Įmonės profilio“.</p>
+        <p class="hint">Žvaigždute pažymėti laukai privalomi.</p>
 
-        <form id="offerForm" novalidate>
+        <form id="offerForm">
           <label>Pavadinimas *
             <input name="title" required placeholder="Pvz. Mūrininkas">
           </label>
@@ -124,14 +124,13 @@
           </div>
 
           <label>Trumpas aprašymas
-            <textarea name="desc" placeholder="Darbo pobūdis, reikalavimai, darbo grafikas..."></textarea>
+            <textarea name="desc" placeholder="Darbo pobūdis, reikalavimai, grafikas..."></textarea>
           </label>
 
           <div class="actions">
             <button class="btn primary" type="submit">Skelbti pasiūlymą</button>
-            <button class="btn secondary" type="button" id="seedOne">Įkelti pavyzdį</button>
           </div>
-          <div id="offerMsg" class="hint" aria-live="polite" style="margin-top:8px;"></div>
+          <div id="offerMsg" class="hint" aria-live="polite"></div>
         </form>
       </section>
     </div>
@@ -144,192 +143,161 @@
     <a href="/timurita/darbdavys.html" aria-current="page">Darbdavys</a>
   </nav>
 
-  <script type="module">
-    import { setSetting, getSetting, saveOffer } from '/timurita/db.js';
-    import { initTheme } from '/timurita/theme.js';
-    import { supabase } from '/timurita/supabase.js';
+  <script>
+    // Supabase klientas (naudojam tavo projektą ir anon key)
+    const supabaseUrl = 'https://qnczakppadjxbicgjzcy.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-    initTheme();
+    const EMP_KEY = 'timurita_employer_profile';
+    const OFFERS_KEY = 'timurita_offers';
 
-    const empForm  = document.getElementById('employerForm');
-    const offerForm= document.getElementById('offerForm');
-    const empMsg   = document.getElementById('empMsg');
-    const offerMsg = document.getElementById('offerMsg');
-    const clearBtn = document.getElementById('clearEmployer');
-    const seedOne  = document.getElementById('seedOne');
+    const v = (el) => el.value.trim();
 
-    const EMP_KEY = 'employer_profile';
-    const uuid = () => (crypto?.randomUUID?.() || 'id-' + Math.random().toString(36).slice(2,10));
-    const v = (el) => el?.value?.trim() || '';
-
-    // --- Profilio užkrovimas iš IndexedDB ---
-    (async () => {
+    // Užkraunam profilį iš localStorage
+    function loadProfile() {
+      const form = document.getElementById('employerForm');
+      const msg = document.getElementById('empMsg');
       try {
-        const data = await getSetting(EMP_KEY);
-        if (data) {
-          empForm.company.value = data.company ?? '';
-          empForm.contact.value = data.contact ?? '';
-          empForm.city.value    = data.city ?? '';
-          empForm.phone.value   = data.phone ?? '';
-          empForm.email.value   = data.email ?? '';
-          empForm.about.value   = data.about ?? '';
-          empMsg.textContent = '✅ Įkeltas anksčiau išsaugotas profilis.';
-        }
-      } catch (e) {
-        console.warn('getSetting klaida:', e);
-        empMsg.textContent = '⚠️ Nepavyko užkrauti profilio (naudojama tuščia forma).';
-      }
-    })();
-
-    empForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!v(empForm.company)) {
-        empMsg.textContent = '✋ Įrašykite įmonės pavadinimą.'; empForm.company.focus(); return;
-      }
-      const payload = {
-        company: v(empForm.company),
-        contact: v(empForm.contact),
-        city:    v(empForm.city),
-        phone:   v(empForm.phone),
-        email:   v(empForm.email),
-        about:   v(empForm.about)
-      };
-      try {
-        await setSetting(EMP_KEY, payload);
-        empMsg.textContent = '✅ Profilis išsaugotas (IndexedDB).';
-      } catch (err) {
-        console.warn('setSetting klaida:', err);
-        empMsg.textContent = '⚠️ Nepavyko išsaugoti profilio.';
-      }
-    });
-
-    clearBtn.addEventListener('click', async () => {
-      empForm.reset();
-      try {
-        await setSetting(EMP_KEY, { company:'', contact:'', city:'', phone:'', email:'', about:'' });
-      } catch {}
-      empMsg.textContent = '🧹 Profilio laukai išvalyti.';
-    });
-
-    // --- Lokalus pasiūlymo saugojimas be await (kad neužstrigtų UI) ---
-    function saveOfferLocal(offer) {
-      try {
-        if (typeof saveOffer === 'function') {
-          console.log('[Local] saveOffer() kviečiamas');
-          // KVIEČIAME, BET NELAUKIAME
-          saveOffer(offer).catch(e => console.warn('saveOffer klaida:', e));
-          return;
-        }
-      } catch (e) {
-        console.warn('saveOffer sinchroninė klaida:', e);
-      }
-      // Jei saveOffer nėra – fallback į localStorage
-      try {
-        const key = 'offers_fallback';
-        const all = JSON.parse(localStorage.getItem(key) || '[]');
-        all.push(offer);
-        localStorage.setItem(key, JSON.stringify(all));
-        console.log('[Local] fallback į localStorage');
-      } catch (e2) {
-        console.warn('localStorage fallback klaida:', e2);
+        const raw = localStorage.getItem(EMP_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        form.company.value = data.company || '';
+        form.contact.value = data.contact || '';
+        form.city.value    = data.city || '';
+        form.phone.value   = data.phone || '';
+        form.email.value   = data.email || '';
+        form.about.value   = data.about || '';
+        msg.textContent = '✅ Įkeltas anksčiau išsaugotas profilis.';
+      } catch(e) {
+        console.warn('loadProfile error', e);
+        msg.textContent = '⚠️ Nepavyko užkrauti profilio.';
       }
     }
 
-    async function insertToSupabase(offer, timeoutMs = 8000) {
-      const { data: { user }, error: userErr } = await supabase.auth.getUser();
-      if (userErr) throw new Error('auth.getUser: ' + userErr.message);
-      if (!user) return { skipped: true };
-
-      const op = supabase.from('offers').insert({
-        owner_id: user.id,
-        title: offer.title,
-        city: offer.city,
-        company: offer.company,
-        description: offer.desc,   // svarbu: stulpelis "description"
-        salary: offer.salary,
-        contact: offer.contact,
-        phone: offer.phone,
-        email: offer.email
-      });
-
-      const race = Promise.race([
-        op,
-        new Promise((_, rej) => setTimeout(() => rej(new Error('Supabase užklausa užtruko per ilgai')), timeoutMs))
-      ]);
-
-      const { error } = await race;
-      if (error) throw new Error(error.message || String(error));
-      return { ok:true };
-    }
-
-    // --- Naujas pasiūlymas ---
-    offerForm.addEventListener('submit', async (e) => {
+    function saveProfile(e) {
       e.preventDefault();
+      const form = document.getElementById('employerForm');
+      const msg = document.getElementById('empMsg');
 
-      if (!v(offerForm.title)) {
-        offerMsg.textContent = '✋ Įrašykite pasiūlymo pavadinimą.';
-        offerForm.title.focus();
+      if (!v(form.company)) {
+        msg.textContent = '✋ Įrašykite įmonės pavadinimą.';
+        form.company.focus();
         return;
       }
 
-      let emp = {};
-      try { emp = (await getSetting(EMP_KEY)) || {}; } catch { emp = {}; }
-
-      const localOffer = {
-        id: uuid(),
-        title:  v(offerForm.title),
-        city:   v(offerForm.city) || emp.city || '',
-        company:emp.company || '',
-        desc:   v(offerForm.desc),
-        salary: v(offerForm.salary),
-        contact: emp.contact || '',
-        phone:   emp.phone || '',
-        email:   emp.email || ''
+      const data = {
+        company: v(form.company),
+        contact: v(form.contact),
+        city:    v(form.city),
+        phone:   v(form.phone),
+        email:   v(form.email),
+        about:   v(form.about)
       };
 
-      // 1) iškart parodom, kad lokaliai išsaugota
-      offerMsg.textContent = '✅ Bandoma išsaugoti lokaliai...';
-      saveOfferLocal(localOffer); // NE await
-
-      // 2) bandome įrašyti į Supabase
       try {
-        const res = await insertToSupabase(localOffer);
-        if (res.ok) {
-          offerMsg.textContent = '✅ Pasiūlymas išsaugotas (lokaliai ir Supabase).';
-        } else {
-          offerMsg.textContent = '✅ Išsaugota lokaliai. (Neprisijungęs prie Supabase – prisijunkite per /auth.html)';
-        }
-      } catch (e2) {
-        console.warn('Supabase klaida:', e2);
-        offerMsg.textContent = '✅ Išsaugota lokaliai. ⚠️ Į Supabase nepavyko: ' + e2.message;
+        localStorage.setItem(EMP_KEY, JSON.stringify(data));
+        msg.textContent = '✅ Profilis išsaugotas (localStorage).';
+      } catch (e) {
+        console.warn('saveProfile error', e);
+        msg.textContent = '⚠️ Nepavyko išsaugoti profilio.';
+      }
+    }
+
+    function clearProfile() {
+      const form = document.getElementById('employerForm');
+      const msg = document.getElementById('empMsg');
+      form.reset();
+      try { localStorage.removeItem(EMP_KEY); } catch {}
+      msg.textContent = '🧹 Profilis išvalytas.';
+    }
+
+    async function submitOffer(e) {
+      e.preventDefault();
+      const form = document.getElementById('offerForm');
+      const empForm = document.getElementById('employerForm');
+      const msg = document.getElementById('offerMsg');
+
+      if (!v(form.title)) {
+        msg.textContent = '✋ Įrašykite pasiūlymo pavadinimą.';
+        form.title.focus();
+        return;
       }
 
-      offerForm.reset();
-    });
-
-    // Pavyzdinis pasiūlymas
-    seedOne.addEventListener('click', async () => {
-      let emp = {};
-      try { emp = (await getSetting(EMP_KEY)) || {}; } catch {}
-      const demo = {
-        id: uuid(),
-        title: 'Apdailininkas',
-        city:  emp.city || 'Vilnius',
-        company: emp.company || 'UAB Statyba',
-        desc: 'Butų apdaila, lankstus grafikas.',
-        salary: 'nuo 1200 €/mėn.',
-        contact: emp.contact || 'Jonas',
-        phone: emp.phone || '+3706...',
-        email: emp.email || 'info@imone.lt'
+      // paimam darbdavio duomenis iš formos (nebebūtina IndexedDB)
+      const offer = {
+        title: v(form.title),
+        city: v(form.city),
+        salary: v(form.salary),
+        desc: v(form.desc),
+        company: v(empForm.company),
+        contact: v(empForm.contact),
+        phone: v(empForm.phone),
+        email: v(empForm.email)
       };
-      offerMsg.textContent = '✅ Bandoma išsaugoti lokaliai...';
-      saveOfferLocal(demo);
-      try { await insertToSupabase(demo); } catch(e){ console.warn('seed supabase:', e.message); }
-      offerMsg.textContent = '✅ Pavyzdinis pasiūlymas įkeltas.';
-    });
-  </script>
 
-  <script>
+      // 1) Išsaugom lokaliai (localStorage)
+      try {
+        const raw = localStorage.getItem(OFFERS_KEY);
+        const all = raw ? JSON.parse(raw) : [];
+        all.push({ ...offer, id: Date.now() });
+        localStorage.setItem(OFFERS_KEY, JSON.stringify(all));
+        msg.textContent = '✅ Išsaugota lokaliai. Bandoma įrašyti į Supabase...';
+      } catch(e) {
+        console.warn('local offers save error', e);
+        msg.textContent = '⚠️ Nepavyko išsaugoti lokaliai. Bandoma įrašyti į Supabase...';
+      }
+
+      // 2) Bandom įrašyti į Supabase (jei prisijungęs)
+      try {
+        const { data: { user }, error: authErr } = await supabaseClient.auth.getUser();
+        if (authErr) {
+          console.warn('auth.getUser error', authErr);
+          msg.textContent = '✅ Išsaugota lokaliai. ⚠️ Nepavyko gauti prisijungimo informacijos.';
+          form.reset();
+          return;
+        }
+        if (!user) {
+          msg.textContent = '✅ Išsaugota lokaliai. Prisijunkite per /auth.html, kad pasiūlymas būtų išsaugotas ir serveryje.';
+          form.reset();
+          return;
+        }
+
+        const { error } = await supabaseClient.from('offers').insert({
+          owner_id: user.id,
+          title: offer.title,
+          city: offer.city,
+          company: offer.company,
+          description: offer.desc,
+          salary: offer.salary,
+          contact: offer.contact,
+          phone: offer.phone,
+          email: offer.email
+        });
+
+        if (error) {
+          console.warn('insert error', error);
+          msg.textContent = '✅ Išsaugota lokaliai. ⚠️ Į Supabase nepavyko: ' + error.message;
+        } else {
+          msg.textContent = '✅ Pasiūlymas išsaugotas (lokaliai ir Supabase).';
+        }
+      } catch (e2) {
+        console.warn('supabase error', e2);
+        msg.textContent = '✅ Išsaugota lokaliai. ⚠️ Supabase klaida: ' + e2.message;
+      }
+
+      form.reset();
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProfile();
+      document.getElementById('employerForm').addEventListener('submit', saveProfile);
+      document.getElementById('clearEmployer').addEventListener('click', clearProfile);
+      document.getElementById('offerForm').addEventListener('submit', submitOffer);
+    });
+
+    // Service worker (paliekam kaip buvo)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
         .then(()=>console.log('SW registered'))
