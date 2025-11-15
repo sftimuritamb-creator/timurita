@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Timurita – Darbdavys</title>
-  <meta name="description" content="Darbdavio valdymo puslapis – kurkite profilį ir skelbkite darbo pasiūlymus.">
+  <meta name="description" content="Darbdavio valdymo puslapis – kurkite profilį ir tvarkykite savo darbo pasiūlymus.">
 
   <!-- PWA -->
   <link rel="manifest" href="/timurita/manifest.json">
@@ -22,18 +22,21 @@
     .container { max-width:980px; margin:0 auto; padding:16px; }
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(15,23,42,0.05); }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(15,23,42,0.05); margin-bottom:16px; }
     .muted { color:var(--muted); }
     label { display:block; margin-top:12px; font-weight:600; color:#334155; }
     input, textarea { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; margin-top:4px; background:var(--card); color:var(--fg); }
     textarea { min-height:100px; resize:vertical; }
     .row { display:flex; gap:10px; }
     .row > * { flex:1; }
-    .btn { padding:10px 14px; font-size:14px; font-weight:600; border:none; border-radius:10px; cursor:pointer; }
+    .btn { padding:8px 12px; font-size:14px; font-weight:600; border:none; border-radius:10px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
     .btn.primary { background:var(--primary); color:#fff; }
     .btn.secondary { background:transparent; color:var(--fg); border:1px solid var(--line); }
+    .btn.danger { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
+    .btn.small { padding:6px 10px; font-size:12px; }
+    .btn:disabled { opacity:0.6; cursor:default; }
     .actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
-    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:rgba(248,250,252,0.9); border-top:1px solid var(--line); padding:10px; }
+    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:rgba(248,250,252,0.9); border-top:1px solid var(--line); padding:10px; backdrop-filter:blur(6px); }
     .bottom-nav a { text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:var(--fg); font-weight:600; background:var(--card); border:1px solid var(--line); }
     .bottom-nav a[aria-current="page"] { background:var(--primary); color:#fff; border-color:var(--primary); }
     .hint { font-size:12px; color:var(--muted); margin-top:4px; }
@@ -58,6 +61,18 @@
       opacity:0.5;
       pointer-events:none;
     }
+
+    /* Mano pasiūlymų sąrašas */
+    #myOffersSection h2 { margin-top:0; }
+    .my-offers-header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .my-offers-status { font-size:12px; color:var(--muted); }
+    .my-offers-list { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+    .my-offer-card { border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--card); }
+    .my-offer-title { font-size:14px; font-weight:700; margin:0; }
+    .my-offer-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+    .my-offer-actions { margin-top:6px; display:flex; gap:6px; align-items:center; justify-content:space-between; }
+    .my-offer-date { font-size:11px; color:var(--muted); }
+    .empty { font-size:13px; color:var(--muted); font-style:italic; margin-top:6px; }
   </style>
 
   <!-- Supabase UMD biblioteka -->
@@ -84,15 +99,15 @@
 
     <h1>Darbdavio valdymas</h1>
     <p class="muted">
-      Čia galite tvarkyti įmonės profilį ir kurti darbo pasiūlymus.
-      <br>Norint skelbimus išsaugoti serveryje (Supabase) ir matyti juos „Pasiūlymai“ puslapyje, būtina būti prisijungus.
+      Čia galite tvarkyti įmonės profilį, kurti naujus darbo pasiūlymus ir matyti savo jau paskelbtus pasiūlymus.
+      Pasiūlymai saugomi Supabase ir matomi darbuotojams „Pasiūlymai“ puslapyje.
     </p>
 
     <div id="formsWrapper" class="grid">
       <!-- Įmonės profilis -->
       <section class="card">
         <h2 style="margin:0;">Įmonės profilis</h2>
-        <p class="hint">Šie duomenys automatiškai naudojami kontaktams pasiūlyme.</p>
+        <p class="hint">Šie duomenys automatiškai naudojami kontaktams pasiūlyme. Saugojama šiame įrenginyje (localStorage).</p>
 
         <form id="employerForm">
           <label>Įmonės pavadinimas
@@ -132,7 +147,7 @@
       <!-- Naujas pasiūlymas -->
       <section class="card">
         <h2 style="margin:0;">Naujas darbo pasiūlymas</h2>
-        <p class="hint">Žvaigždute pažymėti laukai privalomi.</p>
+        <p class="hint">Žvaigždute pažymėti laukai privalomi. Sukurtas pasiūlymas iš karto atsiras „Mano pasiūlymuose“ ir „Pasiūlymai“ sąraše.</p>
 
         <form id="offerForm">
           <label>Pavadinimas *
@@ -159,6 +174,20 @@
         </form>
       </section>
     </div>
+
+    <!-- Mano paskelbti pasiūlymai -->
+    <section class="card" id="myOffersSection">
+      <div class="my-offers-header">
+        <h2>Jūsų paskelbti pasiūlymai</h2>
+        <span class="badge">Supabase</span>
+      </div>
+      <p class="hint">
+        Čia rodomi visi pasiūlymai, kuriuos sukūrėte prisijungęs su šia paskyra. Ištrynus pasiūlymą, jis nebebus matomas darbuotojams.
+      </p>
+      <div class="my-offers-status" id="myOffersStatus">Kraunami pasiūlymai...</div>
+      <div class="my-offers-list" id="myOffersList"></div>
+      <div class="empty" id="myOffersEmpty" style="display:none;">Dar nesate paskelbę jokių pasiūlymų.</div>
+    </section>
   </main>
 
   <nav class="bottom-nav" aria-label="Apatinė navigacija">
@@ -171,6 +200,8 @@
   <script>
     // --- Supabase klientas (tas pats projektas) ---
     let supabaseClient = null;
+    let currentUser = null; // prisijungęs vartotojas (darbdavys)
+
     try {
       if (window.supabase) {
         const supabaseUrl = 'https://qnczakppadjxbicgjzcy.supabase.co';
@@ -190,13 +221,18 @@
 
     const guardBox = document.getElementById('guardBox');
     const formsWrapper = document.getElementById('formsWrapper');
+    const myOffersSection = document.getElementById('myOffersSection');
+    const myOffersStatus = document.getElementById('myOffersStatus');
+    const myOffersList = document.getElementById('myOffersList');
+    const myOffersEmpty = document.getElementById('myOffersEmpty');
+    const offerMsg = document.getElementById('offerMsg');
+    const profileMsgEl = document.getElementById('empMsg');
 
     // --- Apsauga: tik prisijungus ---
     async function guardAuth() {
       if (!supabaseClient) {
-        guardBox.classList.remove('guard-ok');
-        guardBox.innerHTML = '🚫 Nepavyko užkrauti Supabase kliento. Šis puslapis veiks tik šiame įrenginyje (lokaliai).';
-        // Jei nori, galim čia išjungti formą – kol kas paliekam lokaliam naudojimui
+        guardBox.innerHTML = '⚠️ Supabase klientas nepasileido. Pasiūlymai bus saugomi tik šiame įrenginyje.';
+        myOffersStatus.textContent = 'Supabase nepasiekiamas – „Mano pasiūlymai“ neveiks.';
         return;
       }
 
@@ -204,28 +240,33 @@
         const { data: { user }, error } = await supabaseClient.auth.getUser();
         if (error) {
           console.warn('auth.getUser klaida:', error);
-          guardBox.innerHTML = '⚠️ Nepavyko patikrinti prisijungimo. Bandykite dar kartą arba prisijunkite iš naujo per <a href="/timurita/auth.html">prisijungimo puslapį</a>.';
+          guardBox.innerHTML = '⚠️ Nepavyko patikrinti prisijungimo. Prisijunkite per <a href="/timurita/auth.html">prisijungimo puslapį</a>.';
           formsWrapper.classList.add('disabled-overlay');
+          myOffersStatus.textContent = 'Prisijungimas nenustatytas.';
           return;
         }
 
         if (!user) {
           guardBox.innerHTML = '🔐 Reikia prisijungti kaip darbdaviui. Nukreipiama į prisijungimo puslapį...';
           formsWrapper.classList.add('disabled-overlay');
-          // nedidelis vėlavimas, kad matytum žinutę
+          myOffersStatus.textContent = 'Prisijungimas nenustatytas.';
           setTimeout(() => {
             window.location.href = '/timurita/auth.html';
           }, 1500);
           return;
         }
 
-        // Vartotojas prisijungęs – leidžiam naudotis
+        currentUser = user;
         guardBox.classList.add('guard-ok');
-        guardBox.innerHTML = '✅ Prisijungta. Galite kurti ir tvarkyti darbo pasiūlymus.';
+        guardBox.innerHTML = '✅ Prisijungta. Šiuo metu prisijungęs darbdavys: <strong>' + (user.email || '') + '</strong>.';
+
+        // kai jau žinom user, galim užkrauti jo pasiūlymus
+        loadMyOffers();
       } catch (e) {
         console.warn('guardAuth klaida:', e);
         guardBox.innerHTML = '⚠️ Nepavyko patikrinti prisijungimo. Pabandykite atnaujinti puslapį.';
         formsWrapper.classList.add('disabled-overlay');
+        myOffersStatus.textContent = 'Prisijungimas nenustatytas.';
       }
     }
 
@@ -292,10 +333,9 @@
       e.preventDefault();
       const form = document.getElementById('offerForm');
       const empForm = document.getElementById('employerForm');
-      const msg = document.getElementById('offerMsg');
 
       if (!v(form.title)) {
-        msg.textContent = '✋ Įrašykite pasiūlymo pavadinimą.';
+        offerMsg.textContent = '✋ Įrašykite pasiūlymo pavadinimą.';
         form.title.focus();
         return;
       }
@@ -311,41 +351,39 @@
         email: v(empForm.email)
       };
 
-      // 1) lokaliai
+      // 1) Lokaliai (kad išliktų šiame įrenginyje, offline)
       try {
         const raw = localStorage.getItem(OFFERS_KEY);
         const all = raw ? JSON.parse(raw) : [];
         all.push({ ...offer, id: Date.now() });
         localStorage.setItem(OFFERS_KEY, JSON.stringify(all));
-        msg.textContent = '✅ Išsaugota lokaliai. Bandoma įrašyti į Supabase...';
+        offerMsg.textContent = '✅ Išsaugota lokaliai. Bandoma įrašyti į Supabase...';
       } catch(e) {
         console.warn('local offers save error', e);
-        msg.textContent = '⚠️ Nepavyko išsaugoti lokaliai. Bandoma įrašyti į Supabase...';
+        offerMsg.textContent = '⚠️ Nepavyko išsaugoti lokaliai. Bandoma įrašyti į Supabase...';
       }
 
-      // 2) Supabase – tik jei klientas yra
+      // 2) Supabase – tik jei klientas ir user
       if (!supabaseClient) {
-        msg.textContent = '✅ Išsaugota lokaliai. Supabase šiuo metu nepasiekiamas (klientas nesukurtas).';
+        offerMsg.textContent = '✅ Išsaugota lokaliai. Supabase šiuo metu nepasiekiamas.';
         form.reset();
         return;
       }
 
       try {
-        const { data: { user }, error: authErr } = await supabaseClient.auth.getUser();
-        if (authErr) {
-          console.warn('auth.getUser error', authErr);
-          msg.textContent = '✅ Išsaugota lokaliai. ⚠️ Nepavyko gauti prisijungimo informacijos.';
-          form.reset();
-          return;
+        // įsitikinam, kad turim currentUser
+        if (!currentUser) {
+          const { data: { user } } = await supabaseClient.auth.getUser();
+          currentUser = user || null;
         }
-        if (!user) {
-          msg.textContent = '✅ Išsaugota lokaliai. Prisijunkite per /auth.html, kad pasiūlymas būtų išsaugotas ir serveryje.';
+        if (!currentUser) {
+          offerMsg.textContent = '✅ Išsaugota lokaliai. Prisijunkite iš naujo, kad būtų išsaugota serveryje.';
           form.reset();
           return;
         }
 
         const { error } = await supabaseClient.from('offers').insert({
-          owner_id: user.id,
+          owner_id: currentUser.id,
           title: offer.title,
           city: offer.city,
           company: offer.company,
@@ -358,26 +396,152 @@
 
         if (error) {
           console.warn('insert error', error);
-          msg.textContent = '✅ Išsaugota lokaliai. ⚠️ Į Supabase nepavyko: ' + error.message;
+          offerMsg.textContent = '✅ Išsaugota lokaliai. ⚠️ Į Supabase nepavyko: ' + error.message;
         } else {
-          msg.textContent = '✅ Pasiūlymas išsaugotas (lokaliai ir Supabase).';
+          offerMsg.textContent = '✅ Pasiūlymas išsaugotas (lokaliai ir Supabase).';
+          // perkraunam „Mano pasiūlymų“ sąrašą
+          loadMyOffers();
         }
       } catch (e2) {
         console.warn('supabase error', e2);
-        msg.textContent = '✅ Išsaugota lokaliai. ⚠️ Supabase klaida: ' + e2.message;
+        offerMsg.textContent = '✅ Išsaugota lokaliai. ⚠️ Supabase klaida: ' + e2.message;
       }
 
       form.reset();
+    }
+
+    // --- Mano pasiūlymų sąrašas iš Supabase ---
+    function formatDate(iso) {
+      if (!iso) return '';
+      try {
+        const d = new Date(iso);
+        return d.toLocaleDateString('lt-LT') + ' ' + d.toLocaleTimeString('lt-LT', { hour: '2-digit', minute: '2-digit' });
+      } catch {
+        return iso;
+      }
+    }
+
+    async function loadMyOffers() {
+      myOffersList.innerHTML = '';
+      myOffersEmpty.style.display = 'none';
+
+      if (!supabaseClient || !currentUser) {
+        myOffersStatus.textContent = 'Supabase ar prisijungimas nepasiekiamas.';
+        myOffersEmpty.style.display = 'block';
+        return;
+      }
+
+      myOffersStatus.textContent = 'Kraunami jūsų pasiūlymai...';
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('offers')
+          .select('*')
+          .eq('owner_id', currentUser.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.warn('loadMyOffers klaida:', error);
+          myOffersStatus.textContent = 'Klaida gaunant pasiūlymus: ' + (error.message || 'nežinoma');
+          myOffersEmpty.style.display = 'block';
+          return;
+        }
+
+        if (!data || !data.length) {
+          myOffersStatus.textContent = 'Pasiūlymų nerasta.';
+          myOffersEmpty.style.display = 'block';
+          return;
+        }
+
+        myOffersStatus.textContent = 'Rasta pasiūlymų: ' + data.length;
+        data.forEach(o => {
+          const card = document.createElement('div');
+          card.className = 'my-offer-card';
+
+          const titleEl = document.createElement('p');
+          titleEl.className = 'my-offer-title';
+          titleEl.textContent = o.title || 'Be pavadinimo';
+          card.appendChild(titleEl);
+
+          const metaEl = document.createElement('p');
+          metaEl.className = 'my-offer-meta';
+          const metaParts = [];
+          if (o.city) metaParts.push(o.city);
+          if (o.salary) metaParts.push(o.salary);
+          metaEl.textContent = metaParts.join(' • ');
+          card.appendChild(metaEl);
+
+          const actionsRow = document.createElement('div');
+          actionsRow.className = 'my-offer-actions';
+
+          const dateEl = document.createElement('span');
+          dateEl.className = 'my-offer-date';
+          dateEl.textContent = 'Sukurta: ' + formatDate(o.created_at);
+
+          const btnRow = document.createElement('div');
+          const deleteBtn = document.createElement('button');
+          deleteBtn.type = 'button';
+          deleteBtn.className = 'btn small danger';
+          deleteBtn.textContent = '🗑 Ištrinti';
+          deleteBtn.addEventListener('click', () => {
+            deleteOffer(o.id);
+          });
+
+          btnRow.appendChild(deleteBtn);
+          actionsRow.appendChild(dateEl);
+          actionsRow.appendChild(btnRow);
+
+          card.appendChild(actionsRow);
+          myOffersList.appendChild(card);
+        });
+      } catch (e) {
+        console.warn('loadMyOffers klaida:', e);
+        myOffersStatus.textContent = 'Klaida gaunant pasiūlymus: ' + e.message;
+        myOffersEmpty.style.display = 'block';
+      }
+    }
+
+    async function deleteOffer(offerId) {
+      if (!confirm('Ar tikrai norite ištrinti šį pasiūlymą?')) return;
+      if (!supabaseClient || !currentUser) {
+        alert('Supabase neprieinamas arba neprisijungta.');
+        return;
+      }
+
+      myOffersStatus.textContent = 'Šalinamas pasiūlymas...';
+
+      try {
+        const { error } = await supabaseClient
+          .from('offers')
+          .delete()
+          .eq('id', offerId)
+          .eq('owner_id', currentUser.id);
+
+        if (error) {
+          console.warn('deleteOffer klaida:', error);
+          myOffersStatus.textContent = 'Klaida šalinant pasiūlymą: ' + (error.message || 'nežinoma');
+          alert('Nepavyko ištrinti pasiūlymo.');
+        } else {
+          myOffersStatus.textContent = 'Pasiūlymas ištrintas.';
+          loadMyOffers();
+        }
+      } catch (e) {
+        console.warn('deleteOffer klaida:', e);
+        myOffersStatus.textContent = 'Klaida šalinant pasiūlymą: ' + e.message;
+        alert('Nepavyko ištrinti pasiūlymo.');
+      }
     }
 
     // --- Inicializacija ---
     document.addEventListener('DOMContentLoaded', () => {
       guardAuth();
       loadProfile();
+
       document.getElementById('employerForm').addEventListener('submit', saveProfile);
       document.getElementById('clearEmployer').addEventListener('click', clearProfile);
       document.getElementById('offerForm').addEventListener('submit', submitOffer);
-      console.log('Darbdavys puslapis paruoštas');
+
+      console.log('Darbdavys puslapis su „Mano pasiūlymais“ paruoštas');
     });
 
     // Service worker
