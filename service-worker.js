@@ -1,20 +1,18 @@
-/* Timurita – Service Worker (pilnas)
- * Strategijos:
- * - HTML: network-first su offline fallback
- * - Statiniai (CSS/JS/ikonos): stale-while-revalidate (cache-first su fone vykstančiu atnaujinimu)
- * - Paveikslėliai: cache-first (su dydžio limitu)
- * - Supabase: VISADA per tinklą (be cache)
- * - „Skip waiting“: per postMessage('SKIP_WAITING')
+/* ===== TIMURITA SERVICE WORKER =====
+ * 2025-11-15 — versija su Supabase išimtimi
+ * Palaiko:
+ *   - App shell cache (offline puslapiai)
+ *   - Static failų kešavimą
+ *   - HTML network-first strategiją
+ *   - Supabase – visada per tinklą (be cache)
  */
 
-const VERSION = 'v32-2025-11-15'; // ⬅️ PAKEISK kai atnaujini SW
+const VERSION = 'v35-2025-11-15';
 const BASE = '/timurita';
 
-const CACHE_STATIC  = `timurita-static-${VERSION}`;
+const CACHE_STATIC = `timurita-static-${VERSION}`;
 const CACHE_RUNTIME = `timurita-runtime-${VERSION}`;
-const CACHE_IMAGES  = `timurita-images-${VERSION}`;
 
-/** App Shell – failai, kuriuos norime turėti offline iškart */
 const APP_SHELL = [
   `${BASE}/`,
   `${BASE}/index.html`,
@@ -28,176 +26,98 @@ const APP_SHELL = [
   `${BASE}/db.js`,
   `${BASE}/theme.js`,
   `${BASE}/supabase.js`,
+  `${BASE}/manifest.json`,
   `${BASE}/Timurita_logo_192x192.png`,
   `${BASE}/Timurita_logo_512x512.png`,
-  `${BASE}/manifest.json`,
 ];
 
-/* Naudingos funkcijos */
-const isHTMLRequest = (req) =>
-  req.mode === 'navigate' ||
-  (req.headers.get('accept') || '').includes('text/html');
+/* === Pagalbinės funkcijos === */
+function isHTML(req) {
+  return req.mode === 'navigate' ||
+    (req.headers.get('accept') || '').includes('text/html');
+}
 
-const isImageRequest = (req) => {
+function isStatic(req) {
   const url = new URL(req.url);
-  return /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(url.pathname);
-};
-
-const isStaticAsset = (req) => {
-  const url = new URL(req.url);
-  return /\.(css|js|mjs|json|ico)$/i.test(url.pathname);
-};
-
-const fromCache = (cacheName, request) =>
-  caches.open(cacheName).then((cache) => cache.match(request));
-
-const putCache = (cacheName, request, response) =>
-  caches.open(cacheName).then((cache) => cache.put(request, response.clone()));
-
-async function staleWhileRevalidate(cacheName, request) {
-  const cachePromise = caches.open(cacheName);
-  const cached = await (await cachePromise).match(request);
-  const networkPromise = fetch(request)
-    .then((resp) => {
-      // Saugom tik 200 atsakymus
-      if (resp && resp.status === 200) {
-        cachePromise.then((cache) => cache.put(request, resp.clone()));
-      }
-      return resp;
-    })
-    .catch(() => null);
-
-  // Grąžinam iš cache, o fone atsinaujins
-  return cached || (await networkPromise);
+  return /\.(js|css|json|ico|png|jpg|jpeg|svg|webp)$/i.test(url.pathname);
 }
 
-async function cacheFirst(cacheName, request) {
-  const cached = await fromCache(cacheName, request);
-  if (cached) return cached;
-  const resp = await fetch(request);
-  if (resp && resp.status === 200) {
-    await putCache(cacheName, request, resp);
-  }
-  return resp;
-}
-
-async function networkFirstHTML(request) {
-  try {
-    // Navigation Preload atsakymas (jei įjungtas) yra greitesnis
-    const preload = await self.registration.navigationPreload?.getState?.()
-      .then((s) => s?.enabled ? event.preloadResponse : null)
-      .catch(() => null);
-
-    const resp = (preload ? await preload : null) || await fetch(request, { cache: 'no-store' });
-    // Į cache dedam tik sėkmingą atsakymą
-    if (resp && resp.status === 200) {
-      await putCache(CACHE_RUNTIME, request, resp);
-    }
-    return resp;
-  } catch (err) {
-    // Tinklas neveikia: bandome iš cache, tada offline.html
-    const cached = await fromCache(CACHE_RUNTIME, request) || await fromCache(CACHE_STATIC, request);
-    return cached || caches.match(`${BASE}/offline.html`);
-  }
-}
-
-/* Ribojam paveikslėlių cache, kad neaugtų be ribų */
-async function trimImageCache(maxEntries = 60) {
-  const cache = await caches.open(CACHE_IMAGES);
-  const keys = await cache.keys();
-  const surplus = keys.length - maxEntries;
-  if (surplus > 0) {
-    for (let i = 0; i < surplus; i++) {
-      await cache.delete(keys[i]);
-    }
-  }
-}
-
-/* INSTALL – sukaupiam App Shell */
+/* === INSTALL === */
 self.addEventListener('install', (event) => {
+  console.log('[SW] Installing', VERSION);
   event.waitUntil(
-    (async () => {
-      const cache = await caches.open(CACHE_STATIC);
-      await cache.addAll(APP_SHELL);
-      // aktyvuojam, nelaukiant seno SW
-      self.skipWaiting();
-    })()
+    caches.open(CACHE_STATIC).then((cache) => cache.addAll(APP_SHELL))
   );
+  self.skipWaiting();
 });
 
-/* ACTIVATE – išvalom senus cache + įjungiam navigation preload */
+/* === ACTIVATE === */
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating', VERSION);
   event.waitUntil(
     (async () => {
-      // Navigation Preload (greitesni HTML atsakymai)
-      if ('navigationPreload' in self.registration) {
-        try { await self.registration.navigationPreload.enable(); } catch {}
-      }
-
       const keys = await caches.keys();
       await Promise.all(
         keys.map((key) => {
-          if (![CACHE_STATIC, CACHE_RUNTIME, CACHE_IMAGES].includes(key)) {
+          if (![CACHE_STATIC, CACHE_RUNTIME].includes(key)) {
+            console.log('[SW] Deleting old cache:', key);
             return caches.delete(key);
           }
         })
       );
-      // perimam kontrolę iškart
-      await self.clients.claim();
+      self.clients.claim();
     })()
   );
 });
 
-/* PRANEŠIMAS iš puslapio – leidžia „Skip Waiting“ iš UI */
-self.addEventListener('message', (event) => {
-  if (event.data === 'SKIP_WAITING') self.skipWaiting();
-});
-
-/* FETCH – maršrutizacija pagal tipą ir domeną */
+/* === FETCH === */
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const req = event.request;
+  const url = new URL(req.url);
 
-  // 1) Supabase – VISADA per tinklą (be cache)
+  // ✅ 1. Supabase — visada per tinklą, be cache
   if (url.hostname.endsWith('.supabase.co')) {
-    event.respondWith(fetch(request));
+    event.respondWith(fetch(req));
     return;
   }
 
-  // 2) HTML (navigacijos) – network-first su offline fallback
-  if (isHTMLRequest(request)) {
-    event.respondWith(networkFirstHTML(request));
-    return;
-  }
-
-  // 3) Paveikslėliai – cache-first su dydžio ribojimu
-  if (isImageRequest(request)) {
+  // ✅ 2. HTML (navigacija) — network first, fallback į offline.html
+  if (isHTML(req)) {
     event.respondWith(
-      (async () => {
-        const resp = await cacheFirst(CACHE_IMAGES, request);
-        trimImageCache().catch(()=>{});
-        return resp;
-      })()
+      fetch(req)
+        .then((resp) => {
+          const copy = resp.clone();
+          caches.open(CACHE_RUNTIME).then((c) => c.put(req, copy));
+          return resp;
+        })
+        .catch(() => caches.match(req).then((r) => r || caches.match(`${BASE}/offline.html`)))
     );
     return;
   }
 
-  // 4) Statiniai assetai (CSS/JS/JSON/ICO) – stale-while-revalidate
-  if (isStaticAsset(request) || url.pathname.startsWith(`${BASE}/`)) {
-    event.respondWith(staleWhileRevalidate(CACHE_STATIC, request));
+  // ✅ 3. Statiniai failai — cache first
+  if (isStatic(req)) {
+    event.respondWith(
+      caches.match(req).then((cacheResp) => {
+        return (
+          cacheResp ||
+          fetch(req).then((networkResp) => {
+            caches.open(CACHE_STATIC).then((c) => c.put(req, networkResp.clone()));
+            return networkResp;
+          })
+        );
+      })
+    );
     return;
   }
 
-  // 5) Visi kiti – bandome tinklą, jei failina – cache
+  // ✅ 4. Kiti – tiesiog bandome tinklą
   event.respondWith(
-    (async () => {
-      try {
-        const resp = await fetch(request);
-        return resp;
-      } catch {
-        const cached = await fromCache(CACHE_RUNTIME, request) || await fromCache(CACHE_STATIC, request);
-        return cached || new Response('Offline', { status: 503, statusText: 'Offline' });
-      }
-    })()
+    fetch(req).catch(() => caches.match(`${BASE}/offline.html`))
   );
+});
+
+/* === Pranešimas iš puslapio (pvz. skip waiting) === */
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
