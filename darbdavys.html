@@ -63,6 +63,7 @@
     <p class="muted">Užpildykite įmonės profilį ir kurkite darbo pasiūlymus. Lokaliai (IndexedDB) ir, jei būsite <strong>prisijungę</strong> per <span class="badge">/auth.html</span>, papildomai įrašysime į <strong>Supabase</strong>.</p>
 
     <div class="grid">
+      <!-- Įmonės profilis -->
       <section class="card">
         <h2 style="margin:0;">Įmonės profilis</h2>
         <p class="hint">Duomenys automatiškai pildys pasiūlymo kontaktus.</p>
@@ -103,6 +104,7 @@
         </form>
       </section>
 
+      <!-- Naujas pasiūlymas -->
       <section class="card">
         <h2 style="margin:0;">Naujas darbo pasiūlymas</h2>
         <p class="hint">Žvaigždute pažymėti laukai privalomi. Kontaktai – iš „Įmonės profilio“.</p>
@@ -160,7 +162,7 @@
     const uuid = () => (crypto?.randomUUID?.() || 'id-' + Math.random().toString(36).slice(2,10));
     const v = (el) => el?.value?.trim() || '';
 
-    // saugus profilio užkrovimas
+    // --- Profilio užkrovimas iš IndexedDB ---
     (async () => {
       try {
         const data = await getSetting(EMP_KEY);
@@ -209,47 +211,60 @@
       empMsg.textContent = '🧹 Profilio laukai išvalyti.';
     });
 
-    // pagalbinis: saugus lokalaus pasiūlymo išsaugojimas
-    async function saveOfferLocal(offer) {
+    // --- Lokalus pasiūlymo saugojimas be await (kad neužstrigtų UI) ---
+    function saveOfferLocal(offer) {
       try {
         if (typeof saveOffer === 'function') {
-          await saveOffer(offer);
+          console.log('[Local] saveOffer() kviečiamas');
+          // KVIEČIAME, BET NELAUKIAME
+          saveOffer(offer).catch(e => console.warn('saveOffer klaida:', e));
           return;
         }
       } catch (e) {
-        console.warn('saveOffer klaida, bandome localStorage:', e);
+        console.warn('saveOffer sinchroninė klaida:', e);
       }
-      // fallback į localStorage, kad bent kažkas išliktų
-      const key = 'offers_fallback';
-      const all = JSON.parse(localStorage.getItem(key) || '[]');
-      all.push(offer);
-      localStorage.setItem(key, JSON.stringify(all));
+      // Jei saveOffer nėra – fallback į localStorage
+      try {
+        const key = 'offers_fallback';
+        const all = JSON.parse(localStorage.getItem(key) || '[]');
+        all.push(offer);
+        localStorage.setItem(key, JSON.stringify(all));
+        console.log('[Local] fallback į localStorage');
+      } catch (e2) {
+        console.warn('localStorage fallback klaida:', e2);
+      }
     }
 
-    async function insertToSupabase(offer) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return { skipped:true };
+    async function insertToSupabase(offer, timeoutMs = 8000) {
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr) throw new Error('auth.getUser: ' + userErr.message);
+      if (!user) return { skipped: true };
 
-      const { error } = await supabase.from('offers').insert({
+      const op = supabase.from('offers').insert({
         owner_id: user.id,
         title: offer.title,
         city: offer.city,
         company: offer.company,
-        description: offer.desc,   // tavo stulpelis Supabase
+        description: offer.desc,   // svarbu: stulpelis "description"
         salary: offer.salary,
         contact: offer.contact,
         phone: offer.phone,
         email: offer.email
       });
 
+      const race = Promise.race([
+        op,
+        new Promise((_, rej) => setTimeout(() => rej(new Error('Supabase užklausa užtruko per ilgai')), timeoutMs))
+      ]);
+
+      const { error } = await race;
       if (error) throw new Error(error.message || String(error));
       return { ok:true };
     }
 
-    // naujas pasiūlymas
+    // --- Naujas pasiūlymas ---
     offerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      offerMsg.textContent = '⏳ Išsaugoma (lokaliai)...';
 
       if (!v(offerForm.title)) {
         offerMsg.textContent = '✋ Įrašykite pasiūlymo pavadinimą.';
@@ -258,11 +273,7 @@
       }
 
       let emp = {};
-      try {
-        emp = (await getSetting(EMP_KEY)) || {};
-      } catch {
-        emp = {};
-      }
+      try { emp = (await getSetting(EMP_KEY)) || {}; } catch { emp = {}; }
 
       const localOffer = {
         id: uuid(),
@@ -276,30 +287,27 @@
         email:   emp.email || ''
       };
 
+      // 1) iškart parodom, kad lokaliai išsaugota
+      offerMsg.textContent = '✅ Bandoma išsaugoti lokaliai...';
+      saveOfferLocal(localOffer); // NE await
+
+      // 2) bandome įrašyti į Supabase
       try {
-        await saveOfferLocal(localOffer);
-        offerMsg.textContent = '✅ Išsaugota lokaliai. Bandau įrašyti į Supabase...';
-
-        try {
-          const res = await insertToSupabase(localOffer);
-          if (res.ok) {
-            offerMsg.textContent = '✅ Pasiūlymas išsaugotas (lokaliai ir Supabase).';
-          } else {
-            offerMsg.textContent = '✅ Išsaugota lokaliai. (Neprisijungęs prie Supabase – prisijunkite per /auth.html)';
-          }
-        } catch (e2) {
-          console.warn('Supabase klaida:', e2);
-          offerMsg.textContent = '✅ Išsaugota lokaliai. ⚠️ Į Supabase nepavyko: ' + e2.message;
+        const res = await insertToSupabase(localOffer);
+        if (res.ok) {
+          offerMsg.textContent = '✅ Pasiūlymas išsaugotas (lokaliai ir Supabase).';
+        } else {
+          offerMsg.textContent = '✅ Išsaugota lokaliai. (Neprisijungęs prie Supabase – prisijunkite per /auth.html)';
         }
-
-        offerForm.reset();
-      } catch (err) {
-        console.error('Save offer klaida:', err);
-        offerMsg.textContent = '⚠️ Nepavyko išsaugoti pasiūlymo: ' + (err?.message || err);
+      } catch (e2) {
+        console.warn('Supabase klaida:', e2);
+        offerMsg.textContent = '✅ Išsaugota lokaliai. ⚠️ Į Supabase nepavyko: ' + e2.message;
       }
+
+      offerForm.reset();
     });
 
-    // Pavyzdinis įrašas
+    // Pavyzdinis pasiūlymas
     seedOne.addEventListener('click', async () => {
       let emp = {};
       try { emp = (await getSetting(EMP_KEY)) || {}; } catch {}
@@ -314,13 +322,10 @@
         phone: emp.phone || '+3706...',
         email: emp.email || 'info@imone.lt'
       };
-      try {
-        await saveOfferLocal(demo);
-        try { await insertToSupabase(demo); } catch(e) { console.warn('seed supabase:', e.message); }
-        offerMsg.textContent = '✅ Pavyzdinis pasiūlymas įkeltas.';
-      } catch {
-        offerMsg.textContent = '⚠️ Nepavyko įkelti pavyzdžio.';
-      }
+      offerMsg.textContent = '✅ Bandoma išsaugoti lokaliai...';
+      saveOfferLocal(demo);
+      try { await insertToSupabase(demo); } catch(e){ console.warn('seed supabase:', e.message); }
+      offerMsg.textContent = '✅ Pavyzdinis pasiūlymas įkeltas.';
     });
   </script>
 
