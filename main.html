@@ -20,10 +20,7 @@
       gap:16px;
     }
     @media (min-width: 768px) {
-      .hero {
-        flex-direction:row;
-        align-items:center;
-      }
+      .hero { flex-direction:row; align-items:center; }
     }
     .hero-text {
       flex:1;
@@ -38,10 +35,8 @@
     @media (min-width: 768px) {
       .hero-text h1 { font-size:28px; }
     }
-    .hero-text p {
-      margin:0;
-      color:#cbd5e1;
-    }
+    .hero-text p { margin:0; color:#cbd5e1; }
+
     .hero-list {
       margin:8px 0 0;
       padding-left:18px;
@@ -54,6 +49,26 @@
       margin-top:8px;
       font-size:13px;
       color:#a5b4fc;
+    }
+
+    /* MY BUTTON */
+    .offer-btn {
+      margin-top:12px;
+      display:flex;
+      width:100%;
+      justify-content:center;
+      padding:12px 18px;
+      background:#0ea5e9;
+      color:#0b1120;
+      font-size:15px;
+      border:none;
+      border-radius:14px;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow:0 0 20px rgba(14,165,233,0.3);
+    }
+    .offer-btn:hover {
+      background:#38bdf8;
     }
 
     .hero-logo {
@@ -103,9 +118,7 @@
       gap:10px;
     }
     @media (min-width: 600px) {
-      .role-actions {
-        flex-direction:row;
-      }
+      .role-actions { flex-direction:row; }
     }
     .role-actions .btn {
       flex:1;
@@ -142,8 +155,11 @@
   <div class="card">
     <div class="hero">
       <div class="hero-text">
+
         <span class="pill" id="welcomeRole">Sveiki sugrįžę</span>
+
         <h1>Užsidirbk statybose be ilgalaikių įsipareigojimų</h1>
+
         <p>
           Trumpalaikio darbo platforma Vilniuje – atlyginimas kiekvieną penktadienį,
           jokio ilgo laukimo ir sudėtingų atrankų.
@@ -152,36 +168,45 @@
         <ul class="hero-list">
           <li>Atlyginimas – kiekvieną penktadienį</li>
           <li>Paprasta dirbti – jokių darbo pokalbių</li>
-          <li>Užsidirbk be įsipareigojimų ilgalaikiam darbui</li>
+          <li>Užsidirbk be ilgalaikių įsipareigojimų</li>
         </ul>
 
         <p class="hero-steps">
           Užsiregistruok → kandidatuok → sulauk patvirtinimo → atvyk dirbti → gauk darbo užmokestį.
         </p>
+
+        <!-- NAUJAS MYGTUKAS čia -->
+        <button class="offer-btn" onclick="location.href='./pasiulymai.html'">
+          🔍 Darbo pasiūlymai
+        </button>
+
       </div>
 
-      <!-- Dešinėje – didesnis logotipas (vėliau galėsi pakeisti į kitą paveikslėlį) -->
+      <!-- Dešinėje – didelis logotipas -->
       <div class="hero-logo">
         <img src="./Timurita_logo_192x192.png" alt="Timurita logotipas">
       </div>
     </div>
   </div>
 
-  <!-- 3 PAGRINDINIAI PRIVALUMAI -->
+  <!-- 3 PRIVALUMAI -->
   <div class="card">
     <h3>Kodėl verta?</h3>
+
     <div class="feature-grid">
       <div class="feature-card">
         <strong>Atlyginimas – kiekvieną penktadienį</strong>
-        Jokio ilgo laukimo – atlikai darbą šią savaitę, penktadienį gauni užmokestį.
+        Jokio ilgo laukimo – dirbai šią savaitę, penktadienį gauni pinigus.
       </div>
+
       <div class="feature-card">
-        <strong>Paprasta dirbti – jokių darbo pokalbių</strong>
-        Užpildai profilį, kandidatuoji į pasiūlymą ir lauki patvirtinimo – be sudėtingų atrankų.
+        <strong>Paprasta dirbti, be pokalbių</strong>
+        Kandidatuoji, atvyksti ir dirbi – viskas paprasta ir greita.
       </div>
+
       <div class="feature-card">
-        <strong>Užsidirbk be ilgalaikių įsipareigojimų</strong>
-        Dirbk tada, kada tau patogu: tik kelias dienas per savaitę arba tik atskirus projektus.
+        <strong>Laisvas darbo grafikas</strong>
+        Dirbk tik tada, kada tau patogu. Jokio spaudimo ar įsipareigojimų.
       </div>
     </div>
   </div>
@@ -202,22 +227,21 @@
 </main>
 
 <script>
-  const supabaseUrl = "https://qnczakppadjxbicgjzcy.supabase.co";
-  const supabaseKey =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY";
-
-  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+  const supabaseClient = supabase.createClient(
+    "https://qnczakppadjxbicgjzcy.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
+  );
 
   async function checkAuthAndSetRole() {
-    const { data, error } = await supabaseClient.auth.getUser();
+    const { data } = await supabaseClient.auth.getUser();
     if (!data || !data.user) {
       location.href = "./auth.html";
       return;
     }
-    const user = data.user;
-    const role = user.user_metadata?.role || "worker";
 
+    const role = data.user.user_metadata?.role || "worker";
     const pill = document.getElementById("welcomeRole");
+
     if (role === "employer") {
       pill.textContent = "Prisijungė darbdavys";
       pill.style.borderColor = "#f97316";
@@ -236,7 +260,6 @@
     location.href = "./auth.html";
   }
 
-  // PWA service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js')
       .catch(e => console.log('SW error main.html', e));
