@@ -132,7 +132,7 @@
           <label for="terms" style="margin-top:0;font-weight:400;">
             Registruodamasis patvirtinu, kad susipažinau ir sutinku su
             puslapio sąlygomis ir taisyklėmis.
-            <!-- jei susikursi atskirą puslapį, gali padaryti taip:
+            <!-- Vėliau gali pridėti nuorodą į taisykles:
             <a href="./taisykles.html" target="_blank">taisyklių ir privatumo politika</a>
             -->
           </label>
@@ -162,8 +162,8 @@
       </div>
 
       <p class="foot">
-        Prisijungęs vartotojas bus nukreiptas pagal rolę:<br>
-        Darbdavys → <strong>darbdavys.html</strong>, Darbuotojas → <strong>darbuotojai.html</strong>
+        Prisijungęs vartotojas bus nukreiptas į pagrindinį puslapį:<br>
+        <strong>main.html</strong>
       </p>
     </section>
   </main>
@@ -196,9 +196,10 @@
     const roleEmployerBox = document.getElementById('roleEmployerBox');
 
     function saveRoleLocally(role){ try { localStorage.setItem("timurita_role", role); } catch {} }
+
+    // 🔁 NUKREIPIMAS PO LOGIN / PATVIRTINIMO → main.html
     function redirectByRole(role){
-      if(role==="employer") location.href="/timurita/darbdavys.html";
-      else location.href="/timurita/darbuotojai.html";
+      location.href = "/timurita/main.html";
     }
 
     function showLogin(){
@@ -274,7 +275,7 @@
       }
     });
 
-    // Registracija (tik el. paštas, su privalomu „sutinku“)
+    // Registracija
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       registerMsg.textContent = "";
@@ -456,7 +457,7 @@
           loginForm.email.value = user.email;
         }
 
-        loginMsg.textContent = "✅ El. paštas patvirtintas! Nukreipiama pagal jūsų rolę...";
+        loginMsg.textContent = "✅ El. paštas patvirtintas! Nukreipiama į pagrindinį puslapį...";
         loginMsg.classList.add('ok');
         setTimeout(() => redirectByRole(role), 1200);
       } catch (e) {
