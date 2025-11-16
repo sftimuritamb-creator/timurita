@@ -132,9 +132,6 @@
           <label for="terms" style="margin-top:0;font-weight:400;">
             Registruodamasis patvirtinu, kad susipažinau ir sutinku su
             puslapio sąlygomis ir taisyklėmis.
-            <!-- Vėliau gali pridėti nuorodą į taisykles:
-            <a href="./taisykles.html" target="_blank">taisyklių ir privatumo politika</a>
-            -->
           </label>
         </div>
 
@@ -162,8 +159,8 @@
       </div>
 
       <p class="foot">
-        Prisijungęs vartotojas bus nukreiptas į pagrindinį puslapį:<br>
-        <strong>main.html</strong>
+        Prisijungęs vartotojas bus nukreiptas:<br>
+        <strong>admin</strong> → admin.html, kiti → main.html
       </p>
     </section>
   </main>
@@ -178,6 +175,8 @@
     } catch (e) {
       console.error('Supabase createClient klaida auth.html:', e);
     }
+
+    const ADMIN_EMAIL = "kancerevicius1@gmail.com"; // <- čia tavo admin el. paštas
 
     const tabLogin = document.getElementById('tabLogin');
     const tabRegister = document.getElementById('tabRegister');
@@ -197,9 +196,13 @@
 
     function saveRoleLocally(role){ try { localStorage.setItem("timurita_role", role); } catch {} }
 
-    // 🔁 NUKREIPIMAS PO LOGIN / PATVIRTINIMO → main.html
+    // 🔁 Nukreipimas – admin pagal el. paštą
     function redirectByRole(role){
-      location.href = "/timurita/main.html";
+      if (role === "admin") {
+        location.href = "/timurita/admin.html";
+      } else {
+        location.href = "/timurita/main.html";
+      }
     }
 
     function showLogin(){
@@ -264,7 +267,14 @@
           return;
         }
         const user = data.user;
-        const role = user?.user_metadata?.role || "worker";
+        const userEmail = (user.email || "").toLowerCase();
+
+        let role = user?.user_metadata?.role || "worker";
+        // jei el. paštas = admin, priverstinai darom admin
+        if (userEmail === ADMIN_EMAIL.toLowerCase()) {
+          role = "admin";
+        }
+
         saveRoleLocally(role);
         loginMsg.textContent = "✅ Prisijungta. Nukreipiama...";
         loginMsg.classList.add('ok');
@@ -450,14 +460,20 @@
         }
 
         const user = data.user;
-        const role = user.user_metadata?.role || "worker";
+        const userEmail = (user.email || "").toLowerCase();
+        let role = user.user_metadata?.role || "worker";
+
+        if (userEmail === ADMIN_EMAIL.toLowerCase()) {
+          role = "admin";
+        }
+
         saveRoleLocally(role);
 
         if (user.email) {
           loginForm.email.value = user.email;
         }
 
-        loginMsg.textContent = "✅ El. paštas patvirtintas! Nukreipiama į pagrindinį puslapį...";
+        loginMsg.textContent = "✅ El. paštas patvirtintas! Nukreipiama...";
         loginMsg.classList.add('ok');
         setTimeout(() => redirectByRole(role), 1200);
       } catch (e) {
@@ -483,7 +499,12 @@
         try {
           const { data } = await supabaseClient.auth.getUser();
           if (data.user) {
-            const role = data.user.user_metadata?.role || "worker";
+            const user = data.user;
+            const userEmail = (user.email || "").toLowerCase();
+            let role = user.user_metadata?.role || "worker";
+            if (userEmail === ADMIN_EMAIL.toLowerCase()) {
+              role = "admin";
+            }
             saveRoleLocally(role);
             redirectByRole(role);
           }
