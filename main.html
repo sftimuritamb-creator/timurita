@@ -22,7 +22,7 @@
     @media (min-width: 768px) {
       .hero {
         flex-direction:row;
-        align-items:stretch;
+        align-items:center;
       }
     }
     .hero-text {
@@ -56,30 +56,23 @@
       color:#a5b4fc;
     }
 
-    .hero-actions {
-      margin-top:12px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-
-    .hero-images {
+    .hero-logo {
       flex:1;
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px;
     }
-    .hero-images img {
+    .hero-logo img {
+      max-width:220px;
       width:100%;
-      height:100px;
-      object-fit:cover;
-      border-radius:12px;
+      height:auto;
+      border-radius:20px;
       border:1px solid #1e293b;
-    }
-    @media (min-width: 768px) {
-      .hero-images img {
-        height:110px;
-      }
+      box-shadow:0 20px 40px rgba(15,23,42,0.7);
+      background:#020617;
+      padding:10px;
+      object-fit:contain;
     }
 
     .feature-grid {
@@ -165,23 +158,11 @@
         <p class="hero-steps">
           Užsiregistruok → kandidatuok → sulauk patvirtinimo → atvyk dirbti → gauk darbo užmokestį.
         </p>
-
-        <div class="hero-actions">
-          <button class="btn big" type="button" onclick="goToRole()">
-            Pradėti pagal mano rolę
-          </button>
-          <button class="btn" type="button" onclick="scrollToRoles()">
-            Peržiūrėti galimybes
-          </button>
-        </div>
       </div>
 
-      <div class="hero-images">
-        <!-- Nuotraukos iš atvirų šaltinių – gali vėliau pasikeisti savo -->
-        <img src="https://images.pexels.com/photos/5449650/pexels-photo-5449650.jpeg?auto=compress&dpr=2&w=400" alt="Statybų aikštelė">
-        <img src="https://images.pexels.com/photos/8961065/pexels-photo-8961065.jpeg?auto=compress&dpr=2&w=400" alt="Darbuotojas su šalmu">
-        <img src="https://images.pexels.com/photos/5854190/pexels-photo-5854190.jpeg?auto=compress&dpr=2&w=400" alt="Statybų komanda">
-        <img src="https://images.pexels.com/photos/8487051/pexels-photo-8487051.jpeg?auto=compress&dpr=2&w=400" alt="Pastato karkasas">
+      <!-- Dešinėje – didesnis logotipas (vėliau galėsi pakeisti į kitą paveikslėlį) -->
+      <div class="hero-logo">
+        <img src="./Timurita_logo_192x192.png" alt="Timurita logotipas">
       </div>
     </div>
   </div>
@@ -245,7 +226,6 @@
       pill.style.borderColor = "#22c55e";
     }
 
-    // išsaugom rolę localStorage, jei prireiktų kitur
     try { localStorage.setItem("timurita_role", role); } catch(e) {}
   }
 
@@ -256,25 +236,7 @@
     location.href = "./auth.html";
   }
 
-  function goToRole() {
-    try {
-      const role = localStorage.getItem("timurita_role") || "worker";
-      if (role === "employer") {
-        location.href = "./darbdavys.html";
-      } else {
-        location.href = "./darbuotojai.html";
-      }
-    } catch (e) {
-      location.href = "./darbuotojai.html";
-    }
-  }
-
-  function scrollToRoles() {
-    const el = document.getElementById("rolesSection");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  }
-
-  // PWA service worker (nebūtina, bet naudinga)
+  // PWA service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js')
       .catch(e => console.log('SW error main.html', e));
