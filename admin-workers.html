@@ -87,28 +87,36 @@
     }
   }
 
-  // Įkelti darbuotojus
+  // Įkelti darbuotojus (visi profiliai, išskyrus admin)
   async function loadWorkers() {
+    const box = document.getElementById("workersList");
+
     const { data: workers, error } = await supabaseClient
       .from("profiles")
       .select("*")
-      .eq("role", "worker")
       .order("created_at", { ascending: false });
-
-    const box = document.getElementById("workersList");
 
     if (error) {
       box.innerHTML = "<p>Klaida kraunant darbuotojus.</p>";
       return;
     }
 
+    // Jeigu visiškai tuščia lentelė
     if (!workers || workers.length === 0) {
-      box.innerHTML = "<p>Nėra registruotų darbuotojų.</p>";
+      box.innerHTML = "<p>Nėra registruotų darbuotojų (profiles lentelė tuščia).</p>";
+      return;
+    }
+
+    // Atfiltruojam admin, jeigu toks yra
+    const filtered = workers.filter(w => (w.role || "").toLowerCase() !== "admin");
+
+    if (filtered.length === 0) {
+      box.innerHTML = "<p>Yra tik administratoriaus profilis, darbuotojų nėra.</p>";
       return;
     }
 
     box.innerHTML = "";
-    workers.forEach(w => {
+    filtered.forEach(w => {
       const statusTag = w.is_approved
         ? `<span class="tag approved">Patvirtintas</span>`
         : `<span class="tag pending">Nepatvirtintas</span>`;
