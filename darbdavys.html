@@ -41,6 +41,21 @@
       border-radius:10px;
       margin-bottom:10px;
     }
+    .toast {
+      position:fixed;
+      left:50%;
+      bottom:20px;
+      transform:translateX(-50%);
+      background:#0f172a;
+      color:#e5e7eb;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid #22c55e;
+      box-shadow:0 10px 25px rgba(0,0,0,0.5);
+      font-size:13px;
+      display:none;
+      z-index:9999;
+    }
   </style>
 </head>
 <body>
@@ -131,11 +146,21 @@
 
 </main>
 
+<div id="toast" class="toast"></div>
+
 <script>
   const supabaseUrl = "https://qnczakppadjxbicgjzcy.supabase.co";
   const supabaseKey =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY";
+
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+  const toastEl = document.getElementById("toast");
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.style.display = "block";
+    setTimeout(() => { toastEl.style.display = "none"; }, 4000);
+  }
 
   async function checkAuth() {
     const { data } = await supabaseClient.auth.getUser();
@@ -202,7 +227,7 @@
 
     const offer = {
       title: oTitle.value,
-      city: oCity.value,           // visada Vilnius
+      city: oCity.value,
       company: oCompany.value,
       company_code: oCompanyCode.value,
       description: oDescription.value,
@@ -253,6 +278,9 @@
       `;
       list.appendChild(div);
     });
+
+    // Panaudojam offers masyvą realtime kandidatams
+    window.__myOffers = offers || [];
   }
   loadMyOffers();
 
@@ -309,8 +337,33 @@
       `;
       list.appendChild(div);
     });
+
+    // išsaugom pasiūlymus globaliai kandidatų realtime'ui
+    window.__myOffers = offers || [];
   }
   loadCandidates();
+
+  // 🔔 Realtime – nauji kandidatavimai į mano pasiūlymus
+  const candidatesChannel = supabaseClient
+    .channel("public:applications")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "applications" },
+      async (payload) => {
+        const app = payload.new;
+
+        // užkraunam naujausią sąrašą kandidatų
+        await loadCandidates();
+
+        // randam pasiūlymo pavadinimą
+        const offers = window.__myOffers || [];
+        const found = offers.find(o => o.id === app.offer_id);
+        const title = found ? found.title : "jūsų darbo pasiūlymą";
+
+        showToast("✅ Naujas kandidatas į: " + title);
+      }
+    )
+    .subscribe();
 </script>
 
 </body>
