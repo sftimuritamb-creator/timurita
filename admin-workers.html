@@ -65,7 +65,9 @@
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
   );
 
-  // Tik administratorius turi pasiekti šį puslapį
+  const ADMIN_EMAIL = "kancerevicius1@gmail.com";
+
+  // Apsauga: tik ADMIN mato šį puslapį
   async function checkAdmin() {
     const { data } = await supabaseClient.auth.getUser();
 
@@ -75,14 +77,17 @@
     }
 
     const role = data.user.user_metadata?.role;
-    if (role !== "admin") {
-      alert("Šis puslapis prieinamas tik administratoriui.");
+    const email = (data.user.email || "").toLowerCase();
+
+    // Leidžiam, jei role = admin ARBA el. paštas = ADMIN_EMAIL
+    if (role !== "admin" && email !== ADMIN_EMAIL.toLowerCase()) {
+      alert("Šis puslapis pasiekiamas tik administratoriui.");
       location.href = "./main.html";
       return;
     }
   }
 
-  // Įkelti visus darbuotojus (role = worker)
+  // Įkelti darbuotojus
   async function loadWorkers() {
     const { data: workers, error } = await supabaseClient
       .from("profiles")
@@ -104,26 +109,24 @@
 
     box.innerHTML = "";
     workers.forEach(w => {
-      const div = document.createElement("div");
-      div.className = "worker-card";
-
       const statusTag = w.is_approved
         ? `<span class="tag approved">Patvirtintas</span>`
         : `<span class="tag pending">Nepatvirtintas</span>`;
 
+      const div = document.createElement("div");
+      div.className = "worker-card";
       div.innerHTML = `
         <h3>${w.full_name || "Be vardo"} ${statusTag}</h3>
 
+        <div><strong>El. paštas:</strong> ${w.email || ""}</div>
         <div><strong>Miestas:</strong> ${w.city || ""}</div>
         <div><strong>Telefonas:</strong> ${w.phone || ""}</div>
-        <div><strong>El. paštas:</strong> ${w.email || ""}</div>
-        <div><strong>IV numeris:</strong> ${w.iv_code || ""}</div>
+        <div><strong>IV numeris:</strong> ${w.iv_nr || ""}</div>
         <br>
 
         ${w.is_approved
           ? `<button class="btn small" onclick="setApproval('${w.id}', false)">Atšaukti patvirtinimą</button>`
-          : `<button class="btn small" onclick="setApproval('${w.id}', true)">Patvirtinti paskyrą</button>`
-        }
+          : `<button class="btn small" onclick="setApproval('${w.id}', true)">Patvirtinti paskyrą</button>`}
       `;
 
       box.appendChild(div);
@@ -142,22 +145,19 @@
       return;
     }
 
-    loadWorkers(); // atnaujinam sąrašą iškart
+    loadWorkers(); // atnaujinam sąrašą
   }
 
-  // Atsijungimas
   async function logout() {
     await supabaseClient.auth.signOut();
     location.href = "./auth.html";
   }
 
-  // Start
   (async () => {
     await checkAdmin();
     await loadWorkers();
   })();
 
-  // PWA
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register("./service-worker.js");
   }
