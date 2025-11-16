@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin – Pasiūlymų patvirtinimas</title>
+
+  <link rel="stylesheet" href="./style.css">
+  <meta name="theme-color" content="#1a2a44">
+  <link rel="manifest" href="./manifest.json">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
+
+  <style>
+    .offer-box {
+      background:#1e293b;
+      padding:12px;
+      border-radius:12px;
+      margin-bottom:10px;
+      border:1px solid #334155;
+      font-size:14px;
+    }
+    .offer-box h3 {
+      margin:0 0 4px 0;
+    }
+    .row {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:8px;
+    }
+    .btn.small {
+      padding:6px 10px;
+      font-size:13px;
+    }
+    .badge {
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:11px;
+      margin-top:4px;
+    }
+    .badge-pending {
+      background:#1f2937;
+      color:#fbbf24;
+      border:1px solid #fbbf24;
+    }
+    .badge-approved {
+      background:#022c22;
+      color:#6ee7b7;
+      border:1px solid #22c55e;
+    }
+    .badge-rejected {
+      background:#3f1d1d;
+      color:#fecaca;
+      border:1px solid #ef4444;
+    }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <h2>Administratorius – pasiūlymų patvirtinimas</h2>
+  <button class="btn small" onclick="logout()" style="margin-left:auto;">Atsijungti</button>
+</header>
+
+<main class="container">
+  <div class="card">
+    <h3>Laukiantys pasiūlymai</h3>
+    <p style="font-size:12px;color:#9ca3af;">
+      Čia rodomi visi pasiūlymai su statusu <strong>pending</strong>. Juos galite patvirtinti arba atmesti.
+    </p>
+    <div id="pendingList">Kraunama...</div>
+  </div>
+
+  <div class="card">
+    <h3>Visi pasiūlymai (santrauka)</h3>
+    <p style="font-size:12px;color:#9ca3af;">
+      Greita peržiūra pagal statusą.
+    </p>
+    <div id="allList">Kraunama...</div>
+  </div>
+</main>
+
+<script>
+  const supabaseClient = supabase.createClient(
+    "https://qnczakppadjxbicgjzcy.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
+  );
+
+  // 🔐 ADMIN APSAUGA: leidžiam tik role === "admin"
+  async function checkAdmin() {
+    const { data } = await supabaseClient.auth.getUser();
+    if (!data.user) {
+      location.href = "./auth.html";
+      return;
+    }
+
+    const role = data.user.user_metadata?.role;
+
+    if (role !== "admin") {
+      alert("Neturite prieigos prie administratoriaus puslapio.");
+      location.href = "./main.html";
+      return;
+    }
+  }
+  checkAdmin();
+
+  function renderBadge(status) {
+    const s = (status || "").toLowerCase();
+    if (s === "approved") {
+      return '<span class="badge badge-approved">Patvirtintas</span>';
+    }
+    if (s === "rejected") {
+      return '<span class="badge badge-rejected">Atmestas</span>';
+    }
+    return '<span class="badge badge-pending">Laukia patvirtinimo</span>';
+  }
+
+  // --- LAUKIANTYS (pending) PASIŪLYMAI
+  async function loadPending() {
+    const { data: offers, error } = await supabaseClient
+      .from("offers")
+      .select("id,title,city,company,description,status,created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+
+    const box = document.getElementById("pendingList");
+    box.innerHTML = "";
+
+    if (error) {
+      box.textContent = "Klaida kraunant pasiūlymus.";
+      return;
+    }
+
+    if (!offers || offers.length === 0) {
+      box.textContent = "Kol kas nėra laukiančių pasiūlymų.";
+      return;
+    }
+
+    offers.forEach(o => {
+      const div = document.createElement("div");
+      div.className = "offer-box";
+      div.innerHTML = `
+        <h3>${o.title}</h3>
+        <div><strong>Įmonė:</strong> ${o.company || "nenurodyta"}</div>
+        <div><strong>Miestas:</strong> ${o.city || "-"}</div>
+        <div style="margin-top:4px;"><strong>Aprašymas:</strong> ${o.description || "(nėra)"}</div>
+        <div style="margin-top:4px;">${renderBadge(o.status)}</div>
+        <div class="row">
+          <button class="btn small" onclick="approve('${o.id}')">✅ Patvirtinti</button>
+          <button class="btn small" onclick="reject('${o.id}')">❌ Atmesti</button>
+          <button class="btn small" onclick="removeOffer('${o.id}')">🗑 Ištrinti</button>
+        </div>
+      `;
+      box.appendChild(div);
+    });
+  }
+
+  // --- SANTRAUKA VISŲ PASIŪLYMŲ
+  async function loadAll() {
+    const { data: offers, error } = await supabaseClient
+      .from("offers")
+      .select("id,title,status,created_at")
+      .order("created_at", { ascending: false });
+
+    const box = document.getElementById("allList");
+    box.innerHTML = "";
+
+    if (error) {
+      box.textContent = "Klaida kraunant visus pasiūlymus.";
+      return;
+    }
+
+    if (!offers || offers.length === 0) {
+      box.textContent = "Pasiūlymų nėra.";
+      return;
+    }
+
+    offers.forEach(o => {
+      const div = document.createElement("div");
+      div.className = "offer-box";
+      div.innerHTML = `
+        <strong>${o.title}</strong><br>
+        ${renderBadge(o.status)}
+        <div style="font-size:11px;color:#9ca3af;margin-top:4px;">
+          ID: ${o.id}
+        </div>
+      `;
+      box.appendChild(div);
+    });
+  }
+
+  // --- VEIKSMAI: patvirtinti / atmesti / ištrinti
+  async function approve(id) {
+    await supabaseClient
+      .from("offers")
+      .update({ status: "approved" })
+      .eq("id", id);
+
+    await loadPending();
+    await loadAll();
+  }
+
+  async function reject(id) {
+    await supabaseClient
+      .from("offers")
+      .update({ status: "rejected" })
+      .eq("id", id);
+
+    await loadPending();
+    await loadAll();
+  }
+
+  async function removeOffer(id) {
+    if (!confirm("Ar tikrai norite ištrinti šį pasiūlymą?")) return;
+
+    await supabaseClient
+      .from("offers")
+      .delete()
+      .eq("id", id);
+
+    await loadPending();
+    await loadAll();
+  }
+
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    location.href = "./auth.html";
+  }
+
+  // Start
+  loadPending();
+  loadAll();
+
+  // PWA SW (nebūtina, bet naudinga)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .catch(e => console.log('SW error admin.html', e));
+  }
+</script>
+
+</body>
+</html>
