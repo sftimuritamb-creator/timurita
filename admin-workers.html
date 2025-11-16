@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Darbuotojų valdymas (Admin)</title>
+
+  <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#1a2a44">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
+
+  <style>
+    .worker-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .tag {
+      padding: 3px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+    .tag.approved {
+      background: #16a34a;
+      color: white;
+    }
+    .tag.pending {
+      background: #eab308;
+      color: black;
+    }
+    .btn.small {
+      padding: 6px 10px;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="app-header">
+  <h2 style="margin:0;">Darbuotojų valdymas</h2>
+  <button onclick="logout()" class="btn small" style="margin-left:auto;">Atsijungti</button>
+</header>
+
+<main class="container">
+
+  <div class="card">
+    <h3>Visi darbuotojai</h3>
+    <p>Administratoriaus panelė patvirtinti darbuotojus.</p>
+
+    <div id="workersList">Kraunama...</div>
+  </div>
+
+</main>
+
+<script>
+  const supabaseClient = supabase.createClient(
+    "https://qnczakppadjxbicgjzcy.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
+  );
+
+  // Tik administratorius turi pasiekti šį puslapį
+  async function checkAdmin() {
+    const { data } = await supabaseClient.auth.getUser();
+
+    if (!data.user) {
+      location.href = "./auth.html";
+      return;
+    }
+
+    const role = data.user.user_metadata?.role;
+    if (role !== "admin") {
+      alert("Šis puslapis prieinamas tik administratoriui.");
+      location.href = "./main.html";
+      return;
+    }
+  }
+
+  // Įkelti visus darbuotojus (role = worker)
+  async function loadWorkers() {
+    const { data: workers, error } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("role", "worker")
+      .order("created_at", { ascending: false });
+
+    const box = document.getElementById("workersList");
+
+    if (error) {
+      box.innerHTML = "<p>Klaida kraunant darbuotojus.</p>";
+      return;
+    }
+
+    if (!workers || workers.length === 0) {
+      box.innerHTML = "<p>Nėra registruotų darbuotojų.</p>";
+      return;
+    }
+
+    box.innerHTML = "";
+    workers.forEach(w => {
+      const div = document.createElement("div");
+      div.className = "worker-card";
+
+      const statusTag = w.is_approved
+        ? `<span class="tag approved">Patvirtintas</span>`
+        : `<span class="tag pending">Nepatvirtintas</span>`;
+
+      div.innerHTML = `
+        <h3>${w.full_name || "Be vardo"} ${statusTag}</h3>
+
+        <div><strong>Miestas:</strong> ${w.city || ""}</div>
+        <div><strong>Telefonas:</strong> ${w.phone || ""}</div>
+        <div><strong>El. paštas:</strong> ${w.email || ""}</div>
+        <div><strong>IV numeris:</strong> ${w.iv_code || ""}</div>
+        <br>
+
+        ${w.is_approved
+          ? `<button class="btn small" onclick="setApproval('${w.id}', false)">Atšaukti patvirtinimą</button>`
+          : `<button class="btn small" onclick="setApproval('${w.id}', true)">Patvirtinti paskyrą</button>`
+        }
+      `;
+
+      box.appendChild(div);
+    });
+  }
+
+  // Patvirtinimo funkcija
+  async function setApproval(userId, approved) {
+    const { error } = await supabaseClient
+      .from("profiles")
+      .update({ is_approved: approved })
+      .eq("id", userId);
+
+    if (error) {
+      alert("Klaida keičiant statusą: " + error.message);
+      return;
+    }
+
+    loadWorkers(); // atnaujinam sąrašą iškart
+  }
+
+  // Atsijungimas
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    location.href = "./auth.html";
+  }
+
+  // Start
+  (async () => {
+    await checkAdmin();
+    await loadWorkers();
+  })();
+
+  // PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register("./service-worker.js");
+  }
+</script>
+
+</body>
+</html>
