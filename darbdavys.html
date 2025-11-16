@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Darbdavio profilis – Timurita</title>
+  <title>Darbdavio valdymas – Timurita</title>
 
   <link rel="stylesheet" href="./style.css">
   <link rel="manifest" href="./manifest.json">
@@ -28,383 +28,360 @@
       margin-bottom:10px;
       font-size:14px;
     }
-    textarea { min-height:70px; resize:vertical; }
+    textarea { min-height:80px; resize:vertical; }
+
     .required::after {
       content:" *";
       color:#ef4444;
       font-weight:bold;
     }
-    .btn.small { padding:5px 10px; font-size:13px; }
-    .offer-box, .candidate-box {
-      background:#1e293b;
-      padding:10px;
-      border-radius:10px;
-      margin-bottom:10px;
+
+    .offer-card {
+      background:#0b1220;
+      border-radius:12px;
+      border:1px solid #1f2937;
+      padding:12px;
+      margin-bottom:12px;
     }
-    .toast {
-      position:fixed;
-      left:50%;
-      bottom:20px;
-      transform:translateX(-50%);
-      background:#0f172a;
-      color:#e5e7eb;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid #22c55e;
-      box-shadow:0 10px 25px rgba(0,0,0,0.5);
-      font-size:13px;
-      display:none;
-      z-index:9999;
+    .offer-header {
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:center;
     }
-    .status-pill {
+    .badge {
       display:inline-block;
       padding:2px 8px;
       border-radius:999px;
       font-size:11px;
-      margin-top:4px;
     }
-    .status-pending {
+    .badge-pending {
       background:#1f2937;
       color:#fbbf24;
-      border:1px solid #fbbf24;
+      border:1px solid #facc15;
     }
-    .status-approved {
+    .badge-approved {
       background:#022c22;
       color:#6ee7b7;
       border:1px solid #22c55e;
     }
-    .status-rejected {
+    .badge-rejected {
       background:#3f1d1d;
       color:#fecaca;
       border:1px solid #ef4444;
     }
+
+    .candidate {
+      background:#020617;
+      border-radius:8px;
+      border:1px solid #1e293b;
+      padding:8px;
+      margin-top:6px;
+      font-size:13px;
+    }
+    .candidate-status {
+      font-size:11px;
+      color:#e5e7eb;
+      margin-top:4px;
+    }
+    .small-text {
+      font-size:12px;
+      color:#9ca3af;
+    }
+    .btn.small { padding:6px 10px; font-size:13px; }
   </style>
 </head>
 <body>
 
 <header class="app-header">
-  <h2>Darbdavio profilis</h2>
-  <button onclick="logout()" class="btn small" style="margin-left:auto;">Atsijungti</button>
+  <h2>Darbdavio valdymas</h2>
+  <button class="btn small" onclick="logout()" style="margin-left:auto;">Atsijungti</button>
 </header>
 
 <main class="container">
 
-  <!-- PROFILIS -->
+  <!-- Naujo pasiūlymo forma -->
   <div class="card">
-    <h3>Įmonės duomenys</h3>
+    <h3>Sukurti naują darbo pasiūlymą</h3>
+    <p class="small-text">
+      Užpildykite formą. Pasiūlymas pirmiausia keliaus administratoriui, kuris jį patvirtins arba atmes.
+    </p>
 
-    <form id="profileForm">
-
-      <label class="required">Įmonės pavadinimas</label>
-      <input type="text" id="companyName" required>
-
-      <label class="required">Įmonės kodas</label>
-      <input type="text" id="companyCode" required>
-
-      <label class="required">Kontaktinis asmuo</label>
-      <input type="text" id="contactPerson" required>
+    <form id="offerForm">
+      <label class="required">Pavadinimas</label>
+      <input type="text" id="title" required placeholder="pvz. Pagalbinis darbininkas">
 
       <label class="required">Miestas</label>
       <select id="city" required>
         <option value="Vilnius">Vilnius</option>
       </select>
 
-      <label class="required">Telefonas</label>
-      <input type="text" id="phone" required>
-
-      <label class="required">El. paštas</label>
-      <input type="email" id="email" required>
-
-      <button class="btn" type="submit">💾 Išsaugoti</button>
-    </form>
-
-    <p id="profileMsg"></p>
-  </div>
-
-  <!-- NAUJAS PASIŪLYMAS -->
-  <div class="card">
-    <h3>Naujas darbo pasiūlymas</h3>
-
-    <form id="offerForm">
-
-      <label class="required">Pavadinimas</label>
-      <input type="text" id="oTitle" required>
-
-      <label class="required">Miestas</label>
-      <select id="oCity" required>
-        <option value="Vilnius">Vilnius</option>
-      </select>
+      <label class="required">Įmonės pavadinimas</label>
+      <input type="text" id="company" required placeholder="Jūsų įmonė">
 
       <label class="required">Įmonės kodas</label>
-      <input type="text" id="oCompanyCode" required>
+      <input type="text" id="companyCode" required placeholder="Įmonės kodas">
 
-      <label class="required">Įmonės pavadinimas</label>
-      <input type="text" id="oCompany" required>
+      <label>Atlygis (pvz. €/val.)</label>
+      <input type="text" id="salary" placeholder="pvz. 8 Eur/val.">
 
       <label>Aprašymas</label>
-      <textarea id="oDescription"></textarea>
+      <textarea id="description" placeholder="Trumpai aprašykite darbą, laiką, reikalavimus"></textarea>
 
-      <button class="btn" type="submit">📤 Pateikti peržiūrai</button>
+      <label>Kontaktinis asmuo</label>
+      <input type="text" id="contact" placeholder="Vardas, pavardė">
 
+      <label>Telefonas</label>
+      <input type="text" id="phone" placeholder="Kontaktinis telefonas">
+
+      <label>El. paštas</label>
+      <input type="email" id="email" placeholder="Kontaktinis el. paštas">
+
+      <button class="btn" type="submit">💾 Išsaugoti pasiūlymą</button>
     </form>
 
-    <p id="offerMsg"></p>
+    <p id="offerMsg" class="small-text" style="margin-top:6px;"></p>
   </div>
 
-  <!-- MANO PASIŪLYMAI -->
+  <!-- Darbdavio pasiūlymų sąrašas -->
   <div class="card">
-    <h3>Jūsų paskelbti pasiūlymai</h3>
-    <p style="font-size:12px;color:#9ca3af;">
-      Pasiūlymai pirmiausia turi būti patvirtinti administratoriaus.
-    </p>
-    <div id="myOffersList">Kraunama...</div>
-  </div>
-
-  <!-- KANDIDATAI -->
-  <div class="card">
-    <h3>Kandidatai</h3>
-    <div id="candidatesList">Kraunama...</div>
+    <h3>Mano darbo pasiūlymai ir kandidatai</h3>
+    <div id="offersList">Kraunama...</div>
   </div>
 
 </main>
 
-<div id="toast" class="toast"></div>
-
 <script>
-  const supabaseUrl = "https://qnczakppadjxbicgjzcy.supabase.co";
-  const supabaseKey =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY";
+  const supabaseClient = supabase.createClient(
+    "https://qnczakppadjxbicgjzcy.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
+  );
 
-  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+  let currentUser = null;
 
-  const toastEl = document.getElementById("toast");
-  function showToast(msg) {
-    toastEl.textContent = msg;
-    toastEl.style.display = "block";
-    setTimeout(() => { toastEl.style.display = "none"; }, 4000);
-  }
-
-  // ✅ Tik darbdavys gali patekti į šį puslapį
-  async function checkAuth() {
-    const { data } = await supabaseClient.auth.getUser();
-    if (!data.user) {
+  // 🔐 Tik darbdavys turi pasiekti šį puslapį
+  async function checkEmployer() {
+    const { data, error } = await supabaseClient.auth.getUser();
+    if (error || !data.user) {
       location.href = "./auth.html";
       return;
     }
-    if (data.user.user_metadata.role !== "employer") {
-      location.href = "./darbuotojai.html";
+
+    currentUser = data.user;
+
+    const role = currentUser.user_metadata?.role;
+    if (role !== "employer") {
+      alert("Šis puslapis prieinamas tik darbdaviams.");
+      location.href = "./main.html";
+      return;
     }
   }
-  checkAuth();
+
+  function statusBadge(status) {
+    const s = (status || "").toLowerCase();
+    if (s === "approved") {
+      return '<span class="badge badge-approved">Patvirtintas</span>';
+    }
+    if (s === "rejected") {
+      return '<span class="badge badge-rejected">Atmestas</span>';
+    }
+    return '<span class="badge badge-pending">Laukia patvirtinimo</span>';
+  }
+
+  // 💾 Naujo pasiūlymo išsaugojimas
+  const offerForm = document.getElementById("offerForm");
+  const offerMsg  = document.getElementById("offerMsg");
+
+  offerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    offerMsg.textContent = "";
+    offerMsg.style.color = "#e5e7eb";
+
+    if (!currentUser) {
+      offerMsg.style.color = "#fecaca";
+      offerMsg.textContent = "Nėra prisijungusio vartotojo.";
+      return;
+    }
+
+    const title       = document.getElementById("title").value.trim();
+    const city        = document.getElementById("city").value;
+    const company     = document.getElementById("company").value.trim();
+    const companyCode = document.getElementById("companyCode").value.trim();
+    const salary      = document.getElementById("salary").value.trim();
+    const description = document.getElementById("description").value.trim();
+    const contact     = document.getElementById("contact").value.trim();
+    const phone       = document.getElementById("phone").value.trim();
+    const email       = document.getElementById("email").value.trim();
+
+    if (!title || !city || !company || !companyCode) {
+      offerMsg.style.color = "#fecaca";
+      offerMsg.textContent = "Užpildykite visus privalomus laukus (Pavadinimas, Miestas, Įmonės pavadinimas, Įmonės kodas).";
+      return;
+    }
+
+    const payload = {
+      owner_id: currentUser.id,
+      title,
+      city,
+      company,
+      company_code: companyCode,
+      salary: salary || null,
+      description: description || null,
+      contact: contact || null,
+      phone: phone || null,
+      email: email || currentUser.email,
+      status: "pending"
+    };
+
+    const { error } = await supabaseClient
+      .from("offers")
+      .insert(payload);
+
+    if (error) {
+      offerMsg.style.color = "#fecaca";
+      offerMsg.textContent = "Klaida išsaugant pasiūlymą: " + error.message;
+      return;
+    }
+
+    offerMsg.style.color = "#a7f3d0";
+    offerMsg.textContent = "✔️ Pasiūlymas išsaugotas. Jis lauks administratoriaus patvirtinimo.";
+
+    offerForm.reset();
+    document.getElementById("city").value = "Vilnius";
+
+    loadOffers();
+  });
+
+  // 📥 Įkelti darbdavio pasiūlymus
+  async function loadOffers() {
+    const list = document.getElementById("offersList");
+    list.textContent = "Kraunama...";
+
+    if (!currentUser) return;
+
+    const { data: offers, error } = await supabaseClient
+      .from("offers")
+      .select("*")
+      .eq("owner_id", currentUser.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      list.textContent = "Klaida kraunant pasiūlymus.";
+      return;
+    }
+
+    if (!offers || offers.length === 0) {
+      list.innerHTML = "<p>Dar neturite jokių pasiūlymų.</p>";
+      return;
+    }
+
+    list.innerHTML = "";
+    for (const o of offers) {
+      const card = document.createElement("div");
+      card.className = "offer-card";
+
+      card.innerHTML = `
+        <div class="offer-header">
+          <div>
+            <strong>${o.title}</strong><br>
+            <span class="small-text">${o.company || ""} • ${o.city || ""}</span>
+          </div>
+          <div>${statusBadge(o.status)}</div>
+        </div>
+
+        <div class="small-text" style="margin-top:6px;">
+          <strong>Įmonės kodas:</strong> ${o.company_code || "-"}<br>
+          <strong>Atlygis:</strong> ${o.salary || "-"}
+        </div>
+
+        <div class="small-text" style="margin-top:6px;">
+          ${o.description || ""}
+        </div>
+
+        <div class="small-text" style="margin-top:8px;">
+          <strong>Kontaktai:</strong> ${o.contact || ""} • ${o.phone || ""} • ${o.email || ""}
+        </div>
+
+        <div style="margin-top:10px;">
+          <strong>Kandidatai:</strong>
+          <div id="candidates-${o.id}" class="small-text">Kraunama...</div>
+        </div>
+      `;
+
+      list.appendChild(card);
+
+      // užkraunam kandidatus šiam pasiūlymui
+      loadCandidatesForOffer(o.id);
+    }
+  }
+
+  // 👥 Įkelti kandidatus konkrečiam pasiūlymui
+  async function loadCandidatesForOffer(offerId) {
+    const box = document.getElementById(`candidates-${offerId}`);
+    if (!box) return;
+
+    const { data: apps, error } = await supabaseClient
+      .from("applications")
+      .select("id, worker_id, status")
+      .eq("offer_id", offerId);
+
+    if (error) {
+      box.textContent = "Klaida kraunant kandidatus.";
+      return;
+    }
+
+    if (!apps || apps.length === 0) {
+      box.textContent = "Kandidatų nėra.";
+      return;
+    }
+
+    box.innerHTML = "";
+    for (const app of apps) {
+      // nuskaitom darbuotojo profilį
+      const { data: profile, error: profErr } = await supabaseClient
+        .from("profiles")
+        .select("full_name, city, phone, email, iv_nr")
+        .eq("id", app.worker_id)
+        .maybeSingle();
+
+      if (profErr) {
+        const div = document.createElement("div");
+        div.className = "candidate";
+        div.textContent = "Klaida skaitant kandidato duomenis.";
+        box.appendChild(div);
+        continue;
+      }
+
+      const div = document.createElement("div");
+      div.className = "candidate";
+
+      const appStatus = (app.status || "pending").toLowerCase();
+
+      div.innerHTML = `
+        <div><strong>${profile?.full_name || "Be vardo"}</strong> (${profile?.city || "-"})</div>
+        <div>Tel.: ${profile?.phone || "-"}</div>
+        <div>El. paštas: ${profile?.email || "-"}</div>
+        <div>IV nr.: ${profile?.iv_nr || "-"}</div>
+        <div class="candidate-status"><strong>Statusas:</strong> ${appStatus}</div>
+      `;
+
+      box.appendChild(div);
+    }
+  }
 
   async function logout() {
     await supabaseClient.auth.signOut();
     location.href = "./auth.html";
   }
 
-  // PROFILIS – saugomas localStorage (front-end)
-  const profileForm = document.getElementById("profileForm");
-  const profileMsg = document.getElementById("profileMsg");
+  (async () => {
+    await checkEmployer();
+    await loadOffers();
+  })();
 
-  profileForm.addEventListener("submit", () => {
-    const profile = {
-      companyName: companyName.value,
-      companyCode: companyCode.value,
-      contactPerson: contactPerson.value,
-      city: city.value,
-      phone: phone.value,
-      email: email.value
-    };
-
-    localStorage.setItem("employer_profile", JSON.stringify(profile));
-    profileMsg.style.color = "lightgreen";
-    profileMsg.textContent = "✔️ Profilis išsaugotas!";
-  });
-
-  const saved = localStorage.getItem("employer_profile");
-  if (saved) {
-    const p = JSON.parse(saved);
-    companyName.value = p.companyName || "";
-    companyCode.value = p.companyCode || "";
-    contactPerson.value = p.contactPerson || "";
-    city.value = p.city || "Vilnius";
-    phone.value = p.phone || "";
-    email.value = p.email || "";
-  }
-
-  // NAUJAS PASIŪLYMAS – status = 'pending'
-  const offerForm = document.getElementById("offerForm");
-  const offerMsg = document.getElementById("offerMsg");
-
-  offerForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    if (!oTitle.value || !oCity.value || !oCompanyCode.value || !oCompany.value) {
-      offerMsg.style.color = "red";
-      offerMsg.textContent = "⚠️ Užpildykite visus privalomus laukus.";
-      return;
-    }
-
-    const { data } = await supabaseClient.auth.getUser();
-    const user = data.user;
-
-    const offer = {
-      title: oTitle.value,
-      city: oCity.value,
-      company_code: oCompanyCode.value,
-      company: oCompany.value,
-      description: oDescription.value,
-      owner_id: user.id,
-      status: "pending"   // LAUKIA ADMIN PATVIRTINIMO
-    };
-
-    const { error } = await supabaseClient.from("offers").insert(offer);
-
-    if (error) {
-      offerMsg.style.color = "red";
-      offerMsg.textContent = "Klaida: " + error.message;
-    } else {
-      offerMsg.style.color = "lightgreen";
-      offerMsg.textContent = "✔️ Pasiūlymas pateiktas administratoriui peržiūrėti.";
-      oTitle.value = "";
-      oDescription.value = "";
-      // Nepanaikiname įmonės pavadinimo/kodo, nes jie gali kartotis
-      loadMyOffers();
-    }
-  });
-
-  // Pagal statusą paruošti tekstą ir klasę
-  function renderStatus(status) {
-    const s = (status || "pending").toLowerCase();
-    if (s === "approved") {
-      return `<span class="status-pill status-approved">Patvirtintas</span>`;
-    }
-    if (s === "rejected") {
-      return `<span class="status-pill status-rejected">Atmestas</span>`;
-    }
-    return `<span class="status-pill status-pending">Laukia patvirtinimo</span>`;
-  }
-
-  // MANO PASIŪLYMAI
-  async function loadMyOffers() {
-    const { data } = await supabaseClient.auth.getUser();
-    const userId = data.user.id;
-
-    const { data: offers } = await supabaseClient
-      .from("offers")
-      .select("*")
-      .eq("owner_id", userId)
-      .order("created_at", { ascending: false });
-
-    const list = document.getElementById("myOffersList");
-    list.innerHTML = "";
-
-    if (!offers || offers.length === 0) {
-      list.textContent = "Dar nepateikėte pasiūlymų.";
-      return;
-    }
-
-    offers.forEach(o => {
-      const div = document.createElement("div");
-      div.className = "offer-box";
-      div.innerHTML = `
-        <strong>${o.title}</strong><br>
-        Miestas: ${o.city}<br>
-        Įmonės kodas: ${o.company_code || "-"}<br>
-        Įmonės pavadinimas: ${o.company || "-"}<br>
-        ${renderStatus(o.status)}
-        <br>
-        <button class="btn small" style="margin-top:6px;" onclick="deleteOffer('${o.id}')">🗑 Ištrinti</button>
-      `;
-      list.appendChild(div);
-    });
-
-    window.__myOffers = offers || [];
-  }
-  loadMyOffers();
-
-  async function deleteOffer(id) {
-    await supabaseClient.from("offers").delete().eq("id", id);
-    loadMyOffers();
-  }
-
-  // KANDIDATAI
-  async function loadCandidates() {
-    const { data } = await supabaseClient.auth.getUser();
-    const userId = data.user.id;
-
-    const { data: offers } = await supabaseClient
-      .from("offers")
-      .select("id,title")
-      .eq("owner_id", userId);
-
-    const list = document.getElementById("candidatesList");
-
-    if (!offers || offers.length === 0) {
-      list.textContent = "Neturite paskelbtų pasiūlymų.";
-      return;
-    }
-
-    const offerIds = offers.map(o => o.id);
-
-    const { data: applications } = await supabaseClient
-      .from("applications")
-      .select("*, profiles:worker_id (full_name,city,phone,email)");
-
-    list.innerHTML = "";
-
-    const filtered = (applications || []).filter(a => offerIds.includes(a.offer_id));
-
-    if (filtered.length === 0) {
-      list.textContent = "Kandidatų dar nėra.";
-      return;
-    }
-
-    filtered.forEach(app => {
-      const offer = offers.find(o => o.id === app.offer_id);
-      const p = app.profiles;
-
-      const div = document.createElement("div");
-      div.className = "candidate-box";
-      div.innerHTML = `
-        <strong>${p.full_name}</strong><br>
-        Miestas: ${p.city}<br>
-        Tel.: ${p.phone}<br>
-        El. paštas: <a href="mailto:${p.email}">${p.email}</a><br>
-        <hr>
-        Kandidatavo į: <strong>${offer ? offer.title : "pasiūlymą"}</strong>
-      `;
-      list.appendChild(div);
-    });
-
-    window.__myOffers = offers || [];
-  }
-  loadCandidates();
-
-  // 🔔 Realtime – nauji kandidatavimai į mano pasiūlymus
-  const candidatesChannel = supabaseClient
-    .channel("public:applications")
-    .on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: "applications" },
-      async (payload) => {
-        const app = payload.new;
-
-        await loadCandidates();
-
-        const offers = window.__myOffers || [];
-        const found = offers.find(o => o.id === app.offer_id);
-        const title = found ? found.title : "jūsų pasiūlymą";
-
-        showToast("✅ Naujas kandidatas į: " + title);
-      }
-    )
-    .subscribe();
-
-  // PWA SW (nebūtina, bet naudinga)
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js')
-      .catch(e => console.log('SW error darbdavys.html', e));
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(e => console.log("SW error darbdavys.html", e));
   }
 </script>
 
