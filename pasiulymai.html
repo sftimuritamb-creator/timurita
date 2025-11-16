@@ -62,7 +62,7 @@
   let currentUser = null;
   let currentProfile = null;
 
-  // 1️⃣ Tik darbuotojas gali kandidatuoti – bet pasiūlymus mato visi prisijungę
+  // 1️⃣ Užkraunam prisijungusį vartotoją ir jo profilį (jei worker)
   async function loadUser() {
     const { data, error } = await supabaseClient.auth.getUser();
 
@@ -72,31 +72,34 @@
     }
 
     currentUser = data.user;
-
     const role = currentUser.user_metadata?.role;
 
-    // Jei darbuotojas – pasikraunam profilį (kad žinotume is_approved)
     if (role === "worker") {
-      const { data: profile } = await supabaseClient
+      const { data: profile, error: profErr } = await supabaseClient
         .from("profiles")
         .select("*")
         .eq("id", currentUser.id)
         .maybeSingle();
 
-      currentProfile = profile || null;
+      if (profErr) {
+        console.log("Klaida kraunant profilį:", profErr);
+        currentProfile = null;
+      } else {
+        currentProfile = profile || null;
+      }
     } else {
       currentProfile = null;
     }
   }
 
-  // 2️⃣ Įkeliam visus patvirtintus pasiūlymus
+  // 2️⃣ Įkeliam visus patvirtintus pasiūlymus (status = approved)
   async function loadJobs() {
     const box = document.getElementById("jobsList");
 
     const { data: offers, error } = await supabaseClient
       .from("offers")
       .select("*")
-      .eq("status", "approved")   // 🔴 PATAISYTA: status vietoj approved
+      .eq("status", "approved")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -132,7 +135,7 @@
     });
   }
 
-  // 3️⃣ Parodyti / paslėpti „Kandidatuoti“ mygtuką
+  // 3️⃣ Parodom / paslepiam „Kandidatuoti“ mygtuką pagal role ir is_approved
   function renderApplyButton(offerId) {
     const area = document.getElementById(`btn-${offerId}`);
     if (!currentUser) {
@@ -142,25 +145,25 @@
 
     const role = currentUser.user_metadata?.role;
 
-    // Tik worker gali kandidatuoti
+    // Tik darbuotojai gali kandidatuoti
     if (role !== "worker") {
-      area.innerHTML = `<p style="font-size:12px;color:#9ca3af;">Prisijungę kaip darbuotojai galės kandidatuoti.</p>`;
+      area.innerHTML = `<p style="font-size:12px;color:#9ca3af;">Prisijunkite kaip darbuotojas, kad galėtumėte kandidatuoti.</p>`;
       return;
     }
 
-    // Jei nėra profilio arba nepatvirtintas
+    // Jei profilis neįrašytas arba nepatvirtintas
     if (!currentProfile || !currentProfile.is_approved) {
       area.innerHTML = `<p style="color:#fbbf24;font-size:12px;">Jūsų paskyra dar nepatvirtinta – negalite kandidatuoti.</p>`;
       return;
     }
 
-    // Patvirtintas darbuotojas – rodom mygtuką
+    // Viskas gerai – rodom mygtuką
     area.innerHTML = `
       <button class="btn small" onclick="apply('${offerId}')">Kandidatuoti</button>
     `;
   }
 
-  // 4️⃣ Kandidatavimo funkcija
+  // 4️⃣ Kandidatavimo funkcija – rašom į applications su status: "pending"
   async function apply(offerId) {
     if (!currentUser) {
       alert("Pirmiausia prisijunkite.");
@@ -179,12 +182,16 @@
     }
 
     // Patikrinam, ar jau kandidatuota į tą pasiūlymą
-    const { data: existing } = await supabaseClient
+    const { data: existing, error: existErr } = await supabaseClient
       .from("applications")
       .select("id")
       .eq("offer_id", offerId)
       .eq("worker_id", currentUser.id)
       .maybeSingle();
+
+    if (existErr) {
+      console.log("Klaida tikrinant paraišką:", existErr);
+    }
 
     if (existing) {
       alert("Jūs jau kandidatuojate į šį pasiūlymą.");
@@ -195,7 +202,8 @@
       .from("applications")
       .insert({
         offer_id: offerId,
-        worker_id: currentUser.id
+        worker_id: currentUser.id,
+        status: "pending"
       });
 
     if (error) {
@@ -203,7 +211,7 @@
       return;
     }
 
-    alert("Sėkmingai kandidatavote!");
+    alert("Sėkmingai kandidatavote! Darbdavys matys jūsų kandidatūrą.");
   }
 
   // Atsijungimas
