@@ -44,6 +44,9 @@
     <h3>Rasti darbo pasiūlymai</h3>
     <p>Rodomi tik <strong>patvirtinti</strong> pasiūlymai.</p>
 
+    <!-- Čia rodysim, ar paskyra patvirtinta -->
+    <p id="approvalInfo" style="font-size:13px;color:#e5e7eb;margin-bottom:8px;"></p>
+
     <div id="offersList">Kraunama...</div>
   </div>
 
@@ -55,8 +58,11 @@
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
   );
 
+  let workerApproved = false; // pagal tai leisim / neleisim kandidatuoti
+  let currentUserId = null;
+
   // --- Apsauga: tik prisijungęs darbuotojas
-  async function checkAuth() {
+  async function checkAuthAndProfile() {
     const { data } = await supabaseClient.auth.getUser();
 
     if (!data.user) {
@@ -64,14 +70,42 @@
       return;
     }
 
-    const role = data.user.user_metadata?.role;
+    const user = data.user;
+    currentUserId = user.id;
+    const role = user.user_metadata?.role;
 
     if (role !== "worker") {
       alert("Šis puslapis skirtas tik darbuotojams.");
       location.href = "./main.html";
+      return;
+    }
+
+    // Patikrinam, ar profilis patvirtintas
+    const infoEl = document.getElementById("approvalInfo");
+
+    const { data: profile, error } = await supabaseClient
+      .from("profiles")
+      .select("is_approved, full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      workerApproved = false;
+      infoEl.style.color = "#fecaca";
+      infoEl.textContent = "Nepavyko patikrinti paskyros statuso. Susisiekite su administratoriumi.";
+      return;
+    }
+
+    if (profile && profile.is_approved) {
+      workerApproved = true;
+      infoEl.style.color = "#a7f3d0";
+      infoEl.textContent = "✅ Jūsų paskyra patvirtinta. Galite kandidatuoti į darbo pasiūlymus.";
+    } else {
+      workerApproved = false;
+      infoEl.style.color = "#fde68a";
+      infoEl.textContent = "⚠ Jūsų paskyra dar nepatvirtinta administratoriaus. Kol kas kandidatuoti negalite.";
     }
   }
-  checkAuth();
 
   // --- Pakrauti tik patvirtintus darbo pasiūlymus
   async function loadOffers() {
@@ -113,10 +147,15 @@
       box.appendChild(div);
     });
   }
-  loadOffers();
 
   // --- Kandidatavimo funkcija
   async function apply(offerId) {
+    // čia patikrinam frontende
+    if (!workerApproved) {
+      alert("Jūsų paskyra dar nepatvirtinta administratoriaus. Kandidatuoti negalite.");
+      return;
+    }
+
     const { data } = await supabaseClient.auth.getUser();
     const user = data.user;
 
@@ -147,7 +186,7 @@
       });
 
     if (error) {
-      alert("Klaida kandidatuojant.");
+      alert("Klaida kandidatuojant: " + (error.message || ""));
     } else {
       alert("Kandidatuota sėkmingai!");
     }
@@ -158,6 +197,12 @@
     await supabaseClient.auth.signOut();
     location.href = "./auth.html";
   }
+
+  // Start
+  (async () => {
+    await checkAuthAndProfile();
+    await loadOffers();
+  })();
 
   // --- PWA SW
   if ('serviceWorker' in navigator) {
