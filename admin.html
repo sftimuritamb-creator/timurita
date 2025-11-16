@@ -88,7 +88,9 @@
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
   );
 
-  // 🔐 ADMIN APSAUGA: leidžiam tik role === "admin"
+  const ADMIN_EMAIL = "kancerevicius1@gmail.com";
+
+  // 🔐 ADMIN APSAUGA: leidžiam tik role === "admin" ARBA el. paštas = ADMIN_EMAIL
   async function checkAdmin() {
     const { data } = await supabaseClient.auth.getUser();
     if (!data.user) {
@@ -97,8 +99,9 @@
     }
 
     const role = data.user.user_metadata?.role;
+    const email = (data.user.email || "").toLowerCase();
 
-    if (role !== "admin") {
+    if (role !== "admin" && email !== ADMIN_EMAIL.toLowerCase()) {
       alert("Neturite prieigos prie administratoriaus puslapio.");
       location.href = "./main.html";
       return;
@@ -233,7 +236,6 @@
   loadPending();
   loadAll();
 
-  // PWA SW (nebūtina, bet naudinga)
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js')
       .catch(e => console.log('SW error admin.html', e));
