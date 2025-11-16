@@ -12,51 +12,37 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 
   <style>
-    /* NAUDOJAME TOKĮ PAT IŠDĖSTYMĄ KAIP DARBUOTOJO PROFILYJE */
-
     label {
       display:block;
       margin:8px 0 4px;
       font-weight:600;
       font-size:14px;
     }
-
-    input, textarea {
+    input, textarea, select {
       width:100%;
       padding:8px;
       border-radius:8px;
       border:1px solid #1e293b;
       background:#0f172a;
       color:#e2e8f0;
+      margin-bottom:10px;
       font-size:14px;
     }
-
-    textarea {
-      min-height:70px;
-      resize:vertical;
-    }
-
+    textarea { min-height:70px; resize:vertical; }
     .required::after {
       content:" *";
       color:#ef4444;
       font-weight:bold;
     }
-
-    .btn.small {
-      padding:5px 10px;
-      font-size:13px;
-    }
-
+    .btn.small { padding:5px 10px; font-size:13px; }
     .offer-box, .candidate-box {
       background:#1e293b;
       padding:10px;
       border-radius:10px;
       margin-bottom:10px;
     }
-
   </style>
 </head>
-
 <body>
 
 <header class="app-header">
@@ -82,7 +68,9 @@
       <input type="text" id="contactPerson" required>
 
       <label class="required">Miestas</label>
-      <input type="text" id="city" required>
+      <select id="city" required>
+        <option value="Vilnius">Vilnius</option>
+      </select>
 
       <label class="required">Telefonas</label>
       <input type="text" id="phone" required>
@@ -106,7 +94,9 @@
       <input type="text" id="oTitle" required>
 
       <label class="required">Miestas</label>
-      <input type="text" id="oCity" required>
+      <select id="oCity" required>
+        <option value="Vilnius">Vilnius</option>
+      </select>
 
       <label class="required">Įmonės kodas</label>
       <input type="text" id="oCompanyCode" required>
@@ -141,13 +131,12 @@
 
 </main>
 
-
 <script>
   const supabaseUrl = "https://qnczakppadjxbicgjzcy.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY";
+  const supabaseKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY";
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-  // AUTH CHECK
   async function checkAuth() {
     const { data } = await supabaseClient.auth.getUser();
     if (!data.user) {
@@ -160,13 +149,12 @@
   }
   checkAuth();
 
-  // LOGOUT
   async function logout() {
     await supabaseClient.auth.signOut();
     location.href = "./auth.html";
   }
 
-  // ===== PROFILIS =====
+  // PROFILIS
   const profileForm = document.getElementById("profileForm");
   const profileMsg = document.getElementById("profileMsg");
 
@@ -185,19 +173,18 @@
     profileMsg.textContent = "✔️ Profilis išsaugotas!";
   });
 
-  // UŽKRAUTI PROFILĮ
   const saved = localStorage.getItem("employer_profile");
   if (saved) {
     const p = JSON.parse(saved);
     companyName.value = p.companyName || "";
     companyCode.value = p.companyCode || "";
     contactPerson.value = p.contactPerson || "";
-    city.value = p.city || "";
+    city.value = p.city || "Vilnius";
     phone.value = p.phone || "";
     email.value = p.email || "";
   }
 
-  // ===== NAUJAS PASIŪLYMAS =====
+  // NAUJAS PASIŪLYMAS
   const offerForm = document.getElementById("offerForm");
   const offerMsg = document.getElementById("offerMsg");
 
@@ -215,9 +202,9 @@
 
     const offer = {
       title: oTitle.value,
-      city: oCity.value,
+      city: oCity.value,           // visada Vilnius
       company: oCompany.value,
-      company_code: oCompanyCode.value,  
+      company_code: oCompanyCode.value,
       description: oDescription.value,
       salary: oSalary.value,
       owner_id: user.id
@@ -235,7 +222,7 @@
     }
   });
 
-  // ===== MANO PASIŪLYMAI =====
+  // MANO PASIŪLYMAI
   async function loadMyOffers() {
     const { data } = await supabaseClient.auth.getUser();
     const userId = data.user.id;
@@ -274,7 +261,7 @@
     loadMyOffers();
   }
 
-  // ===== KANDIDATAI =====
+  // KANDIDATAI
   async function loadCandidates() {
     const { data } = await supabaseClient.auth.getUser();
     const userId = data.user.id;
