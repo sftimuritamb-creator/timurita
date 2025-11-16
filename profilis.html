@@ -18,7 +18,7 @@
       font-weight:600;
       font-size:14px;
     }
-    input, textarea {
+    input, textarea, select {
       width:100%;
       padding:8px;
       border-radius:8px;
@@ -26,7 +26,9 @@
       background:#0f172a;
       color:#e2e8f0;
       margin-bottom:10px;
+      font-size:14px;
     }
+    textarea { min-height:70px; resize:vertical; }
     .required::after {
       content:" *";
       color:#ef4444;
@@ -53,7 +55,9 @@
       <input type="text" id="full_name" required />
 
       <label class="required">Miestas</label>
-      <input type="text" id="city" required />
+      <select id="city" required>
+        <option value="Vilnius">Vilnius</option>
+      </select>
 
       <label class="required">Telefonas</label>
       <input type="text" id="phone" required />
@@ -79,7 +83,6 @@
 
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-  // AUTH CHECK
   async function checkAuth() {
     const { data } = await supabaseClient.auth.getUser();
 
@@ -94,13 +97,11 @@
   }
   checkAuth();
 
-  // LOGOUT
   async function logout() {
     await supabaseClient.auth.signOut();
     location.href = "./auth.html";
   }
 
-  // LOAD PROFILE
   async function loadProfile() {
     const { data, error } = await supabaseClient.auth.getUser();
     const user = data.user;
@@ -113,7 +114,7 @@
 
     if (profile) {
       full_name.value = profile.full_name || "";
-      city.value = profile.city || "";
+      city.value = profile.city || "Vilnius";
       phone.value = profile.phone || "";
       iv_nr.value = profile.iv_nr || "";
       description.value = profile.description || "";
@@ -121,7 +122,6 @@
   }
   loadProfile();
 
-  // SAVE PROFILE
   const profileForm = document.getElementById("profileForm");
   const profileMsg = document.getElementById("profileMsg");
 
@@ -132,7 +132,7 @@
 
     const updateData = {
       full_name: full_name.value,
-      city: city.value,
+      city: city.value,          // visada Vilnius
       phone: phone.value,
       iv_nr: iv_nr.value,
       description: description.value,
