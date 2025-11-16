@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Timurita – Darbo pasiūlymai</title>
-  <meta name="description" content="Peržiūrėkite ir filtruokite darbo pasiūlymus statybų sektoriuje.">
+  <meta name="description" content="Peržiūrėkite darbo pasiūlymus ir kandidatuokite kaip darbuotojas.">
 
   <!-- PWA -->
   <link rel="manifest" href="/timurita/manifest.json">
@@ -14,79 +14,53 @@
   <link rel="stylesheet" href="/timurita/style.css">
 
   <style>
-    :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#64748b; --line:#e2e8f0; --card:#ffffff; --primary:#0f766e; }
+    :root{ --bg:#f8fafc; --fg:#0f172a; --muted:#64748b; --line:#e2e8f0; --card:#ffffff; --primary:#0f766e; --danger:#b91c1c; --badge:#e0f2fe; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); margin:0; color:var(--fg); }
     .app-header { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line); }
     .left { display:flex; align-items:center; gap:10px; }
     .app-header img { width:40px; height:40px; border-radius:8px; }
+    .header-actions { display:flex; gap:8px; align-items:center; }
+    .role-pill { font-size:12px; padding:4px 10px; border-radius:999px; background:#ecfeff; color:#0e7490; border:1px solid #bae6fd; }
+    .logout-btn { padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#fee2e2; color:#b91c1c; font-size:12px; font-weight:600; cursor:pointer; }
+
     .container { max-width:980px; margin:0 auto; padding:16px; }
-    h1 { margin-top:0; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 2px rgba(15,23,42,0.05); margin-bottom:16px; }
     .muted { color:var(--muted); }
 
-    .filters { margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-    .filters-group { display:flex; gap:8px; flex-wrap:wrap; }
-    .filters input[type="search"],
-    .filters select {
-      padding:7px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      font-size:13px;
-      background:var(--card);
-      color:var(--fg);
-    }
+    .filters { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+    .filters input, .filters select { padding:8px 10px; border-radius:999px; border:1px solid var(--line); background:#f8fafc; font-size:13px; }
+    .filters input { min-width:160px; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:var(--badge); color:#0369a1; font-size:12px; font-weight:700; }
 
-    .btn { padding:8px 12px; font-size:13px; font-weight:600; border-radius:10px; border:1px solid var(--line); background:var(--card); cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+    .offers-list { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+    .offer-card { border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:var(--card); display:flex; flex-direction:column; gap:6px; }
+    .offer-header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .offer-title { font-size:15px; font-weight:700; margin:0; }
+    .offer-meta { font-size:12px; color:var(--muted); }
+    .offer-desc { font-size:13px; color:#0f172a; }
+    .offer-footer { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap; }
+
+    .btn { padding:7px 11px; font-size:13px; font-weight:600; border-radius:999px; cursor:pointer; border:1px solid var(--line); display:inline-flex; align-items:center; gap:6px; }
     .btn.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
-    .btn.small { padding:6px 10px; font-size:12px; }
-    .btn:disabled { opacity:0.6; cursor:default; }
+    .btn.secondary { background:#f8fafc; color:#0f172a; }
+    .btn.small { padding:5px 9px; font-size:12px; }
 
-    .status { font-size:12px; color:var(--muted); margin-top:4px; }
+    .btn[disabled] { opacity:0.6; cursor:default; }
+    .status { font-size:12px; color:var(--muted); margin-top:6px; min-height:16px; }
 
-    .section-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:18px; }
-    .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:#e0f2fe; color:#0369a1; font-size:12px; font-weight:600; }
-    .badge-local { background:#dcfce7; color:#166534; }
-    .badge-remote { background:#fee2e2; color:#b91c1c; }
-
-    .offers-list { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
-    .offer-card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; box-shadow:0 1px 2px rgba(15,23,42,0.05); }
-    .offer-header { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
-    .offer-title { font-size:16px; font-weight:700; margin:0; }
-    .offer-meta { font-size:13px; color:var(--muted); margin-top:2px; }
-    .offer-salary { font-size:14px; font-weight:600; color:#0f766e; }
-    .offer-body { font-size:14px; margin-top:6px; white-space:pre-wrap; }
-    .offer-contact { font-size:13px; margin-top:8px; color:var(--muted); display:flex; flex-direction:column; gap:2px; }
-
-    .pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); }
-    .pill-local { background:#f0fdf4; color:#166534; }
-    .pill-supabase { background:#eff6ff; color:#1d4ed8; }
-
-    .empty { font-size:14px; color:var(--muted); font-style:italic; margin-top:8px; }
-
-    .backup-bar {
-      margin-top:10px;
-      padding:8px 10px;
-      border-radius:10px;
-      border:1px dashed var(--line);
-      background:rgba(248,250,252,0.8);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      font-size:12px;
-      color:var(--muted);
-    }
-    .backup-actions { display:flex; gap:8px; flex-wrap:wrap; }
-
-    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:rgba(248,250,252,0.96); border-top:1px solid var(--line); padding:10px; backdrop-filter:blur(6px); }
-    .bottom-nav a { text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:var(--fg); font-weight:600; background:var(--card); border:1px solid var(--line); }
+    nav.bottom-nav { position:sticky; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); background:rgba(248,250,252,0.95); border-top:1px solid var(--line); padding:10px; backdrop-filter:blur(6px); }
+    .bottom-nav a { text-align:center; text-decoration:none; padding:10px; border-radius:10px; color:var(--fg); font-weight:600; background:var(--card); border:1px solid var(--line); font-size:14px; }
     .bottom-nav a[aria-current="page"] { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+    @media (max-width: 700px) {
+      .offer-header { flex-direction:column; align-items:flex-start; }
+      .offer-footer { flex-direction:column; align-items:flex-start; }
+    }
   </style>
 
-  <!-- Supabase UMD biblioteka -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 </head>
-
 <body>
   <header class="app-header">
     <div class="left">
@@ -94,63 +68,39 @@
         <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita" loading="lazy">
         <div>
           <h3 style="margin:0;">Timurita</h3>
-          <div style="font-size:12px;color:var(--muted)">Sujungiame darbdavius ir statybų specialistus</div>
+          <div style="font-size:12px;color:var(--muted)">Darbo pasiūlymai statybų sektoriuje</div>
         </div>
       </a>
+    </div>
+    <div class="header-actions">
+      <span class="role-pill" id="roleInfo">Neprisijungta</span>
+      <button class="logout-btn" type="button" id="logoutBtn" style="display:none;">Atsijungti</button>
     </div>
   </header>
 
   <main class="container">
-    <h1>Darbo pasiūlymai</h1>
-    <p class="muted">
-      Čia matysite:
-      <br>• 🟢 pasiūlymus, išsaugotus šiame įrenginyje (ką sukūrė darbdaviai per šį kompiuterį),
-      <br>• 🔵 viešus pasiūlymus iš Supabase (bendras sąrašas). Prie viešų pasiūlymų galite paspausti „Kandidatuoti“.
-    </p>
+    <section class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <h1 style="margin:0;">Darbo pasiūlymai</h1>
+        <span class="badge">Pasiūlymai iš darbdavių</span>
+      </div>
+      <p class="muted" style="margin-top:6px;">
+        Čia matote visus viešus darbo pasiūlymus. Kandidatuoti gali tik prisijungęs vartotojas su role
+        <strong>„Darbuotojas“</strong>.
+      </p>
 
-    <div class="filters">
-      <div class="filters-group">
-        <input type="search" id="searchInput" placeholder="🔍 Paieška pagal pavadinimą ar aprašymą">
-        <select id="cityFilter">
-          <option value="">Visi miestai</option>
+      <div class="filters">
+        <input type="search" id="searchText" placeholder="Paieška pagal pavadinimą ar aprašymą">
+        <input type="search" id="searchCity" placeholder="Miestas (pvz. Vilnius)">
+        <select id="filterApplied">
+          <option value="all">Visi pasiūlymai</option>
+          <option value="not-applied">Į kuriuos dar nekandidatavau</option>
+          <option value="applied">Į kuriuos jau kandidatuota</option>
         </select>
-        <select id="sourceFilter">
-          <option value="all">Visi šaltiniai</option>
-          <option value="local">Tik šis įrenginys</option>
-          <option value="remote">Tik Supabase</option>
-        </select>
       </div>
-      <button class="btn" type="button" id="refreshBtn">🔁 Atnaujinti iš Supabase</button>
-    </div>
-    <div class="status" id="status">Kraunami pasiūlymai...</div>
 
-    <div class="backup-bar">
-      <span>💾 Atsarginės kopijos (tik šio įrenginio pasiūlymams).</span>
-      <div class="backup-actions">
-        <button class="btn" type="button" id="exportBtn">💾 Eksportuoti (JSON)</button>
-        <button class="btn" type="button" id="importBtn">📂 Importuoti (JSON)</button>
-        <input type="file" id="importFile" accept="application/json" style="display:none">
-      </div>
-    </div>
-
-    <!-- Vietiniai pasiūlymai -->
-    <section>
-      <div class="section-title">
-        <h2 style="margin:16px 0 4px;">Šiame įrenginyje išsaugoti</h2>
-        <span class="badge badge-local">Tik šiam įrenginiui</span>
-      </div>
-      <div id="localOffers" class="offers-list"></div>
-      <div id="localEmpty" class="empty" style="display:none;">Šiame įrenginyje dar nėra išsaugotų pasiūlymų.</div>
-    </section>
-
-    <!-- Supabase pasiūlymai -->
-    <section>
-      <div class="section-title">
-        <h2 style="margin:20px 0 4px;">Vieši pasiūlymai (Supabase)</h2>
-        <span class="badge badge-remote">Galima kandidatuoti</span>
-      </div>
-      <div id="remoteOffers" class="offers-list"></div>
-      <div id="remoteEmpty" class="empty" style="display:none;">Kol kas nėra pasiūlymų iš Supabase, arba nepavyko prisijungti.</div>
+      <div class="status" id="offersStatus">Kraunami pasiūlymai...</div>
+      <div class="offers-list" id="offersList"></div>
     </section>
   </main>
 
@@ -162,32 +112,20 @@
   </nav>
 
   <script>
-    const OFFERS_KEY = 'timurita_offers';
-
-    const statusEl = document.getElementById('status');
-    const localListEl = document.getElementById('localOffers');
-    const localEmptyEl = document.getElementById('localEmpty');
-    const remoteListEl = document.getElementById('remoteOffers');
-    const remoteEmptyEl = document.getElementById('remoteEmpty');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const searchInput = document.getElementById('searchInput');
-    const cityFilter = document.getElementById('cityFilter');
-    const sourceFilter = document.getElementById('sourceFilter');
-    const exportBtn = document.getElementById('exportBtn');
-    const importBtn = document.getElementById('importBtn');
-    const importFile = document.getElementById('importFile');
-
+    // --- Supabase ir globalūs kintamieji ---
     let supabaseClient = null;
-    let localOffersData = [];
-    let remoteOffersData = [];
+    let currentUser = null;
+    let currentRole = 'guest'; // 'guest' | 'worker' | 'employer'
+    let allOffers = [];
+    let appliedMap = {}; // { offer_id: true } – į kuriuos pasiūlymus šis darbuotojas jau kandidatuotas
 
-    // Supabase klientas
+    const WORKER_PROFILE_KEY = 'timurita_worker_profile';
+
     try {
       if (window.supabase) {
         const supabaseUrl = 'https://qnczakppadjxbicgjzcy.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY';
         supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        console.log('Supabase klientas (pasiulymai.html) sukurtas');
       } else {
         console.warn('Supabase biblioteka neužsikrovė');
       }
@@ -195,222 +133,125 @@
       console.warn('Supabase createClient klaida pasiulymai.html:', e);
     }
 
-    function escapeText(text) {
-      return (text || '').toString();
-    }
+    const roleInfo = document.getElementById('roleInfo');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const offersStatus = document.getElementById('offersStatus');
+    const offersList = document.getElementById('offersList');
+    const searchText = document.getElementById('searchText');
+    const searchCity = document.getElementById('searchCity');
+    const filterApplied = document.getElementById('filterApplied');
 
-    // Pabandome paimti darbuotojo profilį iš localStorage
-    function loadWorkerProfileFromLocal() {
-      const possibleKeys = [
-        'timurita_worker_profile',
-        'timurita_profile',
-        'worker_profile'
-      ];
-      for (const key of possibleKeys) {
-        try {
-          const raw = localStorage.getItem(key);
-          if (raw) {
-            const data = JSON.parse(raw);
-            if (data && typeof data === 'object') return data;
-          }
-        } catch(e) {
-          console.warn('Nepavyko perskaityti profilio iš localStorage („' + key + '“):', e);
-        }
-      }
-      return null;
-    }
-
-    function renderOfferCard(offer, source) {
-      const div = document.createElement('article');
-      div.className = 'offer-card';
-
-      const title = escapeText(offer.title);
-      const company = escapeText(offer.company || '');
-      const city = escapeText(offer.city || '');
-      const salary = escapeText(offer.salary || '');
-      const desc = escapeText(offer.description || offer.desc || '');
-      const contact = escapeText(offer.contact || '');
-      const phone = escapeText(offer.phone || '');
-      const email = escapeText(offer.email || '');
-
-      const header = document.createElement('div');
-      header.className = 'offer-header';
-
-      const left = document.createElement('div');
-      const h = document.createElement('h3');
-      h.className = 'offer-title';
-      h.textContent = title || 'Be pavadinimo';
-
-      const meta = document.createElement('div');
-      meta.className = 'offer-meta';
-      const parts = [];
-      if (company) parts.push(company);
-      if (city) parts.push(city);
-      meta.textContent = parts.join(' • ');
-
-      left.appendChild(h);
-      left.appendChild(meta);
-
-      const pill = document.createElement('div');
-      pill.className = 'pill ' + (source === 'local' ? 'pill-local' : 'pill-supabase');
-      pill.textContent = source === 'local' ? 'Šis įrenginys' : 'Supabase';
-
-      header.appendChild(left);
-      header.appendChild(pill);
-
-      const body = document.createElement('div');
-      body.className = 'offer-body';
-      body.textContent = desc || 'Aprašymas nepateiktas.';
-
-      const bottom = document.createElement('div');
-      bottom.className = 'offer-contact';
-
-      if (salary) {
-        const salSpan = document.createElement('div');
-        salSpan.className = 'offer-salary';
-        salSpan.textContent = salary;
-        bottom.appendChild(salSpan);
-      }
-
-      if (contact || phone || email) {
-        const lines = [];
-        if (contact) lines.push('Kontaktinis asmuo: ' + contact);
-        if (phone) lines.push('Tel.: ' + phone);
-        if (email) lines.push('El. paštas: ' + email);
-        const contactP = document.createElement('div');
-        contactP.textContent = lines.join(' • ');
-        bottom.appendChild(contactP);
-      }
-
-      // „Kandidatuoti“ – tik Supabase pasiūlymams (remote) ir tik jei yra offer.id
-      if (source === 'remote' && offer.id && supabaseClient) {
-        const btnRow = document.createElement('div');
-        btnRow.style.marginTop = '6px';
-
-        const applyBtn = document.createElement('button');
-        applyBtn.type = 'button';
-        applyBtn.className = 'btn small primary';
-        applyBtn.textContent = '✅ Kandidatuoti';
-
-        applyBtn.addEventListener('click', () => {
-          handleApply(offer);
-        });
-
-        btnRow.appendChild(applyBtn);
-        bottom.appendChild(btnRow);
-      }
-
-      div.appendChild(header);
-      div.appendChild(body);
-      div.appendChild(bottom);
-
-      return div;
-    }
-
-    function applyFiltersToList(offers, source) {
-      const q = (searchInput.value || '').toLowerCase();
-      const cityVal = (cityFilter.value || '').toLowerCase();
-      const srcFilter = sourceFilter.value;
-
-      let result = offers.slice();
-
-      if (srcFilter === 'local' && source !== 'local') return [];
-      if (srcFilter === 'remote' && source !== 'remote') return [];
-
-      if (q) {
-        result = result.filter(o => {
-          const all = [
-            o.title,
-            o.company,
-            o.city,
-            o.salary,
-            o.description || o.desc
-          ].join(' ').toLowerCase();
-          return all.includes(q);
-        });
-      }
-
-      if (cityVal) {
-        result = result.filter(o => (o.city || '').toLowerCase() === cityVal);
-      }
-
-      return result;
-    }
-
-    function populateCityFilter() {
-      const set = new Set();
-      [...localOffersData, ...remoteOffersData].forEach(o => {
-        if (o.city) set.add(o.city.trim());
-      });
-      const cities = Array.from(set).sort((a,b) => a.localeCompare(b, 'lt'));
-      cityFilter.innerHTML = '<option value="">Visi miestai</option>';
-      cities.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = c;
-        cityFilter.appendChild(opt);
-      });
-    }
-
-    function renderAllOffers() {
-      localListEl.innerHTML = '';
-      let filteredLocal = applyFiltersToList(localOffersData, 'local');
-
-      if (!localOffersData.length) {
-        localEmptyEl.style.display = 'block';
-        localEmptyEl.textContent = 'Šiame įrenginyje dar nėra išsaugotų pasiūlymų.';
-      } else if (!filteredLocal.length) {
-        localEmptyEl.style.display = 'block';
-        localEmptyEl.textContent = 'Nėra pasiūlymų pagal pasirinktus filtrus šiame įrenginyje.';
-      } else {
-        localEmptyEl.style.display = 'none';
-        filteredLocal
-          .sort((a,b) => (b.id || 0) - (a.id || 0))
-          .forEach(o => localListEl.appendChild(renderOfferCard(o, 'local')));
-      }
-
-      remoteListEl.innerHTML = '';
-      let filteredRemote = applyFiltersToList(remoteOffersData, 'remote');
-
-      if (!remoteOffersData.length) {
-        remoteEmptyEl.style.display = 'block';
-        remoteEmptyEl.textContent = 'Kol kas nėra pasiūlymų iš Supabase, arba nepavyko prisijungti.';
-      } else if (!filteredRemote.length) {
-        remoteEmptyEl.style.display = 'block';
-        remoteEmptyEl.textContent = 'Nėra pasiūlymų pagal pasirinktus filtrus iš Supabase.';
-      } else {
-        remoteEmptyEl.style.display = 'none';
-        filteredRemote.forEach(o => remoteListEl.appendChild(renderOfferCard(o, 'remote')));
-      }
-    }
-
-    function loadLocalOffers() {
-      let offers = [];
+    // --- Pagalbinės funkcijos ---
+    function formatDate(iso) {
+      if (!iso) return '';
       try {
-        const raw = localStorage.getItem(OFFERS_KEY);
-        offers = raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        console.warn('local offers read error', e);
-        offers = [];
-      }
-      localOffersData = Array.isArray(offers) ? offers : [];
-      if (!localOffersData.length) {
-        localEmptyEl.style.display = 'block';
+        const d = new Date(iso);
+        return d.toLocaleDateString('lt-LT') + ' ' + d.toLocaleTimeString('lt-LT', { hour: '2-digit', minute: '2-digit' });
+      } catch {
+        return iso;
       }
     }
 
-    async function loadRemoteOffers() {
-      remoteOffersData = [];
-      remoteListEl.innerHTML = '';
-      remoteEmptyEl.style.display = 'none';
-      statusEl.textContent = 'Jungiama prie Supabase...';
-      refreshBtn.disabled = true;
+    function getWorkerProfile() {
+      try {
+        const raw = localStorage.getItem(WORKER_PROFILE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) {
+        console.warn('Nepavyko nuskaityti worker profilio:', e);
+        return null;
+      }
+    }
+
+    function updateRoleUI() {
+      if (currentUser) {
+        logoutBtn.style.display = 'inline-flex';
+      } else {
+        logoutBtn.style.display = 'none';
+      }
+
+      if (currentRole === 'worker') {
+        roleInfo.textContent = 'Prisijungta kaip darbuotojas';
+        roleInfo.style.background = '#dcfce7';
+        roleInfo.style.color = '#166534';
+        roleInfo.style.borderColor = '#bbf7d0';
+      } else if (currentRole === 'employer') {
+        roleInfo.textContent = 'Prisijungta kaip darbdavys';
+        roleInfo.style.background = '#fee2e2';
+        roleInfo.style.color = '#b91c1c';
+        roleInfo.style.borderColor = '#fecaca';
+      } else {
+        roleInfo.textContent = 'Neprisijungta';
+        roleInfo.style.background = '#ecfeff';
+        roleInfo.style.color = '#0e7490';
+        roleInfo.style.borderColor = '#bae6fd';
+      }
+    }
+
+    // --- Auth informacijai ---
+    async function initAuth() {
+      if (!supabaseClient) {
+        currentUser = null;
+        currentRole = 'guest';
+        updateRoleUI();
+        return;
+      }
+
+      try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        if (error || !user) {
+          currentUser = null;
+          currentRole = 'guest';
+        } else {
+          currentUser = user;
+          currentRole = user.user_metadata?.role || 'worker';
+        }
+      } catch (e) {
+        console.warn('getUser klaida:', e);
+        currentUser = null;
+        currentRole = 'guest';
+      }
+
+      updateRoleUI();
+
+      // jei tai darbuotojas – užkraunam, į ką jis jau kandidatuotas
+      if (currentUser && currentRole === 'worker') {
+        await loadMyApplicationsMap();
+      }
+    }
+
+    async function loadMyApplicationsMap() {
+      appliedMap = {};
+      if (!supabaseClient || !currentUser) return;
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('applications')
+          .select('offer_id')
+          .eq('worker_id', currentUser.id);
+
+        if (error) {
+          console.warn('loadMyApplicationsMap klaida:', error);
+          return;
+        }
+
+        if (data) {
+          data.forEach(row => {
+            if (row.offer_id) appliedMap[row.offer_id] = true;
+          });
+        }
+      } catch (e) {
+        console.warn('loadMyApplicationsMap klaida:', e);
+      }
+    }
+
+    // --- Pasiūlymų užkrovimas iš Supabase ---
+    async function loadOffers() {
+      offersList.innerHTML = '';
+      offersStatus.textContent = 'Kraunami pasiūlymai...';
 
       if (!supabaseClient) {
-        statusEl.textContent = 'Supabase klientas nesukurtas (biblioteka neįkelta).';
-        remoteEmptyEl.style.display = 'block';
-        refreshBtn.disabled = false;
-        renderAllOffers();
+        offersStatus.textContent = 'Supabase klientas nepasiekiamas. Pabandykite persikrauti puslapį.';
         return;
       }
 
@@ -418,203 +259,268 @@
         const { data, error } = await supabaseClient
           .from('offers')
           .select('*')
-          .order('created_at', { ascending: false })
-          .limit(100);
+          .order('created_at', { ascending: false });
 
         if (error) {
-          console.warn('Supabase select klaida:', error);
-          statusEl.textContent = 'Supabase klaida: ' + (error.message || 'nežinoma');
-          remoteEmptyEl.style.display = 'block';
-          remoteOffersData = [];
-        } else {
-          remoteOffersData = data || [];
-          if (!remoteOffersData.length) {
-            remoteEmptyEl.style.display = 'block';
-            statusEl.textContent = 'Prisijungta prie Supabase. Pasiūlymų nėra.';
-          } else {
-            remoteEmptyEl.style.display = 'none';
-            statusEl.textContent = 'Prisijungta prie Supabase. Gauta ' + remoteOffersData.length + ' pasiūlymų.';
-          }
+          console.warn('loadOffers klaida:', error);
+          offersStatus.textContent = 'Klaida gaunant pasiūlymus: ' + (error.message || 'nežinoma');
+          return;
         }
+
+        allOffers = data || [];
+        if (!allOffers.length) {
+          offersStatus.textContent = 'Šiuo metu nėra darbo pasiūlymų.';
+          return;
+        }
+
+        offersStatus.textContent = 'Rasta pasiūlymų: ' + allOffers.length;
+        renderOffers();
       } catch (e) {
-        console.warn('Supabase loadRemoteOffers klaida:', e);
-        statusEl.textContent = 'Supabase klaida: ' + e.message;
-        remoteEmptyEl.style.display = 'block';
-        remoteOffersData = [];
-      } finally {
-        refreshBtn.disabled = false;
-        populateCityFilter();
-        renderAllOffers();
+        console.warn('loadOffers klaida:', e);
+        offersStatus.textContent = 'Klaida gaunant pasiūlymus: ' + e.message;
       }
     }
 
-    // --- Kandidatavimo logika ---
-    async function handleApply(offer) {
-      if (!supabaseClient) {
-        alert('Supabase šiuo metu nepasiekiamas. Bandykite vėliau.');
+    // --- Filtravimas ir atvaizdavimas ---
+    function renderOffers() {
+      offersList.innerHTML = '';
+
+      const text = (searchText.value || '').trim().toLowerCase();
+      const city = (searchCity.value || '').trim().toLowerCase();
+      const filter = filterApplied.value;
+
+      const filtered = allOffers.filter(o => {
+        if (text) {
+          const hay = ((o.title || '') + ' ' + (o.description || '')).toLowerCase();
+          if (!hay.includes(text)) return false;
+        }
+        if (city) {
+          const c = (o.city || '').toLowerCase();
+          if (!c.includes(city)) return false;
+        }
+
+        if (currentUser && currentRole === 'worker') {
+          const isApplied = !!appliedMap[o.id];
+          if (filter === 'applied' && !isApplied) return false;
+          if (filter === 'not-applied' && isApplied) return false;
+        } else {
+          // svečias ar darbdavys – filtras pagal kandidatuota nelabai prasmingas
+          if (filter !== 'all') {
+            // galim paprastai leisti tik "visi pasiūlymai"
+            if (filter === 'applied' || filter === 'not-applied') {
+              // jei ne worker – rodom viską
+            }
+          }
+        }
+
+        return true;
+      });
+
+      if (!filtered.length) {
+        const div = document.createElement('div');
+        div.className = 'muted';
+        div.style.marginTop = '8px';
+        div.textContent = 'Pagal pasirinktus filtrus pasiūlymų nerasta.';
+        offersList.appendChild(div);
         return;
       }
+
+      filtered.forEach(o => {
+        const card = document.createElement('article');
+        card.className = 'offer-card';
+
+        const header = document.createElement('div');
+        header.className = 'offer-header';
+
+        const titleEl = document.createElement('h2');
+        titleEl.className = 'offer-title';
+        titleEl.textContent = o.title || 'Be pavadinimo';
+
+        const metaRight = document.createElement('div');
+        metaRight.style.fontSize = '12px';
+        metaRight.style.textAlign = 'right';
+        metaRight.innerHTML =
+          (o.city ? `<div>${o.city}</div>` : '') +
+          (o.salary ? `<div><strong>${o.salary}</strong></div>` : '') +
+          (o.created_at ? `<div style="color:#94a3b8;">${formatDate(o.created_at)}</div>` : '');
+
+        header.appendChild(titleEl);
+        header.appendChild(metaRight);
+
+        const meta = document.createElement('div');
+        meta.className = 'offer-meta';
+        const comp = o.company || '';
+        const contact = o.contact || '';
+        const phone = o.phone || '';
+        const email = o.email || '';
+
+        let metaText = '';
+        if (comp) metaText += comp;
+        if (contact) {
+          if (metaText) metaText += ' • ';
+          metaText += contact;
+        }
+        if (phone) metaText += (metaText ? ' • Tel. ' : 'Tel. ') + phone;
+        if (email) metaText += (metaText ? ' • ' : '') + email;
+
+        meta.textContent = metaText;
+
+        const desc = document.createElement('div');
+        desc.className = 'offer-desc';
+        desc.textContent = o.description || 'Darbo aprašymas nepateiktas.';
+
+        const footer = document.createElement('div');
+        footer.className = 'offer-footer';
+
+        const leftInfo = document.createElement('div');
+        leftInfo.style.fontSize = '12px';
+        leftInfo.style.color = '#64748b';
+        leftInfo.textContent = 'Norėdami kandidatuoti, turite būti prisijungęs kaip darbuotojas.';
+
+        const rightButtons = document.createElement('div');
+        rightButtons.style.display = 'flex';
+        rightButtons.style.gap = '6px';
+        rightButtons.style.flexWrap = 'wrap';
+
+        const applyBtn = document.createElement('button');
+        applyBtn.type = 'button';
+        applyBtn.className = 'btn small primary';
+        applyBtn.textContent = 'Kandidatuoti';
+
+        if (!currentUser) {
+          applyBtn.addEventListener('click', () => {
+            alert('Norėdami kandidatuoti, pirmiausia prisijunkite kaip darbuotojas.');
+            window.location.href = '/timurita/auth.html';
+          });
+        } else if (currentRole !== 'worker') {
+          applyBtn.disabled = true;
+          applyBtn.textContent = 'Tik darbuotojams';
+          leftInfo.textContent = 'Jūs prisijungęs ne kaip darbuotojas. Kandidatuoti gali tik darbuotojai.';
+        } else {
+          const isApplied = !!appliedMap[o.id];
+          if (isApplied) {
+            applyBtn.disabled = true;
+            applyBtn.classList.remove('primary');
+            applyBtn.classList.add('secondary');
+            applyBtn.textContent = 'Jau kandidatuota';
+          } else {
+            applyBtn.addEventListener('click', () => {
+              handleApply(o);
+            });
+          }
+          leftInfo.textContent = 'Kandidatuojant bus panaudoti jūsų profilyje nurodyti duomenys.';
+        }
+
+        rightButtons.appendChild(applyBtn);
+        footer.appendChild(leftInfo);
+        footer.appendChild(rightButtons);
+
+        card.appendChild(header);
+        card.appendChild(meta);
+        card.appendChild(desc);
+        card.appendChild(footer);
+
+        offersList.appendChild(card);
+      });
+    }
+
+    // --- Kandidatavimas ---
+    async function handleApply(offer) {
+      if (!currentUser || currentRole !== 'worker') {
+        alert('Norėdami kandidatuoti, prisijunkite kaip darbuotojas.');
+        window.location.href = '/timurita/auth.html';
+        return;
+      }
+
+      const profile = getWorkerProfile();
+      if (!profile) {
+        const go = confirm('Pirmiausia užpildykite savo profilį, kad darbdavys matytų jūsų duomenis. Eiti į profilį dabar?');
+        if (go) window.location.href = '/timurita/profilis.html';
+        return;
+      }
+
+      if (!supabaseClient) {
+        alert('Supabase nepasiekiamas, pabandykite vėliau.');
+        return;
+      }
+
+      const confirmText = `Kandidatuosite į: "${offer.title || ''}"\nDarbdavys: ${offer.company || ''}\n\nBus perduoti jūsų profilio duomenys.\nTęsti?`;
+      if (!confirm(confirmText)) return;
+
+      offersStatus.textContent = 'Siunčiama kandidatūra...';
 
       try {
-        const { data: { user }, error } = await supabaseClient.auth.getUser();
-        if (error) {
-          console.warn('auth.getUser error', error);
-          alert('Nepavyko patikrinti prisijungimo. Bandykite dar kartą.');
-          return;
-        }
-        if (!user) {
-          const go = confirm('Norėdami kandidatuoti, turite prisijungti. Ar norite eiti į prisijungimo puslapį?');
-          if (go) {
-            window.location.href = '/timurita/auth.html';
-          }
-          return;
-        }
-
-        // Pabandom paimti profilį iš localStorage
-        const profile = loadWorkerProfileFromLocal();
-        const workerName  = profile?.fullName || profile?.name || '';
-        const workerCity  = profile?.city  || '';
-        const workerPhone = profile?.phone || '';
-        const workerEmail = profile?.email || user.email || '';
-        const workerNote  = profile?.about || profile?.description || '';
-
-        const { error: insertError } = await supabaseClient
+        // saugumo sumetimais patikrinam, ar dar nėra tokios paraiškos
+        const { data: existing, error: checkError } = await supabaseClient
           .from('applications')
-          .insert({
-            offer_id: offer.id,
-            worker_id: user.id,
-            note: null,
-            worker_name:  workerName  || null,
-            worker_city:  workerCity  || null,
-            worker_phone: workerPhone || null,
-            worker_email: workerEmail || null,
-            worker_note:  workerNote  || null
-          });
+          .select('id')
+          .eq('offer_id', offer.id)
+          .eq('worker_id', currentUser.id)
+          .limit(1);
 
-        if (insertError) {
-          console.warn('applications insert error', insertError);
-          if (insertError.code === '23505') {
-            alert('Jūs jau kandidavote į šį pasiūlymą.');
-          } else {
-            alert('Nepavyko išsaugoti kandidatavimo: ' + insertError.message);
-          }
+        if (checkError) {
+          console.warn('Check existing application klaida:', checkError);
+        } else if (existing && existing.length) {
+          alert('Jūs jau kandidatuojate į šį pasiūlymą.');
+          appliedMap[offer.id] = true;
+          renderOffers();
+          offersStatus.textContent = 'Jau buvote kandidatavęs į šį pasiūlymą.';
           return;
         }
 
-        alert('✅ Jūsų kandidatas užregistruotas. Darbdavys matys jūsų kontaktinius duomenis.');
+        const { error } = await supabaseClient.from('applications').insert({
+          offer_id: offer.id,
+          worker_id: currentUser.id,
+          worker_name: profile.fullName || profile.name || null,
+          worker_city: profile.city || null,
+          worker_phone: profile.phone || null,
+          worker_email: profile.email || currentUser.email || null,
+          worker_note: profile.about || null
+        });
+
+        if (error) {
+          console.warn('Insert application klaida:', error);
+          alert('Nepavyko išsiųsti kandidatūros: ' + (error.message || 'nežinoma klaida'));
+          offersStatus.textContent = 'Klaida siunčiant kandidatūrą.';
+          return;
+        }
+
+        appliedMap[offer.id] = true;
+        renderOffers();
+        offersStatus.textContent = '✅ Kandidatūra išsiųsta darbdaviui.';
       } catch (e) {
         console.warn('handleApply klaida:', e);
-        alert('Klaida kandidatuojant: ' + e.message);
+        alert('Klaida siunčiant kandidatūrą: ' + e.message);
+        offersStatus.textContent = 'Klaida siunčiant kandidatūrą.';
       }
     }
 
-    // --- Eksportas / importas ---
-    function downloadJSON(data, filename) {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    }
-
-    exportBtn.addEventListener('click', () => {
-      if (!localOffersData.length) {
-        alert('Šiame įrenginyje nėra pasiūlymų, kuriuos būtų galima eksportuoti.');
+    // --- Atsijungimas ---
+    logoutBtn.addEventListener('click', async () => {
+      if (!supabaseClient) {
+        window.location.href = '/timurita/auth.html';
         return;
       }
-      const filename = 'timurita_pasiulymai_' + new Date().toISOString().slice(0,10) + '.json';
-      downloadJSON(localOffersData, filename);
+      try {
+        await supabaseClient.auth.signOut();
+      } catch (e) {
+        console.warn('signOut klaida:', e);
+      }
+      try { localStorage.removeItem('timurita_role'); } catch {}
+      window.location.href = '/timurita/auth.html';
     });
 
-    importBtn.addEventListener('click', () => {
-      importFile.value = '';
-      importFile.click();
+    // --- Inicializacija ---
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initAuth();
+      await loadOffers();
+
+      searchText.addEventListener('input', renderOffers);
+      searchCity.addEventListener('input', renderOffers);
+      filterApplied.addEventListener('change', renderOffers);
     });
 
-    importFile.addEventListener('change', () => {
-      const file = importFile.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const parsed = JSON.parse(reader.result);
-          if (!Array.isArray(parsed)) {
-            alert('JSON faile tikimasi masyvo ( [ ... ] ).');
-            return;
-          }
-
-          let added = 0;
-          const now = Date.now();
-
-          parsed.forEach((o, idx) => {
-            if (!o || typeof o !== 'object') return;
-            if (!o.title) return;
-
-            const copy = {
-              id: o.id || (now + idx),
-              title: o.title || '',
-              city: o.city || '',
-              salary: o.salary || '',
-              desc: o.description || o.desc || '',
-              company: o.company || '',
-              contact: o.contact || '',
-              phone: o.phone || '',
-              email: o.email || ''
-            };
-            localOffersData.push(copy);
-            added++;
-          });
-
-          if (!added) {
-            alert('Nepavyko rasti tinkamų pasiūlymų JSON faile.');
-            return;
-          }
-
-          try {
-            localStorage.setItem(OFFERS_KEY, JSON.stringify(localOffersData));
-          } catch (e) {
-            console.warn('Nepavyko išsaugoti localStorage po importo:', e);
-          }
-
-          populateCityFilter();
-          renderAllOffers();
-          alert('Importuota pasiūlymų: ' + added);
-        } catch (e) {
-          console.warn('Import JSON klaida:', e);
-          alert('Nepavyko perskaityti JSON failo: ' + e.message);
-        }
-      };
-      reader.readAsText(file, 'utf-8');
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-      loadLocalOffers();
-      loadRemoteOffers();
-      populateCityFilter();
-      renderAllOffers();
-
-      refreshBtn.addEventListener('click', () => {
-        loadRemoteOffers();
-      });
-
-      searchInput.addEventListener('input', () => {
-        renderAllOffers();
-      });
-
-      cityFilter.addEventListener('change', () => {
-        renderAllOffers();
-      });
-
-      sourceFilter.addEventListener('change', () => {
-        renderAllOffers();
-      });
-    });
-
+    // Service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/timurita/service-worker.js')
         .then(()=>console.log('SW registered (pasiulymai.html)'))
