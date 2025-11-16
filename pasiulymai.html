@@ -3,166 +3,167 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Darbo pasiūlymai – Timurita</title>
+  <title>Darbo pasiūlymai</title>
 
-  <link rel="stylesheet" href="./style.css" />
-  <link rel="manifest" href="./manifest.json" />
-  <meta name="theme-color" content="#1a2a44" />
+  <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#1a2a44">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 
   <style>
-    .offer-card {
-      background:#0f172a;
-      border-radius:10px;
-      padding:10px;
-      margin-bottom:10px;
-      border:1px solid #1e293b;
+    .offer {
+      background:#1e293b;
+      padding:14px;
+      border-radius:12px;
+      margin-bottom:12px;
+      border:1px solid #334155;
     }
-    .offer-card h4 { margin:0 0 4px; }
-    .offer-card small { color:#9ca3af; }
-
-    /* Toast notifikacija */
-    .toast {
-      position:fixed;
-      left:50%;
-      bottom:20px;
-      transform:translateX(-50%);
-      background:#0f172a;
-      color:#e5e7eb;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid #22c55e;
-      box-shadow:0 10px 25px rgba(0,0,0,0.5);
+    .offer h3 {
+      margin:0 0 6px 0;
+    }
+    .btn.small {
+      padding:6px 10px;
       font-size:13px;
-      display:none;
-      z-index:9999;
     }
   </style>
 </head>
 
 <body>
+
 <header class="app-header">
-  <h2>Darbo pasiūlymai (Vilnius)</h2>
-  <button onclick="logout()" class="btn small" style="margin-left:auto;">Atsijungti</button>
+  <a href="./main.html" style="text-decoration:none;color:inherit;">
+    <h2 style="margin:0;">Darbo pasiūlymai</h2>
+  </a>
+  <button class="btn small" onclick="logout()" style="margin-left:auto;">Atsijungti</button>
 </header>
 
 <main class="container">
+
   <div class="card">
-    <h3>Galimi darbai</h3>
+    <h3>Rasti darbo pasiūlymai</h3>
+    <p>Rodomi tik <strong>patvirtinti</strong> pasiūlymai.</p>
+
     <div id="offersList">Kraunama...</div>
   </div>
+
 </main>
 
-<div id="toast" class="toast"></div>
-
 <script>
-  const supabaseUrl = "https://qnczakppadjxbicgjzcy.supabase.co";
-  const supabaseKey =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY";
+  const supabaseClient = supabase.createClient(
+    "https://qnczakppadjxbicgjzcy.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
+  );
 
-  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
+  // --- Apsauga: tik prisijungęs darbuotojas
   async function checkAuth() {
     const { data } = await supabaseClient.auth.getUser();
+
     if (!data.user) {
       location.href = "./auth.html";
       return;
     }
-    // Leidžiam ir worker, ir employer matyti, jei nori – gali riboti tik worker
+
+    const role = data.user.user_metadata?.role;
+
+    if (role !== "worker") {
+      alert("Šis puslapis skirtas tik darbuotojams.");
+      location.href = "./main.html";
+    }
   }
   checkAuth();
 
-  async function logout() {
-    await supabaseClient.auth.signOut();
-    location.href = "./auth.html";
-  }
-
-  const offersList = document.getElementById("offersList");
-
+  // --- Pakrauti tik patvirtintus darbo pasiūlymus
   async function loadOffers() {
     const { data: offers, error } = await supabaseClient
       .from("offers")
       .select("*")
-      .eq("city", "Vilnius")
-      .order("created_at", { ascending:false });
-
-    offersList.innerHTML = "";
+      .eq("status", "approved")
+      .order("created_at", { ascending: false });
 
     if (error) {
-      offersList.textContent = "Klaida: " + error.message;
+      document.getElementById("offersList").innerText = "Klaida kraunant pasiūlymus.";
       return;
     }
 
+    const box = document.getElementById("offersList");
+    box.innerHTML = "";
+
     if (!offers || offers.length === 0) {
-      offersList.textContent = "Šiuo metu nėra darbo pasiūlymų Vilniuje.";
+      box.innerHTML = "<p>Nėra patvirtintų darbo pasiūlymų.</p>";
       return;
     }
 
     offers.forEach(o => {
       const div = document.createElement("div");
-      div.className = "offer-card";
+      div.className = "offer";
       div.innerHTML = `
-        <h4>${o.title}</h4>
-        <small>${o.city}</small><br>
-        <div>${o.description || ""}</div>
-        <div><strong>Atlygis:</strong> ${o.salary || "-"}</div>
-        <button class="btn small" onclick="apply('${o.id}')">Kandidatuoti</button>
+        <h3>${o.title}</h3>
+
+        <div><strong>Įmonė:</strong> ${o.company || "Nenurodyta"}</div>
+        <div><strong>Įmonės kodas:</strong> ${o.company_code || "Nenurodytas"}</div>
+        <div><strong>Miestas:</strong> ${o.city}</div>
+        <div><strong>Aprašymas:</strong> ${o.description || "(nėra)"}</div>
+        <div><strong>Kontaktas:</strong> ${o.contact || "(nėra)"}</div>
+
+        <button class="btn small" style="margin-top:10px;" onclick="apply('${o.id}')">
+          Kandidatuoti
+        </button>
       `;
-      offersList.appendChild(div);
+      box.appendChild(div);
     });
   }
-
   loadOffers();
 
-  // Kandidatavimas
+  // --- Kandidatavimo funkcija
   async function apply(offerId) {
-    const { data: userData } = await supabaseClient.auth.getUser();
-    const user = userData.user;
-    if (!user) {
-      alert("Reikia prisijungti.");
-      location.href = "./auth.html";
+    const { data } = await supabaseClient.auth.getUser();
+    const user = data.user;
+
+    if (!user) return alert("Prašome prisijungti.");
+
+    const workerId = user.id;
+
+    // Tikrinti, ar jau kandidatuota
+    const { data: existing } = await supabaseClient
+      .from("applications")
+      .select("*")
+      .eq("offer_id", offerId)
+      .eq("worker_id", workerId)
+      .maybeSingle();
+
+    if (existing) {
+      alert("Jūs jau kandidatuojate į šį darbo pasiūlymą.");
       return;
     }
 
-    const { error } = await supabaseClient.from("applications").insert({
-      offer_id: offerId,
-      worker_id: user.id
-    });
+    // Kandidatavimo įrašas
+    const { error } = await supabaseClient
+      .from("applications")
+      .insert({
+        offer_id: offerId,
+        worker_id: workerId,
+        status: "pending"
+      });
 
     if (error) {
-      alert("Klaida kandidatuojant: " + error.message);
+      alert("Klaida kandidatuojant.");
     } else {
-      alert("Kandidatura išsiųsta.");
+      alert("Kandidatuota sėkmingai!");
     }
   }
 
-  // Toast helperis
-  const toastEl = document.getElementById("toast");
-  function showToast(msg) {
-    toastEl.textContent = msg;
-    toastEl.style.display = "block";
-    setTimeout(() => {
-      toastEl.style.display = "none";
-    }, 4000);
+  // --- Atsijungimas
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    location.href = "./auth.html";
   }
 
-  // 🔔 Realtime – nauji darbo pasiūlymai Vilniuje
-  const offersChannel = supabaseClient
-    .channel("public:offers")
-    .on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: "offers" },
-      (payload) => {
-        const o = payload.new;
-        if (o.city === "Vilnius") {
-          showToast("🆕 Naujas darbo pasiūlymas Vilniuje: " + o.title);
-          // perkelti naujausią į sąrašo viršų: tiesiog perkraunam
-          loadOffers();
-        }
-      }
-    )
-    .subscribe();
+  // --- PWA SW
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(err => console.log("SW klaida pasiulymai.html", err));
+  }
 </script>
 
 </body>
