@@ -8,133 +8,103 @@
   <link rel="stylesheet" href="./style.css">
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#1a2a44">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 
   <style>
-    /* ----- GRAŽUS IR TVARKINGAS FORMOS IŠDĖSTYMAS ----- */
+    /* GRĄŽINTAS SENAS, PAPRASTAS, GLAUSTAS IŠDĖSTYMAS */
 
-    .card h3 {
-      margin-bottom: 15px;
-      border-bottom: 1px solid #334155;
-      padding-bottom: 6px;
-      font-size: 18px;
-    }
-
-    form input, form textarea {
+    label { font-weight: 600; margin-top: 10px; display: block; }
+    input, textarea {
       width: 100%;
-      padding: 10px 12px;
-      margin-top: 6px;
-      margin-bottom: 14px;
-      border-radius: 10px;
-      border: 1px solid #334155;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
       background: #0f172a;
       color: #e2e8f0;
-      font-size: 14px;
+      margin-top: 4px;
+      margin-bottom: 10px;
     }
+    textarea { min-height: 70px; }
+    .btn.small { padding: 5px 10px; font-size: 13px; }
 
-    form textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
-
-    label {
-      font-weight: 600;
-      font-size: 14px;
-      color: #cbd5e1;
-    }
-
-    .required-label::after {
+    .card h3 { margin-bottom: 10px; }
+    .required::after {
       content: " *";
       color: #ef4444;
       font-weight: bold;
     }
-
-    .btn {
-      margin-top: 10px;
+    .offer-box {
+      background: #1e293b;
       padding: 10px;
-      font-size: 15px;
       border-radius: 10px;
-      background: #0284c7;
-      color: white;
-      border: none;
+      margin-bottom: 10px;
     }
-
-    .btn.small {
-      padding: 6px 10px;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-
-    .offer-card {
-      padding: 12px;
-      border-radius: 10px;
+    .candidate-box {
       background: #1e293b;
-      margin-bottom: 12px;
-    }
-
-    .offer-card strong {
-      font-size: 15px;
-    }
-
-    .candidate-card {
-      background: #1e293b;
-      padding: 12px;
+      padding: 10px;
       border-radius: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
   </style>
+
 </head>
+
 <body>
 
 <header class="app-header">
   <h2>Darbdavio profilis</h2>
-  <button onclick="logout()" style="margin-left:auto;" class="btn small">Atsijungti</button>
+  <button onclick="logout()" class="btn small" style="margin-left:auto;">Atsijungti</button>
 </header>
 
 <main class="container">
 
-  <!-- === PROFILIS === -->
+  <!-- =================== PROFILIO BLOKAS =================== -->
   <div class="card">
     <h3>Įmonės duomenys</h3>
 
     <form id="profileForm">
 
-      <label class="required-label">Įmonės pavadinimas</label>
+      <label class="required">Įmonės pavadinimas</label>
       <input type="text" id="companyName" required>
 
-      <label class="required-label">Įmonės kodas</label>
+      <label class="required">Įmonės kodas</label>
       <input type="text" id="companyCode" required>
 
-      <label class="required-label">Kontaktinis asmuo</label>
+      <label class="required">Kontaktinis asmuo</label>
       <input type="text" id="contactPerson" required>
 
-      <label class="required-label">Miestas</label>
+      <label class="required">Miestas</label>
       <input type="text" id="city" required>
 
-      <label class="required-label">Telefonas</label>
+      <label class="required">Telefonas</label>
       <input type="text" id="phone" required>
 
-      <label class="required-label">El. paštas</label>
+      <label class="required">El. paštas</label>
       <input type="email" id="email" required>
 
       <button class="btn" type="submit">💾 Išsaugoti</button>
-
     </form>
+
     <p id="profileMsg"></p>
   </div>
 
-  <!-- === NAUJAS PASIŪLYMAS === -->
+
+  <!-- =================== NAUJAS DARBO PASIŪLYMAS =================== -->
   <div class="card">
     <h3>Naujas darbo pasiūlymas</h3>
 
     <form id="offerForm">
 
-      <label class="required-label">Pavadinimas</label>
+      <label class="required">Pavadinimas</label>
       <input type="text" id="oTitle" required>
 
-      <label class="required-label">Miestas</label>
+      <label class="required">Miestas</label>
       <input type="text" id="oCity" required>
+
+      <label class="required">Įmonės kodas</label>
+      <input type="text" id="oCompanyCode" required>
 
       <label>Įmonė</label>
       <input type="text" id="oCompany">
@@ -142,29 +112,32 @@
       <label>Aprašymas</label>
       <textarea id="oDescription"></textarea>
 
-      <label class="required-label">Atlygis (val. / ranka)</label>
+      <label class="required">Atlygis (val. / ranka)</label>
       <input type="text" id="oSalary" required>
 
       <button class="btn" type="submit">📤 Patalpinti pasiūlymą</button>
-
     </form>
 
     <p id="offerMsg"></p>
   </div>
 
-  <!-- === MANO PASIŪLYMAI === -->
+
+  <!-- =================== MANO PASIŪLYMAI =================== -->
   <div class="card">
     <h3>Jūsų paskelbti pasiūlymai</h3>
     <div id="myOffersList">Kraunama...</div>
   </div>
 
-  <!-- === KANDIDATAI === -->
+
+  <!-- =================== KANDIDATAI =================== -->
   <div class="card">
     <h3>Kandidatai</h3>
     <div id="candidatesList">Kraunama...</div>
   </div>
 
+
 </main>
+
 
 <script>
   // Supabase init
@@ -172,7 +145,8 @@
   const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY";
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-  // Tikrina ar prisijungta ir ar darbdavys
+
+  // =================== AUTH CHECK ===================
   async function checkAuth() {
     const { data } = await supabaseClient.auth.getUser();
     if (!data.user) {
@@ -185,13 +159,15 @@
   }
   checkAuth();
 
-  // Atsijungimas
+
+  // =================== ATSIJUNGIMAS ===================
   async function logout() {
     await supabaseClient.auth.signOut();
     location.href = "./auth.html";
   }
 
-  // ✓ PROFILIS — išsaugoti
+
+  // =================== PROFILIO IŠSAUGOJIMAS ===================
   const profileForm = document.getElementById("profileForm");
   const profileMsg = document.getElementById("profileMsg");
 
@@ -210,7 +186,7 @@
     profileMsg.textContent = "✔️ Profilis išsaugotas!";
   });
 
-  // ✓ PROFILIS — užkrauti
+  // UŽKRAUTI PROFILĮ
   const saved = localStorage.getItem("employer_profile");
   if (saved) {
     const p = JSON.parse(saved);
@@ -222,14 +198,16 @@
     email.value = p.email || "";
   }
 
-  // ✓ NAUJAS PASIŪLYMAS
+
+  // =================== NAUJAS DARBO PASIŪLYMAS ===================
   const offerForm = document.getElementById("offerForm");
   const offerMsg = document.getElementById("offerMsg");
 
   offerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    if (!oTitle.value || !oCity.value || !oSalary.value) {
+    // Patikrina būtinu laukų užpildymą
+    if (!oTitle.value || !oCity.value || !oCompanyCode.value || !oSalary.value) {
       offerMsg.style.color = "red";
       offerMsg.textContent = "⚠️ Užpildykite visus privalomus laukus.";
       return;
@@ -242,6 +220,7 @@
       title: oTitle.value,
       city: oCity.value,
       company: oCompany.value,
+      company_code: oCompanyCode.value,  // 👈 PRIDĖTA
       description: oDescription.value,
       salary: oSalary.value,
       owner_id: user.id
@@ -259,7 +238,8 @@
     }
   });
 
-  // ✓ MANO PASIŪLYMAI
+
+  // =================== MANO PASIŪLYMAI ===================
   async function loadMyOffers() {
     const { data } = await supabaseClient.auth.getUser();
     const userId = data.user.id;
@@ -280,10 +260,11 @@
 
     offers.forEach(o => {
       const div = document.createElement("div");
-      div.className = "offer-card";
+      div.className = "offer-box";
       div.innerHTML = `
         <strong>${o.title}</strong><br>
         ${o.city}<br>
+        Įmonės kodas: ${o.company_code || "-"}<br>
         💰 ${o.salary}<br>
         <button class="btn small" onclick="deleteOffer('${o.id}')">🗑 Ištrinti</button>
       `;
@@ -297,7 +278,8 @@
     loadMyOffers();
   }
 
-  // ✓ KANDIDATAI
+
+  // =================== KANDIDATAI ===================
   async function loadCandidates() {
     const { data } = await supabaseClient.auth.getUser();
     const userId = data.user.id;
@@ -334,7 +316,7 @@
       const p = app.profiles;
 
       const div = document.createElement("div");
-      div.className = "candidate-card";
+      div.className = "candidate-box";
       div.innerHTML = `
         <strong>${p.full_name}</strong><br>
         📍 ${p.city}<br>
