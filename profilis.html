@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Darbuotojo profilis – Timurita</title>
 
-  <link rel="stylesheet" href="./style.css" />
-  <link rel="manifest" href="./manifest.json" />
-  <meta name="theme-color" content="#1a2a44" />
+  <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#1a2a44">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 
@@ -34,9 +34,31 @@
       color:#ef4444;
       font-weight:bold;
     }
+    .btn.small { padding:5px 10px; font-size:13px; }
+    .status-pill {
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:11px;
+      margin-left:6px;
+    }
+    .status-approved {
+      background:#022c22;
+      color:#6ee7b7;
+      border:1px solid #22c55e;
+    }
+    .status-pending {
+      background:#1f2937;
+      color:#fbbf24;
+      border:1px solid #fbbf24;
+    }
+    .status-not {
+      background:#3f1d1d;
+      color:#fecaca;
+      border:1px solid #ef4444;
+    }
   </style>
 </head>
-
 <body>
 
 <header class="app-header">
@@ -47,12 +69,18 @@
 <main class="container">
 
   <div class="card">
-    <h3>Mano duomenys</h3>
+    <h3>Mano profilis
+      <span id="approveStatus" class="status-pill status-pending" style="display:none;"></span>
+    </h3>
+
+    <p style="font-size:13px;color:#9ca3af;">
+      Užpildykite savo duomenis. Administratorius turės patvirtinti paskyrą, kad galėtumėte kandidatuoti į darbo pasiūlymus.
+    </p>
 
     <form id="profileForm">
 
       <label class="required">Vardas</label>
-      <input type="text" id="full_name" required />
+      <input type="text" id="fullName" required>
 
       <label class="required">Miestas</label>
       <select id="city" required>
@@ -60,15 +88,15 @@
       </select>
 
       <label class="required">Telefonas</label>
-      <input type="text" id="phone" required />
+      <input type="text" id="phone" required>
 
       <label class="required">Individualios veiklos nr.</label>
-      <input type="text" id="iv_nr" required />
+      <input type="text" id="ivNr" required>
 
-      <label>Aprašymas</label>
-      <textarea id="description"></textarea>
+      <label>Trumpai apie save</label>
+      <textarea id="description" placeholder="Patirtis, stiprybės, ką norėtumėte dirbti"></textarea>
 
-      <button class="btn" type="submit">💾 Išsaugoti</button>
+      <button class="btn" type="submit">💾 Išsaugoti profilį</button>
     </form>
 
     <p id="profileMsg"></p>
@@ -77,80 +105,128 @@
 </main>
 
 <script>
-  const supabaseUrl = "https://qnczakppadjxbicgjzcy.supabase.co";
-  const supabaseKey =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY";
+  const supabaseClient = supabase.createClient(
+    "https://qnczakppadjxbicgjzcy.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
+  );
 
-  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+  const profileForm = document.getElementById("profileForm");
+  const profileMsg = document.getElementById("profileMsg");
+  const approveStatus = document.getElementById("approveStatus");
 
-  async function checkAuth() {
-    const { data } = await supabaseClient.auth.getUser();
+  let currentUser = null;
 
-    if (!data.user) {
+  // Tik darbuotojas gali pasiekti šį puslapį
+  async function checkAuthAndLoadProfile() {
+    const { data, error } = await supabaseClient.auth.getUser();
+    if (error || !data.user) {
       location.href = "./auth.html";
       return;
     }
 
-    if (data.user.user_metadata.role !== "worker") {
-      location.href = "./darbdavys.html";
+    currentUser = data.user;
+
+    const role = currentUser.user_metadata?.role;
+    if (role !== "worker") {
+      alert("Šis puslapis skirtas tik darbuotojams.");
+      location.href = "./main.html";
+      return;
+    }
+
+    // Parsisiunčiam profilį iš Supabase
+    const { data: profile, error: profErr } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if (profErr) {
+      console.log("Klaida skaitant profilį:", profErr);
+    }
+
+    if (profile) {
+      if (profile.full_name) fullName.value = profile.full_name;
+      if (profile.city) city.value = profile.city;
+      if (profile.phone) phone.value = profile.phone;
+      if (profile.iv_nr) ivNr.value = profile.iv_nr;
+      if (profile.description) description.value = profile.description;
+
+      // Rodyti patvirtinimo statusą
+      approveStatus.style.display = "inline-block";
+      if (profile.is_approved) {
+        approveStatus.textContent = "Paskyra patvirtinta";
+        approveStatus.className = "status-pill status-approved";
+      } else {
+        approveStatus.textContent = "Paskyra dar nepatvirtinta";
+        approveStatus.className = "status-pill status-pending";
+      }
+    } else {
+      // Naujas profilis
+      approveStatus.style.display = "inline-block";
+      approveStatus.textContent = "Paskyra dar nepatvirtinta";
+      approveStatus.className = "status-pill status-pending";
     }
   }
-  checkAuth();
+
+  checkAuthAndLoadProfile();
+
+  profileForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    profileMsg.textContent = "";
+    profileMsg.style.color = "white";
+
+    if (!currentUser) {
+      profileMsg.style.color = "red";
+      profileMsg.textContent = "Nėra prisijungusio vartotojo.";
+      return;
+    }
+
+    if (!fullName.value || !city.value || !phone.value || !ivNr.value) {
+      profileMsg.style.color = "red";
+      profileMsg.textContent = "Užpildykite visus privalomus laukus.";
+      return;
+    }
+
+    const payload = {
+      id: currentUser.id,
+      full_name: fullName.value,
+      city: city.value,
+      phone: phone.value,
+      email: currentUser.email,
+      iv_nr: ivNr.value,
+      description: description.value,
+      role: "worker"
+      // is_approved paliekam kaip yra (default false, kol admin patvirtins)
+    };
+
+    const { error } = await supabaseClient
+      .from("profiles")
+      .upsert(payload, { onConflict: "id" });
+
+    if (error) {
+      profileMsg.style.color = "red";
+      profileMsg.textContent = "Klaida išsaugant profilį: " + error.message;
+      return;
+    }
+
+    profileMsg.style.color = "lightgreen";
+    profileMsg.textContent = "✔️ Profilis išsaugotas. Administratorius turės patvirtinti paskyrą.";
+
+    // atnaujinam statusą
+    approveStatus.style.display = "inline-block";
+    approveStatus.textContent = "Paskyra dar nepatvirtinta";
+    approveStatus.className = "status-pill status-pending";
+  });
 
   async function logout() {
     await supabaseClient.auth.signOut();
     location.href = "./auth.html";
   }
 
-  async function loadProfile() {
-    const { data, error } = await supabaseClient.auth.getUser();
-    const user = data.user;
-
-    const { data: profile } = await supabaseClient
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (profile) {
-      full_name.value = profile.full_name || "";
-      city.value = profile.city || "Vilnius";
-      phone.value = profile.phone || "";
-      iv_nr.value = profile.iv_nr || "";
-      description.value = profile.description || "";
-    }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(e => console.log("SW error profilis.html", e));
   }
-  loadProfile();
-
-  const profileForm = document.getElementById("profileForm");
-  const profileMsg = document.getElementById("profileMsg");
-
-  profileForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const { data } = await supabaseClient.auth.getUser();
-
-    const updateData = {
-      full_name: full_name.value,
-      city: city.value,          // visada Vilnius
-      phone: phone.value,
-      iv_nr: iv_nr.value,
-      description: description.value,
-    };
-
-    const { error } = await supabaseClient
-      .from("profiles")
-      .update(updateData)
-      .eq("id", data.user.id);
-
-    if (error) {
-      profileMsg.textContent = "Klaida: " + error.message;
-      profileMsg.style.color = "red";
-    } else {
-      profileMsg.textContent = "✔️ Profilis išsaugotas!";
-      profileMsg.style.color = "lightgreen";
-    }
-  });
 </script>
 
 </body>
