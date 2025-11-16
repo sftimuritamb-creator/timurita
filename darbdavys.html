@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="lt">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Darbdavio profilis – Timurita</title>
 
   <link rel="stylesheet" href="./style.css">
@@ -12,43 +12,49 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 
   <style>
-    /* GRĄŽINTAS SENAS, PAPRASTAS, GLAUSTAS IŠDĖSTYMAS */
+    /* NAUDOJAME TOKĮ PAT IŠDĖSTYMĄ KAIP DARBUOTOJO PROFILYJE */
 
-    label { font-weight: 600; margin-top: 10px; display: block; }
+    label {
+      display:block;
+      margin:8px 0 4px;
+      font-weight:600;
+      font-size:14px;
+    }
+
     input, textarea {
-      width: 100%;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #1e293b;
-      background: #0f172a;
-      color: #e2e8f0;
-      margin-top: 4px;
-      margin-bottom: 10px;
+      width:100%;
+      padding:8px;
+      border-radius:8px;
+      border:1px solid #1e293b;
+      background:#0f172a;
+      color:#e2e8f0;
+      font-size:14px;
     }
-    textarea { min-height: 70px; }
-    .btn.small { padding: 5px 10px; font-size: 13px; }
 
-    .card h3 { margin-bottom: 10px; }
+    textarea {
+      min-height:70px;
+      resize:vertical;
+    }
+
     .required::after {
-      content: " *";
-      color: #ef4444;
-      font-weight: bold;
+      content:" *";
+      color:#ef4444;
+      font-weight:bold;
     }
-    .offer-box {
-      background: #1e293b;
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 10px;
+
+    .btn.small {
+      padding:5px 10px;
+      font-size:13px;
     }
-    .candidate-box {
-      background: #1e293b;
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 10px;
+
+    .offer-box, .candidate-box {
+      background:#1e293b;
+      padding:10px;
+      border-radius:10px;
+      margin-bottom:10px;
     }
 
   </style>
-
 </head>
 
 <body>
@@ -60,7 +66,7 @@
 
 <main class="container">
 
-  <!-- =================== PROFILIO BLOKAS =================== -->
+  <!-- PROFILIS -->
   <div class="card">
     <h3>Įmonės duomenys</h3>
 
@@ -90,8 +96,7 @@
     <p id="profileMsg"></p>
   </div>
 
-
-  <!-- =================== NAUJAS DARBO PASIŪLYMAS =================== -->
+  <!-- NAUJAS PASIŪLYMAS -->
   <div class="card">
     <h3>Naujas darbo pasiūlymas</h3>
 
@@ -116,37 +121,33 @@
       <input type="text" id="oSalary" required>
 
       <button class="btn" type="submit">📤 Patalpinti pasiūlymą</button>
+
     </form>
 
     <p id="offerMsg"></p>
   </div>
 
-
-  <!-- =================== MANO PASIŪLYMAI =================== -->
+  <!-- MANO PASIŪLYMAI -->
   <div class="card">
     <h3>Jūsų paskelbti pasiūlymai</h3>
     <div id="myOffersList">Kraunama...</div>
   </div>
 
-
-  <!-- =================== KANDIDATAI =================== -->
+  <!-- KANDIDATAI -->
   <div class="card">
     <h3>Kandidatai</h3>
     <div id="candidatesList">Kraunama...</div>
   </div>
 
-
 </main>
 
 
 <script>
-  // Supabase init
   const supabaseUrl = "https://qnczakppadjxbicgjzcy.supabase.co";
   const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY";
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-
-  // =================== AUTH CHECK ===================
+  // AUTH CHECK
   async function checkAuth() {
     const { data } = await supabaseClient.auth.getUser();
     if (!data.user) {
@@ -159,15 +160,13 @@
   }
   checkAuth();
 
-
-  // =================== ATSIJUNGIMAS ===================
+  // LOGOUT
   async function logout() {
     await supabaseClient.auth.signOut();
     location.href = "./auth.html";
   }
 
-
-  // =================== PROFILIO IŠSAUGOJIMAS ===================
+  // ===== PROFILIS =====
   const profileForm = document.getElementById("profileForm");
   const profileMsg = document.getElementById("profileMsg");
 
@@ -198,15 +197,13 @@
     email.value = p.email || "";
   }
 
-
-  // =================== NAUJAS DARBO PASIŪLYMAS ===================
+  // ===== NAUJAS PASIŪLYMAS =====
   const offerForm = document.getElementById("offerForm");
   const offerMsg = document.getElementById("offerMsg");
 
   offerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Patikrina būtinu laukų užpildymą
     if (!oTitle.value || !oCity.value || !oCompanyCode.value || !oSalary.value) {
       offerMsg.style.color = "red";
       offerMsg.textContent = "⚠️ Užpildykite visus privalomus laukus.";
@@ -220,7 +217,7 @@
       title: oTitle.value,
       city: oCity.value,
       company: oCompany.value,
-      company_code: oCompanyCode.value,  // 👈 PRIDĖTA
+      company_code: oCompanyCode.value,  
       description: oDescription.value,
       salary: oSalary.value,
       owner_id: user.id
@@ -238,8 +235,7 @@
     }
   });
 
-
-  // =================== MANO PASIŪLYMAI ===================
+  // ===== MANO PASIŪLYMAI =====
   async function loadMyOffers() {
     const { data } = await supabaseClient.auth.getUser();
     const userId = data.user.id;
@@ -278,8 +274,7 @@
     loadMyOffers();
   }
 
-
-  // =================== KANDIDATAI ===================
+  // ===== KANDIDATAI =====
   async function loadCandidates() {
     const { data } = await supabaseClient.auth.getUser();
     const userId = data.user.id;
@@ -307,7 +302,7 @@
     const filtered = applications.filter(a => offerIds.includes(a.offer_id));
 
     if (filtered.length === 0) {
-      list.textContent = "⚠️ Kandidatų dar nėra.";
+      list.textContent = "Kandidatų dar nėra.";
       return;
     }
 
@@ -319,9 +314,9 @@
       div.className = "candidate-box";
       div.innerHTML = `
         <strong>${p.full_name}</strong><br>
-        📍 ${p.city}<br>
-        📞 ${p.phone}<br>
-        📧 <a href="mailto:${p.email}">${p.email}</a><br>
+        Miestas: ${p.city}<br>
+        Tel.: ${p.phone}<br>
+        El. paštas: <a href="mailto:${p.email}">${p.email}</a><br>
         <hr>
         Kandidatavo į: <strong>${offer.title}</strong>
       `;
@@ -329,7 +324,6 @@
     });
   }
   loadCandidates();
-
 </script>
 
 </body>
