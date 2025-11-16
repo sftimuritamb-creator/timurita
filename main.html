@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Timurita – Pagrindinis</title>
+
+  <meta name="description" content="Trumpalaikio darbo platforma statybų sektoriuje – atlyginimas kiekvieną penktadienį, be ilgalaikių įsipareigojimų.">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#1a2a44">
+  <link rel="icon" href="./Timurita_logo_192x192.png" type="image/png">
+  <link rel="stylesheet" href="./style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
+
+  <style>
+    .hero {
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    @media (min-width: 768px) {
+      .hero {
+        flex-direction:row;
+        align-items:stretch;
+      }
+    }
+    .hero-text {
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .hero-text h1 {
+      margin:0;
+      font-size:24px;
+    }
+    @media (min-width: 768px) {
+      .hero-text h1 { font-size:28px; }
+    }
+    .hero-text p {
+      margin:0;
+      color:#cbd5e1;
+    }
+    .hero-list {
+      margin:8px 0 0;
+      padding-left:18px;
+      color:#e2e8f0;
+      font-size:14px;
+    }
+    .hero-list li { margin-bottom:4px; }
+
+    .hero-steps {
+      margin-top:8px;
+      font-size:13px;
+      color:#a5b4fc;
+    }
+
+    .hero-actions {
+      margin-top:12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .hero-images {
+      flex:1;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+    }
+    .hero-images img {
+      width:100%;
+      height:100px;
+      object-fit:cover;
+      border-radius:12px;
+      border:1px solid #1e293b;
+    }
+    @media (min-width: 768px) {
+      .hero-images img {
+        height:110px;
+      }
+    }
+
+    .feature-grid {
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+    @media (min-width: 768px) {
+      .feature-grid {
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+    }
+    .feature-card {
+      background:#020617;
+      border-radius:12px;
+      padding:10px 12px;
+      border:1px solid #1e293b;
+      font-size:14px;
+    }
+    .feature-card strong {
+      display:block;
+      margin-bottom:4px;
+    }
+
+    .role-actions {
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    @media (min-width: 600px) {
+      .role-actions {
+        flex-direction:row;
+      }
+    }
+    .role-actions .btn {
+      flex:1;
+      justify-content:center;
+    }
+
+    .pill {
+      display:inline-block;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid #1e293b;
+      font-size:11px;
+      color:#a5b4fc;
+      background:#020617;
+    }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <a href="./main.html" style="display:flex;align-items:center;text-decoration:none;color:inherit;gap:10px;">
+    <img src="./Timurita_logo_192x192.png" alt="Timurita" style="width:40px;height:40px;border-radius:12px;">
+    <div>
+      <h3 style="margin:0;">Timurita</h3>
+      <div class="small">Sujungiame darbdavius ir statybų specialistus</div>
+    </div>
+  </a>
+  <button onclick="logout()" class="btn small" style="margin-left:auto;">Atsijungti</button>
+</header>
+
+<main class="container">
+
+  <!-- HERO BLOKAS -->
+  <div class="card">
+    <div class="hero">
+      <div class="hero-text">
+        <span class="pill" id="welcomeRole">Sveiki sugrįžę</span>
+        <h1>Užsidirbk statybose be ilgalaikių įsipareigojimų</h1>
+        <p>
+          Trumpalaikio darbo platforma Vilniuje – atlyginimas kiekvieną penktadienį,
+          jokio ilgo laukimo ir sudėtingų atrankų.
+        </p>
+
+        <ul class="hero-list">
+          <li>Atlyginimas – kiekvieną penktadienį</li>
+          <li>Paprasta dirbti – jokių darbo pokalbių</li>
+          <li>Užsidirbk be įsipareigojimų ilgalaikiam darbui</li>
+        </ul>
+
+        <p class="hero-steps">
+          Užsiregistruok → kandidatuok → sulauk patvirtinimo → atvyk dirbti → gauk darbo užmokestį.
+        </p>
+
+        <div class="hero-actions">
+          <button class="btn big" type="button" onclick="goToRole()">
+            Pradėti pagal mano rolę
+          </button>
+          <button class="btn" type="button" onclick="scrollToRoles()">
+            Peržiūrėti galimybes
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-images">
+        <!-- Nuotraukos iš atvirų šaltinių – gali vėliau pasikeisti savo -->
+        <img src="https://images.pexels.com/photos/5449650/pexels-photo-5449650.jpeg?auto=compress&dpr=2&w=400" alt="Statybų aikštelė">
+        <img src="https://images.pexels.com/photos/8961065/pexels-photo-8961065.jpeg?auto=compress&dpr=2&w=400" alt="Darbuotojas su šalmu">
+        <img src="https://images.pexels.com/photos/5854190/pexels-photo-5854190.jpeg?auto=compress&dpr=2&w=400" alt="Statybų komanda">
+        <img src="https://images.pexels.com/photos/8487051/pexels-photo-8487051.jpeg?auto=compress&dpr=2&w=400" alt="Pastato karkasas">
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 PAGRINDINIAI PRIVALUMAI -->
+  <div class="card">
+    <h3>Kodėl verta?</h3>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <strong>Atlyginimas – kiekvieną penktadienį</strong>
+        Jokio ilgo laukimo – atlikai darbą šią savaitę, penktadienį gauni užmokestį.
+      </div>
+      <div class="feature-card">
+        <strong>Paprasta dirbti – jokių darbo pokalbių</strong>
+        Užpildai profilį, kandidatuoji į pasiūlymą ir lauki patvirtinimo – be sudėtingų atrankų.
+      </div>
+      <div class="feature-card">
+        <strong>Užsidirbk be ilgalaikių įsipareigojimų</strong>
+        Dirbk tada, kada tau patogu: tik kelias dienas per savaitę arba tik atskirus projektus.
+      </div>
+    </div>
+  </div>
+
+  <!-- ROLĖS VEIKSMAI -->
+  <div class="card" id="rolesSection">
+    <h3>Pasirink, kaip nori naudotis Timurita</h3>
+    <div class="role-actions">
+      <button class="btn big" type="button" onclick="location.href='./darbuotojai.html'">
+        👷 Esu darbuotojas – noriu rasti darbą
+      </button>
+      <button class="btn big" type="button" onclick="location.href='./darbdavys.html'">
+        🧱 Esu darbdavys – noriu rasti darbuotojų
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const supabaseUrl = "https://qnczakppadjxbicgjzcy.supabase.co";
+  const supabaseKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY";
+
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+  async function checkAuthAndSetRole() {
+    const { data, error } = await supabaseClient.auth.getUser();
+    if (!data || !data.user) {
+      location.href = "./auth.html";
+      return;
+    }
+    const user = data.user;
+    const role = user.user_metadata?.role || "worker";
+
+    const pill = document.getElementById("welcomeRole");
+    if (role === "employer") {
+      pill.textContent = "Prisijungė darbdavys";
+      pill.style.borderColor = "#f97316";
+    } else {
+      pill.textContent = "Prisijungęs darbuotojas";
+      pill.style.borderColor = "#22c55e";
+    }
+
+    // išsaugom rolę localStorage, jei prireiktų kitur
+    try { localStorage.setItem("timurita_role", role); } catch(e) {}
+  }
+
+  checkAuthAndSetRole();
+
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    location.href = "./auth.html";
+  }
+
+  function goToRole() {
+    try {
+      const role = localStorage.getItem("timurita_role") || "worker";
+      if (role === "employer") {
+        location.href = "./darbdavys.html";
+      } else {
+        location.href = "./darbuotojai.html";
+      }
+    } catch (e) {
+      location.href = "./darbuotojai.html";
+    }
+  }
+
+  function scrollToRoles() {
+    const el = document.getElementById("rolesSection");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // PWA service worker (nebūtina, bet naudinga)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .catch(e => console.log('SW error main.html', e));
+  }
+</script>
+
+</body>
+</html>
