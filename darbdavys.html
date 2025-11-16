@@ -116,14 +116,11 @@
       <label class="required">Įmonės kodas</label>
       <input type="text" id="oCompanyCode" required>
 
-      <label>Įmonė</label>
-      <input type="text" id="oCompany">
+      <label class="required">Įmonės pavadinimas</label>
+      <input type="text" id="oCompany" required>
 
       <label>Aprašymas</label>
       <textarea id="oDescription"></textarea>
-
-      <label class="required">Atlygis (val. / ranka)</label>
-      <input type="text" id="oSalary" required>
 
       <button class="btn" type="submit">📤 Patalpinti pasiūlymą</button>
 
@@ -216,7 +213,7 @@
   offerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    if (!oTitle.value || !oCity.value || !oCompanyCode.value || !oSalary.value) {
+    if (!oTitle.value || !oCity.value || !oCompanyCode.value || !oCompany.value) {
       offerMsg.style.color = "red";
       offerMsg.textContent = "⚠️ Užpildykite visus privalomus laukus.";
       return;
@@ -228,10 +225,9 @@
     const offer = {
       title: oTitle.value,
       city: oCity.value,
-      company: oCompany.value,
       company_code: oCompanyCode.value,
+      company: oCompany.value,
       description: oDescription.value,
-      salary: oSalary.value,
       owner_id: user.id
     };
 
@@ -272,14 +268,12 @@
       div.innerHTML = `
         <strong>${o.title}</strong><br>
         ${o.city}<br>
-        Įmonės kodas: ${o.company_code || "-"}<br>
-        💰 ${o.salary}<br>
+        Įmonės kodas: ${o.company_code}<br>
         <button class="btn small" onclick="deleteOffer('${o.id}')">🗑 Ištrinti</button>
       `;
       list.appendChild(div);
     });
 
-    // Panaudojam offers masyvą realtime kandidatams
     window.__myOffers = offers || [];
   }
   loadMyOffers();
@@ -338,12 +332,11 @@
       list.appendChild(div);
     });
 
-    // išsaugom pasiūlymus globaliai kandidatų realtime'ui
     window.__myOffers = offers || [];
   }
   loadCandidates();
 
-  // 🔔 Realtime – nauji kandidatavimai į mano pasiūlymus
+  // 🔔 Realtime kandidatams
   const candidatesChannel = supabaseClient
     .channel("public:applications")
     .on(
@@ -352,13 +345,11 @@
       async (payload) => {
         const app = payload.new;
 
-        // užkraunam naujausią sąrašą kandidatų
         await loadCandidates();
 
-        // randam pasiūlymo pavadinimą
         const offers = window.__myOffers || [];
         const found = offers.find(o => o.id === app.offer_id);
-        const title = found ? found.title : "jūsų darbo pasiūlymą";
+        const title = found ? found.title : "jūsų pasiūlymą";
 
         showToast("✅ Naujas kandidatas į: " + title);
       }
