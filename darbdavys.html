@@ -56,6 +56,28 @@
       display:none;
       z-index:9999;
     }
+    .status-pill {
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:11px;
+      margin-top:4px;
+    }
+    .status-pending {
+      background:#1f2937;
+      color:#fbbf24;
+      border:1px solid #fbbf24;
+    }
+    .status-approved {
+      background:#022c22;
+      color:#6ee7b7;
+      border:1px solid #22c55e;
+    }
+    .status-rejected {
+      background:#3f1d1d;
+      color:#fecaca;
+      border:1px solid #ef4444;
+    }
   </style>
 </head>
 <body>
@@ -122,7 +144,7 @@
       <label>Aprašymas</label>
       <textarea id="oDescription"></textarea>
 
-      <button class="btn" type="submit">📤 Patalpinti pasiūlymą</button>
+      <button class="btn" type="submit">📤 Pateikti peržiūrai</button>
 
     </form>
 
@@ -132,6 +154,9 @@
   <!-- MANO PASIŪLYMAI -->
   <div class="card">
     <h3>Jūsų paskelbti pasiūlymai</h3>
+    <p style="font-size:12px;color:#9ca3af;">
+      Pasiūlymai pirmiausia turi būti patvirtinti administratoriaus.
+    </p>
     <div id="myOffersList">Kraunama...</div>
   </div>
 
@@ -159,6 +184,7 @@
     setTimeout(() => { toastEl.style.display = "none"; }, 4000);
   }
 
+  // ✅ Tik darbdavys gali patekti į šį puslapį
   async function checkAuth() {
     const { data } = await supabaseClient.auth.getUser();
     if (!data.user) {
@@ -176,7 +202,7 @@
     location.href = "./auth.html";
   }
 
-  // PROFILIS
+  // PROFILIS – saugomas localStorage (front-end)
   const profileForm = document.getElementById("profileForm");
   const profileMsg = document.getElementById("profileMsg");
 
@@ -206,7 +232,7 @@
     email.value = p.email || "";
   }
 
-  // NAUJAS PASIŪLYMAS
+  // NAUJAS PASIŪLYMAS – status = 'pending'
   const offerForm = document.getElementById("offerForm");
   const offerMsg = document.getElementById("offerMsg");
 
@@ -228,7 +254,8 @@
       company_code: oCompanyCode.value,
       company: oCompany.value,
       description: oDescription.value,
-      owner_id: user.id
+      owner_id: user.id,
+      status: "pending"   // LAUKIA ADMIN PATVIRTINIMO
     };
 
     const { error } = await supabaseClient.from("offers").insert(offer);
@@ -238,10 +265,25 @@
       offerMsg.textContent = "Klaida: " + error.message;
     } else {
       offerMsg.style.color = "lightgreen";
-      offerMsg.textContent = "✔️ Pasiūlymas paskelbtas!";
+      offerMsg.textContent = "✔️ Pasiūlymas pateiktas administratoriui peržiūrėti.";
+      oTitle.value = "";
+      oDescription.value = "";
+      // Nepanaikiname įmonės pavadinimo/kodo, nes jie gali kartotis
       loadMyOffers();
     }
   });
+
+  // Pagal statusą paruošti tekstą ir klasę
+  function renderStatus(status) {
+    const s = (status || "pending").toLowerCase();
+    if (s === "approved") {
+      return `<span class="status-pill status-approved">Patvirtintas</span>`;
+    }
+    if (s === "rejected") {
+      return `<span class="status-pill status-rejected">Atmestas</span>`;
+    }
+    return `<span class="status-pill status-pending">Laukia patvirtinimo</span>`;
+  }
 
   // MANO PASIŪLYMAI
   async function loadMyOffers() {
@@ -258,7 +300,7 @@
     list.innerHTML = "";
 
     if (!offers || offers.length === 0) {
-      list.textContent = "Dar nepaskelbėte pasiūlymų.";
+      list.textContent = "Dar nepateikėte pasiūlymų.";
       return;
     }
 
@@ -267,9 +309,12 @@
       div.className = "offer-box";
       div.innerHTML = `
         <strong>${o.title}</strong><br>
-        ${o.city}<br>
-        Įmonės kodas: ${o.company_code}<br>
-        <button class="btn small" onclick="deleteOffer('${o.id}')">🗑 Ištrinti</button>
+        Miestas: ${o.city}<br>
+        Įmonės kodas: ${o.company_code || "-"}<br>
+        Įmonės pavadinimas: ${o.company || "-"}<br>
+        ${renderStatus(o.status)}
+        <br>
+        <button class="btn small" style="margin-top:6px;" onclick="deleteOffer('${o.id}')">🗑 Ištrinti</button>
       `;
       list.appendChild(div);
     });
@@ -308,7 +353,7 @@
 
     list.innerHTML = "";
 
-    const filtered = applications.filter(a => offerIds.includes(a.offer_id));
+    const filtered = (applications || []).filter(a => offerIds.includes(a.offer_id));
 
     if (filtered.length === 0) {
       list.textContent = "Kandidatų dar nėra.";
@@ -327,7 +372,7 @@
         Tel.: ${p.phone}<br>
         El. paštas: <a href="mailto:${p.email}">${p.email}</a><br>
         <hr>
-        Kandidatavo į: <strong>${offer.title}</strong>
+        Kandidatavo į: <strong>${offer ? offer.title : "pasiūlymą"}</strong>
       `;
       list.appendChild(div);
     });
@@ -336,7 +381,7 @@
   }
   loadCandidates();
 
-  // 🔔 Realtime kandidatams
+  // 🔔 Realtime – nauji kandidatavimai į mano pasiūlymus
   const candidatesChannel = supabaseClient
     .channel("public:applications")
     .on(
@@ -355,6 +400,12 @@
       }
     )
     .subscribe();
+
+  // PWA SW (nebūtina, bet naudinga)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .catch(e => console.log('SW error darbdavys.html', e));
+  }
 </script>
 
 </body>
