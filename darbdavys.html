@@ -182,18 +182,18 @@
 
   let currentUser = null;
 
-  // 💰 kainų žemėlapis pagal pavadinimą
+  // 💰 kainų žemėlapis pagal pavadinimą (NAUJI TEKSTAI)
   const prices = {
-    "Pagalbinis darbuotojas": {
-      miestas: "100 € / į rankas mieste",
-      uzMiesto: "120 € / į rankas už miesto"
-    },
     "Darbuotojas betonuotojas": {
-      miestas: "150 € / į rankas mieste",
-      uzMiesto: "170 € / į rankas už miesto"
+      miestas: "150 € /diena į rankas mieste",
+      uzMiesto: "170 € /diena į rankas už miesto"
+    },
+    "Pagalbinis darbuotojas": {
+      miestas: "100 € /diena į rankas mieste",
+      uzMiesto: "120 € /diena į rankas už miesto"
     },
     "Darbuotojas Valytoja/as": {
-      miestas: "10 € / į rankas"
+      miestas: "10 € /val į rankas"
     }
   };
 
@@ -539,7 +539,6 @@
     await checkEmployer();
     await loadOffers();
 
-    // uždedam klausymą ant pavadinimo select'o
     const titleSelect = document.getElementById("title");
     if (titleSelect) {
       titleSelect.addEventListener("change", updatePriceInfo);
