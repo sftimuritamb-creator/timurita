@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kandidatai – darbdavys – Timurita</title>
+
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
+
+  <style>
+    body { background:#020617; color:#e5e7eb; }
+
+    .role-menu {
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      padding:10px;
+      background:#0f172a;
+      border-bottom:1px solid #1f2937;
+    }
+    .role-menu button {
+      flex:0 0 auto;
+      padding:8px 14px;
+      border-radius:8px;
+      background:#1e293b;
+      color:white;
+      border:1px solid #334155;
+      font-size:14px;
+      white-space:nowrap;
+      cursor:pointer;
+    }
+    .role-menu button.active {
+      background:#0369a1;
+      border-color:#0ea5e9;
+    }
+
+    .offer-card {
+      background:#0b1220;
+      border-radius:12px;
+      border:1px solid #1f2937;
+      padding:12px;
+      margin-bottom:12px;
+    }
+    .offer-header {
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:center;
+    }
+    .small-text {
+      font-size:12px;
+      color:#9ca3af;
+    }
+    .badge {
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:11px;
+    }
+    .badge-pending {
+      background:#1f2937;
+      color:#fbbf24;
+      border:1px solid #facc15;
+    }
+    .badge-approved {
+      background:#022c22;
+      color:#6ee7b7;
+      border:1px solid #22c55e;
+    }
+    .badge-rejected {
+      background:#3f1d1d;
+      color:#fecaca;
+      border:1px solid #ef4444;
+    }
+
+    .candidate {
+      background:#020617;
+      border-radius:8px;
+      border:1px solid #1e293b;
+      padding:8px;
+      margin-top:6px;
+      font-size:13px;
+    }
+    .candidate-status {
+      font-size:11px;
+      color:#e5e7eb;
+      margin-top:4px;
+    }
+    .candidate-actions {
+      margin-top:6px;
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+    .btn.small { padding:6px 10px; font-size:13px; }
+    .info-text {
+      font-size:13px;
+      color:#9ca3af;
+      margin-bottom:10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="app-header">
+  <h2>Kandidatai</h2>
+  <button class="btn small" onclick="logout()" style="margin-left:auto;">Atsijungti</button>
+</header>
+
+<nav class="role-menu" id="roleMenu" style="display:none;">
+  <div id="menu-employer" style="display:none;">
+    <button onclick="location.href='darbdavys.html'">Sukurti pasiūlymą</button>
+    <button onclick="location.href='darbdavio-profilis.html'">Mano profilis</button>
+    <button onclick="location.href='mano-pasiulymai.html'">Mano pasiūlymai</button>
+    <button onclick="location.href='kandidatai.html'">Kandidatai</button>
+  </div>
+
+  <div id="menu-worker" style="display:none;">
+    <button onclick="location.href='pasiulymai.html'">Pasiūlymai</button>
+    <button onclick="location.href='profilis.html'">Mano profilis</button>
+    <button onclick="location.href='patvirtintos-kandidaturos.html'">Patvirtintos kandidatūros</button>
+  </div>
+</nav>
+
+<main class="container">
+  <p class="info-text">
+    Čia matysite kandidatus į visus jūsų darbo pasiūlymus. Galite juos priimti arba atmesti.
+  </p>
+
+  <div id="offersWithCandidates">Kraunama...</div>
+</main>
+
+<script>
+  const supabaseClient = supabase.createClient(
+    "https://qnczakppadjxbicgjzcy.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
+  );
+
+  let currentUser = null;
+  let currentProfile = null;
+
+  function statusBadge(status) {
+    const s = (status || "").toLowerCase();
+    if (s === "approved") {
+      return '<span class="badge badge-approved">Pasiūlymas patvirtintas</span>';
+    }
+    if (s === "rejected") {
+      return '<span class="badge badge-rejected">Pasiūlymas atmestas</span>';
+    }
+    return '<span class="badge badge-pending">Laukia administratoriaus patvirtinimo</span>';
+  }
+
+  (async () => {
+    const { data: u } = await supabaseClient.auth.getUser();
+    if (!u.user) {
+      location.href = "./auth.html";
+      return;
+    }
+    currentUser = u.user;
+
+    const { data: p, error: pErr } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if (pErr || !p) {
+      document.getElementById("offersWithCandidates").innerText = "Klaida kraunant profilį.";
+      return;
+    }
+
+    currentProfile = p;
+
+    // ADMIN → admin
+    if (currentProfile.role === "admin") {
+      location.href = "./admin.html";
+      return;
+    }
+    // DARBUOTOJAS → pasiūlymai
+    if (currentProfile.role === "worker") {
+      location.href = "./pasiulymai.html";
+      return;
+    }
+
+    // DARBDAVYS
+    if (currentProfile.role === "employer") {
+      document.getElementById("roleMenu").style.display = "flex";
+      document.getElementById("menu-employer").style.display = "flex";
+      highlightActive("Kandidatai");
+    }
+
+    if (currentProfile.is_blocked) {
+      document.getElementById("offersWithCandidates").innerText =
+        "Jūsų paskyra užblokuota. Susisiekite su administracija.";
+      return;
+    }
+
+    loadOffersWithCandidates();
+  })();
+
+  function highlightActive(label) {
+    document.querySelectorAll(".role-menu button").forEach(btn => {
+      if (btn.textContent.trim() === label) {
+        btn.classList.add("active");
+      }
+    });
+  }
+
+  async function loadOffersWithCandidates() {
+    const box = document.getElementById("offersWithCandidates");
+    box.textContent = "Kraunama...";
+
+    // 1. Pasiūlymai šio darbdavio
+    const { data: offers, error } = await supabaseClient
+      .from("offers")
+      .select("*")
+      .eq("owner_id", currentUser.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      box.textContent = "Klaida kraunant pasiūlymus.";
+      return;
+    }
+
+    if (!offers || offers.length === 0) {
+      box.innerHTML = "Šiuo metu neturite jokių pasiūlymų.";
+      return;
+    }
+
+    box.innerHTML = "";
+
+    for (const o of offers) {
+      const card = document.createElement("div");
+      card.className = "offer-card";
+
+      const created = o.created_at
+        ? new Date(o.created_at).toLocaleString("lt-LT")
+        : "";
+
+      card.innerHTML = `
+        <div class="offer-header">
+          <div>
+            <strong>${o.title}</strong><br>
+            <span class="small-text">${o.company || ""} • ${o.city || ""}</span><br>
+            <span class="small-text">Sukurta: ${created}</span>
+          </div>
+          <div style="text-align:right;">
+            ${statusBadge(o.status)}
+          </div>
+        </div>
+
+        <div class="small-text" style="margin-top:6px;">
+          ${o.description || ""}
+        </div>
+
+        <div style="margin-top:10px;">
+          <strong>Kandidatai:</strong>
+          <div id="candidates-${o.id}" class="small-text">Kraunama...</div>
+        </div>
+      `;
+
+      box.appendChild(card);
+
+      loadCandidatesForOffer(o.id);
+    }
+  }
+
+  async function loadCandidatesForOffer(offerId) {
+    const box = document.getElementById(`candidates-${offerId}`);
+    if (!box) return;
+
+    const { data: apps, error } = await supabaseClient
+      .from("applications")
+      .select("id, worker_id, status, created_at")
+      .eq("offer_id", offerId);
+
+    if (error) {
+      box.textContent = "Klaida kraunant kandidatus.";
+      return;
+    }
+
+    if (!apps || apps.length === 0) {
+      box.textContent = "Kandidatų nėra.";
+      return;
+    }
+
+    box.innerHTML = "";
+
+    for (const app of apps) {
+      const { data: profile, error: profErr } = await supabaseClient
+        .from("profiles")
+        .select("full_name, city, phone, email, iv_nr")
+        .eq("id", app.worker_id)
+        .maybeSingle();
+
+      const div = document.createElement("div");
+      div.className = "candidate";
+
+      if (profErr || !profile) {
+        div.textContent = "Klaida skaitant kandidato duomenis.";
+        box.appendChild(div);
+        continue;
+      }
+
+      const appStatus = (app.status || "pending").toLowerCase();
+      let statusLabel = "Laukia sprendimo";
+      if (appStatus === "accepted") statusLabel = "Priimtas";
+      if (appStatus === "rejected") statusLabel = "Atmestas";
+
+      div.innerHTML = `
+        <div><strong>${profile.full_name || "Be vardo"}</strong> (${profile.city || "-"})</div>
+        <div>Tel.: ${profile.phone || "-"}</div>
+        <div>El. paštas: ${profile.email || "-"}</div>
+        <div>IV nr.: ${profile.iv_nr || "-"}</div>
+
+        <div class="candidate-actions">
+          ${
+            appStatus === "pending"
+              ? `
+                <button class="btn small" onclick="updateApplicationStatus('${app.id}', 'accepted')">Priimti</button>
+                <button class="btn small" onclick="updateApplicationStatus('${app.id}', 'rejected')">Atmesti</button>
+              `
+              : `<span class="small-text">Sprendimas: ${statusLabel}</span>`
+          }
+        </div>
+
+        <div class="candidate-status"><strong>Statusas sistemoje:</strong> ${appStatus}</div>
+      `;
+
+      box.appendChild(div);
+    }
+  }
+
+  async function updateApplicationStatus(appId, newStatus) {
+    const { error } = await supabaseClient
+      .from("applications")
+      .update({ status: newStatus })
+      .eq("id", appId);
+
+    if (error) {
+      alert("Klaida keičiant kandidato statusą: " + error.message);
+      return;
+    }
+
+    loadOffersWithCandidates();
+  }
+
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    location.href = "./auth.html";
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(e => console.log("SW error kandidatai.html", e));
+  }
+</script>
+
+</body>
+</html>
