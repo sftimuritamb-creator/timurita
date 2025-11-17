@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mano pasiūlymai – darbdavys – Timurita</title>
+
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
+
+  <style>
+    body { background:#020617; color:#e5e7eb; }
+
+    .role-menu {
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      padding:10px;
+      background:#0f172a;
+      border-bottom:1px solid #1f2937;
+    }
+    .role-menu button {
+      flex:0 0 auto;
+      padding:8px 14px;
+      border-radius:8px;
+      background:#1e293b;
+      color:white;
+      border:1px solid #334155;
+      font-size:14px;
+      white-space:nowrap;
+      cursor:pointer;
+    }
+    .role-menu button.active {
+      background:#0369a1;
+      border-color:#0ea5e9;
+    }
+
+    .offer-card {
+      background:#0b1220;
+      border-radius:12px;
+      border:1px solid #1f2937;
+      padding:12px;
+      margin-bottom:12px;
+    }
+    .offer-header {
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:center;
+    }
+    .small-text {
+      font-size:12px;
+      color:#9ca3af;
+    }
+    .badge {
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:11px;
+    }
+    .badge-pending {
+      background:#1f2937;
+      color:#fbbf24;
+      border:1px solid #facc15;
+    }
+    .badge-approved {
+      background:#022c22;
+      color:#6ee7b7;
+      border:1px solid #22c55e;
+    }
+    .badge-rejected {
+      background:#3f1d1d;
+      color:#fecaca;
+      border:1px solid #ef4444;
+    }
+    .btn.small {
+      padding:6px 10px;
+      font-size:13px;
+    }
+    .danger {
+      background:#7f1d1d;
+      border-color:#b91c1c;
+    }
+    .info-text {
+      font-size:13px;
+      color:#9ca3af;
+      margin-bottom:10px;
+    }
+    .stats-line {
+      font-size:12px;
+      color:#e5e7eb;
+      margin-top:6px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="app-header">
+  <h2>Mano pasiūlymai</h2>
+  <button class="btn small" onclick="logout()" style="margin-left:auto;">Atsijungti</button>
+</header>
+
+<nav class="role-menu" id="roleMenu" style="display:none;">
+  <div id="menu-employer" style="display:none;">
+    <button onclick="location.href='darbdavys.html'">Sukurti pasiūlymą</button>
+    <button onclick="location.href='darbdavio-profilis.html'">Mano profilis</button>
+    <button onclick="location.href='mano-pasiulymai.html'">Mano pasiūlymai</button>
+    <button onclick="location.href='kandidatai.html'">Kandidatai</button>
+  </div>
+
+  <div id="menu-worker" style="display:none;">
+    <button onclick="location.href='pasiulymai.html'">Pasiūlymai</button>
+    <button onclick="location.href='profilis.html'">Mano profilis</button>
+    <button onclick="location.href='patvirtintos-kandidaturos.html'">Patvirtintos kandidatūros</button>
+  </div>
+</nav>
+
+<main class="container">
+  <p class="info-text">
+    Čia matysite visus jūsų įkeltus darbo pasiūlymus, jų statusą ir kandidatų skaičių. Iš čia galite ir ištrinti neaktualius pasiūlymus.
+  </p>
+
+  <div id="offersList">Kraunama...</div>
+</main>
+
+<script>
+  const supabaseClient = supabase.createClient(
+    "https://qnczakppadjxbicgjzcy.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
+  );
+
+  let currentUser = null;
+  let currentProfile = null;
+
+  function statusBadge(status) {
+    const s = (status || "").toLowerCase();
+    if (s === "approved") {
+      return '<span class="badge badge-approved">Patvirtintas</span>';
+    }
+    if (s === "rejected") {
+      return '<span class="badge badge-rejected">Atmestas</span>';
+    }
+    return '<span class="badge badge-pending">Laukia administratoriaus patvirtinimo</span>';
+  }
+
+  (async () => {
+    const { data: u } = await supabaseClient.auth.getUser();
+    if (!u.user) {
+      location.href = "./auth.html";
+      return;
+    }
+    currentUser = u.user;
+
+    const { data: p, error: pErr } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if (pErr || !p) {
+      document.getElementById("offersList").innerText = "Klaida kraunant profilį.";
+      return;
+    }
+
+    currentProfile = p;
+
+    // ADMIN → admin
+    if (currentProfile.role === "admin") {
+      location.href = "./admin.html";
+      return;
+    }
+    // DARBUOTOJAS → pasiūlymai
+    if (currentProfile.role === "worker") {
+      location.href = "./pasiulymai.html";
+      return;
+    }
+
+    // DARBDAVYS
+    if (currentProfile.role === "employer") {
+      document.getElementById("roleMenu").style.display = "flex";
+      document.getElementById("menu-employer").style.display = "flex";
+      highlightActive("Mano pasiūlymai");
+    }
+
+    if (currentProfile.is_blocked) {
+      document.getElementById("offersList").innerText =
+        "Jūsų paskyra užblokuota. Susisiekite su administracija.";
+      return;
+    }
+
+    loadOffers();
+  })();
+
+  function highlightActive(label) {
+    document.querySelectorAll(".role-menu button").forEach(btn => {
+      if (btn.textContent.trim() === label) {
+        btn.classList.add("active");
+      }
+    });
+  }
+
+  async function loadOffers() {
+    const list = document.getElementById("offersList");
+    list.textContent = "Kraunama...";
+
+    const { data: offers, error } = await supabaseClient
+      .from("offers")
+      .select("*")
+      .eq("owner_id", currentUser.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      list.textContent = "Klaida kraunant pasiūlymus.";
+      return;
+    }
+
+    if (!offers || offers.length === 0) {
+      list.innerHTML = "<p>Dar neturite jokių pasiūlymų.</p>";
+      return;
+    }
+
+    // Pasiimam kandidatūras visiems pasiūlymams
+    const offerIds = offers.map(o => o.id);
+    const statsMap = {};
+
+    if (offerIds.length) {
+      const { data: apps, error: appsErr } = await supabaseClient
+        .from("applications")
+        .select("id, offer_id, status")
+        .in("offer_id", offerIds);
+
+      if (!appsErr && apps) {
+        apps.forEach(a => {
+          if (!statsMap[a.offer_id]) {
+            statsMap[a.offer_id] = { total: 0, pending: 0, accepted: 0, rejected: 0 };
+          }
+          const s = (a.status || "pending").toLowerCase();
+          statsMap[a.offer_id].total++;
+          if (s === "pending") statsMap[a.offer_id].pending++;
+          if (s === "accepted") statsMap[a.offer_id].accepted++;
+          if (s === "rejected") statsMap[a.offer_id].rejected++;
+        });
+      }
+    }
+
+    list.innerHTML = "";
+    offers.forEach(o => {
+      const card = document.createElement("div");
+      card.className = "offer-card";
+
+      const stats = statsMap[o.id] || { total:0, pending:0, accepted:0, rejected:0 };
+
+      const created = o.created_at
+        ? new Date(o.created_at).toLocaleString("lt-LT")
+        : "";
+
+      card.innerHTML = `
+        <div class="offer-header">
+          <div>
+            <strong>${o.title}</strong><br>
+            <span class="small-text">${o.company || ""} • ${o.city || ""}</span><br>
+            <span class="small-text">Sukurta: ${created}</span>
+          </div>
+          <div style="text-align:right;">
+            ${statusBadge(o.status)}
+            <br>
+            <button class="btn small danger"
+              onclick="deleteOffer('${o.id}', '${o.title.replace(/'/g, "\\'")}')">
+              🗑 Ištrinti
+            </button>
+          </div>
+        </div>
+
+        <div class="small-text" style="margin-top:6px;">
+          ${o.description || ""}
+        </div>
+
+        <div class="stats-line">
+          Kandidatūros: ${stats.total} (laukia: ${stats.pending}, priimta: ${stats.accepted}, atmesta: ${stats.rejected})
+        </div>
+      `;
+
+      list.appendChild(card);
+    });
+  }
+
+  async function deleteOffer(offerId, title) {
+    const sure = confirm(`Ar tikrai norite ištrinti pasiūlymą "${title}"? Kandidatūros taip pat bus ištrintos.`);
+    if (!sure) return;
+
+    const { error: appsErr } = await supabaseClient
+      .from("applications")
+      .delete()
+      .eq("offer_id", offerId);
+
+    if (appsErr) {
+      alert("Klaida šalinant kandidatus: " + appsErr.message);
+      return;
+    }
+
+    const { error: offerErr } = await supabaseClient
+      .from("offers")
+      .delete()
+      .eq("id", offerId);
+
+    if (offerErr) {
+      alert("Klaida šalinant pasiūlymą: " + offerErr.message);
+      return;
+    }
+
+    alert("Pasiūlymas ir susijusios kandidatūros sėkmingai ištrinti.");
+    loadOffers();
+  }
+
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    location.href = "./auth.html";
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(e => console.log("SW error mano-pasiulymai.html", e));
+  }
+</script>
+
+</body>
+</html>
