@@ -3,519 +3,386 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Timurita – Prisijungimas</title>
-  <meta name="description" content="Prisijunkite arba užsiregistruokite naudotis Timurita platforma.">
+  <title>Timurita – Prisijungimas / Registracija</title>
 
-  <link rel="manifest" href="/timurita/manifest.json">
-  <meta name="theme-color" content="#1a2a44">
-  <link rel="icon" href="/timurita/Timurita_logo_192x192.png" type="image/png">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0f172a">
 
-  <link rel="stylesheet" href="/timurita/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 
   <style>
-    :root{ --bg:#0f172a; --card:#020617; --fg:#e5e7eb; --muted:#94a3b8; --accent:#0ea5e9; --line:#1e293b;}
-    body { margin:0; font-family:system-ui,-apple-system,segoe ui,roboto,sans-serif; background:radial-gradient(circle at top,#1e293b,#020617); color:var(--fg); min-height:100vh; display:flex; flex-direction:column; }
-    .app-header { display:flex; align-items:center; justify-content:center; padding:16px; }
-    .app-header a { display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
-    .app-header img { width:40px; height:40px; border-radius:12px; }
-    .app-header h1 { margin:0; font-size:20px; }
-    .app-header .subtitle { font-size:12px; color:var(--muted); }
-
-    .auth-wrapper { flex:1; display:flex; justify-content:center; align-items:center; padding:16px; }
-    .card { background:rgba(15,23,42,0.96); border-radius:18px; border:1px solid rgba(148,163,184,0.3); max-width:420px; width:100%; padding:20px 18px 18px; box-shadow:0 20px 40px rgba(15,23,42,0.8); }
-    .tabs { display:flex; border-radius:999px; background:#020617; padding:3px; margin-bottom:16px; }
-    .tab-btn { flex:1; border-radius:999px; border:none; background:transparent; color:var(--muted); font-size:13px; font-weight:600; padding:7px 10px; cursor:pointer; }
-    .tab-btn.active { background:var(--accent); color:#0b1120; }
-
-    label { display:block; margin-top:10px; font-size:13px; font-weight:600; color:#e2e8f0; }
-    input[type="email"],
-    input[type="password"]{
-      width:100%; margin-top:4px; padding:9px 10px; border-radius:10px;
-      border:1px solid #1e293b; background:#020617; color:var(--fg); font-size:14px;
+    body {
+      min-height:100vh;
+      margin:0;
+      display:flex;
+      flex-direction:column;
+      background:radial-gradient(circle at top, #1d4ed8 0, #020617 55%);
+      color:#e5e7eb;
     }
-    input::placeholder { color:#64748b; }
-
-    .role-row { display:flex; gap:10px; margin-top:6px; }
-    .role-option { flex:1; border-radius:12px; border:1px solid #1e293b; background:#020617; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:13px; color:#94a3b8; }
-    .role-option input { margin:0; }
-    .role-option.active { border-color:var(--accent); color:#e5e7eb; }
-
-    .terms-row {
+    main.container {
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+    .auth-wrapper {
+      width:100%;
+      max-width:420px;
+    }
+    .auth-card {
+      background:#020617cc;
+      border:1px solid #1f2937;
+      border-radius:16px;
+      padding:20px 18px 22px;
+      box-shadow:0 18px 45px rgba(0,0,0,0.65);
+    }
+    .auth-header {
+      text-align:center;
+      margin-bottom:14px;
+    }
+    .auth-header h2 {
+      margin:0;
+      font-size:22px;
+    }
+    .auth-header p {
+      margin:4px 0 0;
+      font-size:13px;
+      color:#9ca3af;
+    }
+    label {
+      display:block;
+      margin-top:10px;
+      font-size:14px;
+    }
+    input, select {
+      width:100%;
+      padding:10px 11px;
+      border-radius:10px;
+      border:1px solid #334155;
+      margin-top:5px;
+      background:#020617;
+      color:#e5e7eb;
+      font-size:14px;
+    }
+    input:focus, select:focus {
+      outline:none;
+      border-color:#0ea5e9;
+      box-shadow:0 0 0 1px #0ea5e9;
+    }
+    .btn.big {
+      width:100%;
+      margin-top:16px;
+    }
+    .switch-link {
+      margin-top:10px;
+      text-align:center;
+      font-size:14px;
+      color:#38bdf8;
+      cursor:pointer;
+    }
+    .checkbox-row {
       display:flex;
       align-items:flex-start;
       gap:8px;
       margin-top:10px;
-      font-size:12px;
-      color:#cbd5f5;
+      font-size:13px;
     }
-    .terms-row input[type="checkbox"] {
-      margin-top:2px;
+    .checkbox-row input {
+      width:auto;
+      margin-top:3px;
     }
-    .terms-row a {
-      color:var(--accent);
-      text-decoration:underline;
+    .info-text {
+      font-size:13px;
+      color:#9ca3af;
+      margin-top:8px;
     }
-
-    .btn { width:100%; margin-top:12px; padding:9px 12px; border-radius:12px; border:none; cursor:pointer; font-weight:600; font-size:14px; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
-    .btn.primary { background:var(--accent); color:#0b1120; }
-    .btn.secondary-link { background:transparent; color:var(--muted); border:none; font-size:12px; text-decoration:underline; justify-content:flex-start; padding-left:0; }
-    .btn:disabled { opacity:0.6; cursor:default; }
-
-    .msg { margin-top:8px; font-size:12px; min-height:16px; }
-    .msg.ok { color:#a7f3d0; }
-    .msg.err { color:#fecaca; }
-
-    .foot { margin-top:10px; font-size:11px; color:#64748b; text-align:center; }
-
-    #resetBox { margin-top:10px; }
-    #resetFormTitle { font-size:15px; font-weight:600; margin-bottom:4px; }
-    #resetHint { font-size:12px; color:#94a3b8; margin-bottom:8px; }
   </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 </head>
+
 <body>
-  <header class="app-header">
-    <a href="/timurita/index.html">
-      <img src="/timurita/Timurita_logo_192x192.png" alt="Timurita">
-      <div>
-        <h1>Timurita</h1>
-        <div class="subtitle">Trumpalaikio darbo platforma statybose</div>
-      </div>
-    </a>
-  </header>
 
-  <main class="auth-wrapper">
-    <section class="card">
-      <div class="tabs" id="tabsBar">
-        <button class="tab-btn active" id="tabLogin" type="button">Prisijungti</button>
-        <button class="tab-btn" id="tabRegister" type="button">Registruotis</button>
+<header class="app-header">
+  <h2>Timurita</h2>
+</header>
+
+<main class="container">
+  <div class="auth-wrapper">
+    <div class="auth-card">
+
+      <div class="auth-header">
+        <h2>Sveiki sugrįžę</h2>
+        <p>Prisijunkite arba užsiregistruokite, kad galėtumėte naudotis platforma.</p>
       </div>
 
-      <!-- Prisijungimo forma -->
-      <form id="loginForm">
-        <label>El. paštas</label>
-        <input type="email" name="email" placeholder="el.pastas@pavyzdys.lt" required autocomplete="email">
+      <!-- LOGIN -->
+      <div id="login-box">
+        <label for="login-email">El. paštas</label>
+        <input id="login-email" type="email" autocomplete="email">
 
-        <label>Slaptažodis</label>
-        <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+        <label for="login-password">Slaptažodis</label>
+        <input id="login-password" type="password" autocomplete="current-password">
 
-        <button class="btn primary" type="submit">Prisijungti</button>
-        <button class="btn secondary-link" type="button" id="forgotBtn">Pamiršau slaptažodį</button>
+        <button class="btn big" onclick="login()">Prisijungti</button>
 
-        <div id="loginMsg" class="msg"></div>
-      </form>
+        <div class="switch-link" onclick="showRegister()">Neturite paskyros? Registruotis</div>
+        <div class="switch-link" onclick="showReset()">Pamiršau slaptažodį</div>
+      </div>
 
-      <!-- Registracijos forma -->
-      <form id="registerForm" style="display:none;">
-        <label>El. paštas</label>
-        <input type="email" name="email" placeholder="el.pastas@pavyzdys.lt" required autocomplete="email">
+      <!-- REGISTER -->
+      <div id="register-box" style="display:none;">
+        <label for="reg-email">El. paštas</label>
+        <input id="reg-email" type="email" autocomplete="email">
 
-        <label>Slaptažodis</label>
-        <input type="password" name="password" placeholder="Mažiausiai 6 simboliai" required autocomplete="new-password" minlength="6">
+        <label for="reg-password">Slaptažodis</label>
+        <input id="reg-password" type="password" autocomplete="new-password">
 
-        <label>Rolė sistemoje</label>
-        <div class="role-row">
-          <label class="role-option active" id="roleWorkerBox">
-            <input type="radio" name="role" value="worker" checked>
-            👷‍♂️ <div><div>Darbuotojas</div><div style="font-size:11px;color:#64748b;">Ieškau darbo, noriu kandidatuoti</div></div>
-          </label>
-          <label class="role-option" id="roleEmployerBox">
-            <input type="radio" name="role" value="employer">
-            🧱 <div><div>Darbdavys</div><div style="font-size:11px;color:#64748b;">Skelbsiu darbo pasiūlymus</div></div>
+        <label for="reg-role">Pasirinkite rolę</label>
+        <select id="reg-role">
+          <option value="worker">Darbuotojas</option>
+          <option value="employer">Darbdavys</option>
+        </select>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="agree">
+          <label for="agree">
+            Sutinku su svetainės taisyklėmis ir sąlygomis.
           </label>
         </div>
 
-        <!-- PRIVALOMAS SUTIKIMO CHECKBOX -->
-        <div class="terms-row">
-          <input type="checkbox" id="terms" name="terms">
-          <label for="terms" style="margin-top:0;font-weight:400;">
-            Registruodamasis patvirtinu, kad susipažinau ir sutinku su
-            puslapio sąlygomis ir taisyklėmis.
-          </label>
-        </div>
+        <button class="btn big" onclick="register()">Registruotis</button>
 
-        <button class="btn primary" type="submit">Registruotis</button>
-        <div id="registerMsg" class="msg"></div>
-        <p class="foot">
-          Po registracijos gausite el. laišką su patvirtinimo nuoroda.
+        <div class="switch-link" onclick="showLogin()">Jau turite paskyrą? Prisijungti</div>
+      </div>
+
+      <!-- REQUEST RESET -->
+      <div id="reset-box" style="display:none;">
+        <label for="reset-email">El. paštas</label>
+        <input id="reset-email" type="email" autocomplete="email">
+
+        <button class="btn big" onclick="resetPassword()">Gauti slaptažodžio atstatymo nuorodą</button>
+
+        <p class="info-text">
+          Į nurodytą el. paštą gausite nuorodą slaptažodžio atstatymui.
         </p>
-      </form>
 
-      <!-- Slaptažodžio atstatymas -->
-      <div id="resetBox" style="display:none;">
-        <div id="resetFormTitle">Nustatyti naują slaptažodį</div>
-        <div id="resetHint">Ši forma atidaryta iš slaptažodžio atstatymo nuorodos el. pašte.</div>
-        <form id="resetForm">
-          <label>Naujas slaptažodis</label>
-          <input type="password" name="password1" required minlength="6">
-
-          <label>Pakartoti slaptažodį</label>
-          <input type="password" name="password2" required minlength="6">
-
-          <button class="btn primary" type="submit">Atnaujinti slaptažodį</button>
-          <div id="resetMsg" class="msg"></div>
-        </form>
+        <div class="switch-link" onclick="showLogin()">Atgal į prisijungimą</div>
       </div>
 
-      <p class="foot">
-        Prisijungęs vartotojas bus nukreiptas:<br>
-        <strong>admin</strong> → admin.html, kiti → main.html
-      </p>
-    </section>
-  </main>
+      <!-- NEW PASSWORD (po el. pašto nuorodos) -->
+      <div id="newpass-box" style="display:none;">
+        <p class="info-text">
+          Įvedkite naują slaptažodį savo paskyrai.
+        </p>
 
-  <script>
-    // Supabase klientas
-    let supabaseClient = null;
-    try {
-      const url = 'https://qnczakppadjxbicgjzcy.supabase.co';
-      const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY';
-      supabaseClient = window.supabase.createClient(url, key);
-    } catch (e) {
-      console.error('Supabase createClient klaida auth.html:', e);
+        <label for="new-pass1">Naujas slaptažodis</label>
+        <input id="new-pass1" type="password" autocomplete="new-password">
+
+        <label for="new-pass2">Pakartokite naują slaptažodį</label>
+        <input id="new-pass2" type="password" autocomplete="new-password">
+
+        <button class="btn big" onclick="setNewPassword()">Išsaugoti naują slaptažodį</button>
+
+        <div class="switch-link" onclick="showLogin()">Atgal į prisijungimą</div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+  const supabaseClient = supabase.createClient(
+    "https://qnczakppadjxbicgjzcy.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
+  );
+
+  const loginBox    = document.getElementById("login-box");
+  const registerBox = document.getElementById("register-box");
+  const resetBox    = document.getElementById("reset-box");
+  const newPassBox  = document.getElementById("newpass-box");
+
+  function showLogin() {
+    loginBox.style.display    = "block";
+    registerBox.style.display = "none";
+    resetBox.style.display    = "none";
+    newPassBox.style.display  = "none";
+  }
+
+  function showRegister() {
+    loginBox.style.display    = "none";
+    registerBox.style.display = "block";
+    resetBox.style.display    = "none";
+    newPassBox.style.display  = "none";
+  }
+
+  function showReset() {
+    loginBox.style.display    = "none";
+    registerBox.style.display = "none";
+    resetBox.style.display    = "block";
+    newPassBox.style.display  = "none";
+  }
+
+  function showNewPasswordForm() {
+    loginBox.style.display    = "none";
+    registerBox.style.display = "none";
+    resetBox.style.display    = "none";
+    newPassBox.style.display  = "block";
+  }
+
+  // 🚦 Redirect pagal rolę
+  function redirectByRole(user) {
+    const role = user?.user_metadata?.role;
+
+    if (role === "admin") {
+      location.href = "./admin-panel.html";
+    } else {
+      location.href = "./main.html";
     }
+  }
 
-    const ADMIN_EMAIL = "kancerevicius1@gmail.com"; // <- čia tavo admin el. paštas
+  // 🧠 On load: patikrinam ar tai password recovery, ar paprastas apsilankymas
+  (async () => {
+    // patikrinam hash paramą "type"
+    const hash = window.location.hash.startsWith("#")
+      ? window.location.hash.substring(1)
+      : window.location.hash;
+    const params = new URLSearchParams(hash);
+    const isRecovery = params.get("type") === "recovery";
 
-    const tabLogin = document.getElementById('tabLogin');
-    const tabRegister = document.getElementById('tabRegister');
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const loginMsg = document.getElementById('loginMsg');
-    const registerMsg = document.getElementById('registerMsg');
-    const forgotBtn = document.getElementById('forgotBtn');
-    const tabsBar = document.getElementById('tabsBar');
+    if (isRecovery) {
+      // atsidaryta per el. laišką – rodome naujo slaptažodžio formą
+      showNewPasswordForm();
 
-    const resetBox = document.getElementById('resetBox');
-    const resetForm = document.getElementById('resetForm');
-    const resetMsg = document.getElementById('resetMsg');
-
-    const roleWorkerBox = document.getElementById('roleWorkerBox');
-    const roleEmployerBox = document.getElementById('roleEmployerBox');
-
-    function saveRoleLocally(role){ try { localStorage.setItem("timurita_role", role); } catch {} }
-
-    // 🔁 Nukreipimas – admin pagal el. paštą
-    function redirectByRole(role){
-      if (role === "admin") {
-        location.href = "/timurita/admin.html";
-      } else {
-        location.href = "/timurita/main.html";
-      }
-    }
-
-    function showLogin(){
-      loginForm.style.display="";
-      registerForm.style.display="none";
-      resetBox.style.display="none";
-      tabLogin.classList.add('active');
-      tabRegister.classList.remove('active');
-      loginMsg.textContent="";
-      loginMsg.className="msg";
-    }
-    function showRegister(){
-      loginForm.style.display="none";
-      registerForm.style.display="";
-      resetBox.style.display="none";
-      tabLogin.classList.remove('active');
-      tabRegister.classList.add('active');
-      registerMsg.textContent="";
-      registerMsg.className="msg";
-    }
-
-    tabLogin.addEventListener('click', showLogin);
-    tabRegister.addEventListener('click', showRegister);
-
-    roleWorkerBox.addEventListener('click', () => {
-      roleWorkerBox.classList.add('active');
-      roleEmployerBox.classList.remove('active');
-      roleWorkerBox.querySelector('input').checked = true;
-    });
-    roleEmployerBox.addEventListener('click', () => {
-      roleEmployerBox.classList.add('active');
-      roleWorkerBox.classList.remove('active');
-      roleEmployerBox.querySelector('input').checked = true;
-    });
-
-    // Prisijungimas
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      loginMsg.textContent = "";
-      loginMsg.className = "msg";
-
-      if (!supabaseClient) {
-        loginMsg.textContent = "Supabase klientas nepasiekiamas.";
-        loginMsg.classList.add('err');
-        return;
-      }
-
-      const email = loginForm.email.value.trim();
-      const password = loginForm.password.value;
-
-      if (!email || !password) {
-        loginMsg.textContent = "Įveskite el. paštą ir slaptažodį.";
-        loginMsg.classList.add('err');
-        return;
-      }
-
-      try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) {
-          loginMsg.textContent = error.message || "Nepavyko prisijungti.";
-          loginMsg.classList.add('err');
-          return;
-        }
-        const user = data.user;
-        const userEmail = (user.email || "").toLowerCase();
-
-        let role = user?.user_metadata?.role || "worker";
-        // jei el. paštas = admin, priverstinai darom admin
-        if (userEmail === ADMIN_EMAIL.toLowerCase()) {
-          role = "admin";
-        }
-
-        saveRoleLocally(role);
-        loginMsg.textContent = "✅ Prisijungta. Nukreipiama...";
-        loginMsg.classList.add('ok');
-        setTimeout(() => redirectByRole(role), 700);
-      } catch (e2) {
-        loginMsg.textContent = "Klaida prisijungiant: " + e2.message;
-        loginMsg.classList.add('err');
-      }
-    });
-
-    // Registracija
-    registerForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      registerMsg.textContent = "";
-      registerMsg.className = "msg";
-
-      if (!supabaseClient) {
-        registerMsg.textContent = "Supabase klientas nepasiekiamas.";
-        registerMsg.classList.add('err');
-        return;
-      }
-
-      const email = registerForm.email.value.trim();
-      const password = registerForm.password.value;
-      const role = registerForm.role.value || "worker";
-      const termsChecked = registerForm.terms.checked;
-
-      if (!email || !password) {
-        registerMsg.textContent = "Įveskite el. paštą ir slaptažodį.";
-        registerMsg.classList.add('err');
-        return;
-      }
-
-      if (!termsChecked) {
-        registerMsg.textContent = "Turite sutikti su puslapio sąlygomis ir taisyklėmis.";
-        registerMsg.classList.add('err');
-        return;
-      }
-
-      try {
-        const { data, error } = await supabaseClient.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { role, accepted_terms: true },
-            emailRedirectTo: 'https://sftimuritamb-creator.github.io/timurita/auth.html'
-          }
-        });
-
-        if (error) {
-          registerMsg.textContent = error.message || "Nepavyko užsiregistruoti.";
-          registerMsg.classList.add('err');
-          return;
-        }
-
-        registerMsg.textContent = "✅ Registracija sėkminga. Patikrinkite el. paštą ir paspauskite patvirtinimo nuorodą.";
-        registerMsg.classList.add('ok');
-        loginForm.email.value = email;
+      // papildomai patikrinam, ar Supabase mato vartotoją (sesija iš nuorodos)
+      const { data, error } = await supabaseClient.auth.getUser();
+      if (error || !data.user) {
+        alert("Slaptažodžio atstatymo nuoroda negaliojanti arba pasibaigęs laikas.");
+        // grįžtam į įprastą login
+        window.location.hash = "";
         showLogin();
-      } catch (e2) {
-        registerMsg.textContent = "Klaida registruojantis: " + e2.message;
-        registerMsg.classList.add('err');
-      }
-    });
-
-    // Pamiršau slaptažodį
-    forgotBtn.addEventListener('click', async () => {
-      loginMsg.textContent = "";
-      loginMsg.className = "msg";
-
-      if (!supabaseClient) {
-        loginMsg.textContent = "Supabase klientas nepasiekiamas.";
-        loginMsg.classList.add('err');
         return;
       }
 
-      const email = loginForm.email.value.trim();
-      if (!email) {
-        loginMsg.textContent = "Įrašykite el. paštą, kuriuo registravotės.";
-        loginMsg.classList.add('err');
-        return;
-      }
-
-      try {
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-          redirectTo: "https://sftimuritamb-creator.github.io/timurita/auth.html"
-        });
-        if (error) {
-          loginMsg.textContent = error.message || "Nepavyko išsiųsti nuorodos.";
-          loginMsg.classList.add('err');
-          return;
-        }
-        loginMsg.textContent = "📧 Jei toks el. paštas užregistruotas, išsiųsta slaptažodžio atstatymo nuoroda.";
-        loginMsg.classList.add('ok');
-      } catch (e) {
-        loginMsg.textContent = "Klaida siunčiant nuorodą: " + e.message;
-        loginMsg.classList.add('err');
-      }
-    });
-
-    // Slaptažodžio atstatymo režimas (type=recovery)
-    async function handleRecovery() {
-      tabsBar.style.display = "none";
-      loginForm.style.display = "none";
-      registerForm.style.display = "none";
-      resetBox.style.display = "";
-
-      if (!supabaseClient) {
-        resetMsg.textContent = "Supabase klientas nepasiekiamas.";
-        resetMsg.classList.add('err');
-        return;
-      }
-
-      try {
-        const { data, error } = await supabaseClient.auth.getUser();
-        if (error || !data.user) {
-          resetMsg.textContent = "Nuoroda negalioja arba jau panaudota.";
-          resetMsg.classList.add('err');
-          return;
-        }
-        resetMsg.textContent = "Įveskite naują slaptažodį.";
-        resetMsg.classList.add('ok');
-      } catch (e) {
-        resetMsg.textContent = "Klaida tikrinant nuorodą: " + e.message;
-        resetMsg.classList.add('err');
-      }
+      // jei vartotojas yra, tiesiog laukiam, kol jis įves naują slaptažodį
+      return;
     }
 
-    resetForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      resetMsg.textContent = "";
-      resetMsg.className = "msg";
-
-      if (!supabaseClient) {
-        resetMsg.textContent = "Supabase klientas nepasiekiamas.";
-        resetMsg.classList.add('err');
-        return;
-      }
-
-      const p1 = resetForm.password1.value.trim();
-      const p2 = resetForm.password2.value.trim();
-
-      if (!p1 || !p2 || p1 !== p2) {
-        resetMsg.textContent = "Slaptažodžiai nesutampa arba tušti.";
-        resetMsg.classList.add('err');
-        return;
-      }
-
-      try {
-        const { error } = await supabaseClient.auth.updateUser({ password: p1 });
-        if (error) {
-          resetMsg.textContent = error.message || "Nepavyko atnaujinti slaptažodžio.";
-          resetMsg.classList.add('err');
-          return;
-        }
-        resetMsg.textContent = "✅ Slaptažodis atnaujintas. Galite prisijungti.";
-        resetMsg.classList.add('ok');
-        setTimeout(() => { location.href = "/timurita/auth.html"; }, 1200);
-      } catch (e) {
-        resetMsg.textContent = "Klaida atnaujinant slaptažodį: " + e.message;
-        resetMsg.classList.add('err');
-      }
-    });
-
-    // El. pašto patvirtinimas (type=signup)
-    async function handleSignupConfirm() {
+    // jei ne recovery režimas – jei vartotojas jau prisijungęs, nukreipiam pagal rolę
+    const { data } = await supabaseClient.auth.getUser();
+    if (data.user) {
+      redirectByRole(data.user);
+    } else {
       showLogin();
-      loginMsg.textContent = "Tikrinama patvirtinimo nuoroda...";
-      loginMsg.className = "msg";
+    }
+  })();
 
-      if (!supabaseClient) {
-        loginMsg.textContent = "Supabase klientas nepasiekiamas.";
-        loginMsg.classList.add('err');
-        return;
-      }
+  // 🔑 Prisijungimas
+  async function login() {
+    const email    = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
 
-      try {
-        const { data, error } = await supabaseClient.auth.getUser();
-        if (error || !data.user) {
-          loginMsg.textContent = "Nuoroda gali būti jau panaudota. Pabandykite prisijungti.";
-          loginMsg.classList.add('err');
-          return;
-        }
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
 
-        const user = data.user;
-        const userEmail = (user.email || "").toLowerCase();
-        let role = user.user_metadata?.role || "worker";
-
-        if (userEmail === ADMIN_EMAIL.toLowerCase()) {
-          role = "admin";
-        }
-
-        saveRoleLocally(role);
-
-        if (user.email) {
-          loginForm.email.value = user.email;
-        }
-
-        loginMsg.textContent = "✅ El. paštas patvirtintas! Nukreipiama...";
-        loginMsg.classList.add('ok');
-        setTimeout(() => redirectByRole(role), 1200);
-      } catch (e) {
-        loginMsg.textContent = "Klaida tikrinant patvirtinimą: " + e.message;
-        loginMsg.classList.add('err');
-      }
+    if (error) {
+      alert("Prisijungimo klaida: " + error.message);
+      return;
     }
 
-    // Startas
-    document.addEventListener('DOMContentLoaded', async () => {
-      const hash = location.hash || "";
+    redirectByRole(data.user);
+  }
 
-      if (hash.includes("type=recovery")) {
-        await handleRecovery();
-        return;
-      }
-      if (hash.includes("type=signup")) {
-        await handleSignupConfirm();
-        return;
-      }
+  // 🆕 Registracija
+  async function register() {
+    const email    = document.getElementById("reg-email").value.trim();
+    const password = document.getElementById("reg-password").value;
+    const role     = document.getElementById("reg-role").value;
+    const agree    = document.getElementById("agree");
 
-      if (supabaseClient) {
-        try {
-          const { data } = await supabaseClient.auth.getUser();
-          if (data.user) {
-            const user = data.user;
-            const userEmail = (user.email || "").toLowerCase();
-            let role = user.user_metadata?.role || "worker";
-            if (userEmail === ADMIN_EMAIL.toLowerCase()) {
-              role = "admin";
-            }
-            saveRoleLocally(role);
-            redirectByRole(role);
-          }
-        } catch {}
+    if (!email || !password) {
+      alert("Įveskite el. paštą ir slaptažodį.");
+      return;
+    }
+
+    if (!agree.checked) {
+      alert("Turite sutikti su taisyklėmis.");
+      return;
+    }
+
+    const { data, error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { role }
       }
     });
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/timurita/service-worker.js')
-        .catch(e => console.log('SW error auth.html', e));
+    if (error) {
+      alert("Registracijos klaida: " + error.message);
+      return;
     }
-  </script>
+
+    alert("Registracija sėkminga! Patvirtinkite el. paštą per atsiųstą nuorodą.");
+    showLogin();
+  }
+
+  // 🔁 Pamiršau slaptažodį – išsiunčiam email
+  async function resetPassword() {
+    const email = document.getElementById("reset-email").value.trim();
+    if (!email) {
+      alert("Įveskite el. pašto adresą.");
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: "https://sftimuritamb-creator.github.io/timurita/auth.html"
+    });
+
+    if (error) {
+      alert("Klaida siunčiant nuorodą: " + error.message);
+      return;
+    }
+
+    alert("Slaptažodžio atstatymo nuoroda išsiųsta į el. paštą.");
+    showLogin();
+  }
+
+  // 🆕 Nustatyti naują slaptažodį (po el. pašto nuorodos)
+  async function setNewPassword() {
+    const pass1 = document.getElementById("new-pass1").value;
+    const pass2 = document.getElementById("new-pass2").value;
+
+    if (!pass1 || !pass2) {
+      alert("Įveskite naują slaptažodį ir jo pakartojimą.");
+      return;
+    }
+    if (pass1 !== pass2) {
+      alert("Slaptažodžiai nesutampa.");
+      return;
+    }
+
+    const { data, error } = await supabaseClient.auth.updateUser({
+      password: pass1
+    });
+
+    if (error) {
+      alert("Klaida keičiant slaptažodį: " + error.message);
+      return;
+    }
+
+    alert("Slaptažodis sėkmingai pakeistas. Galite prisijungti nauju slaptažodžiu.");
+    // nuvalom hash ir grįžtam į login
+    window.location.hash = "";
+    showLogin();
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+  }
+</script>
+
 </body>
 </html>
