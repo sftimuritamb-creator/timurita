@@ -10,9 +10,32 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 
   <style>
-    body {
-      font-size:14px;
+    body { font-size:14px; }
+
+    /* ADMIN MENIU */
+    .admin-menu {
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      padding:10px;
+      background:#0f172a;
+      border-bottom:1px solid #1f2937;
     }
+    .admin-menu button {
+      flex:0 0 auto;
+      padding:8px 14px;
+      border-radius:8px;
+      background:#1e293b;
+      color:white;
+      border:1px solid #334155;
+      font-size:14px;
+      white-space:nowrap;
+    }
+    .admin-menu button.active {
+      background:#0369a1;
+      border-color:#0ea5e9;
+    }
+
     .admin-section {
       background:#0f172a;
       border:1px solid #1f2937;
@@ -21,22 +44,18 @@
       margin-bottom:20px;
       box-shadow:0 10px 15px -3px rgba(15,23,42,0.7);
     }
-    .admin-section h3 {
-      margin-top:0;
-      margin-bottom:8px;
-      font-size:16px;
-    }
+
     .row {
       padding:8px 0;
       border-bottom:1px solid #1f2937;
     }
-    .row:last-child {
-      border-bottom:none;
-    }
+    .row:last-child { border-bottom:none; }
+
     .btn.small {
       padding:5px 8px;
       font-size:11px;
     }
+
     .stats-box {
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -50,15 +69,10 @@
       border-radius:10px;
       text-align:center;
     }
-    .stat-title {
-      font-size:11px;
-      color:#9ca3af;
-    }
-    .stat-value {
-      font-size:16px;
-      font-weight:600;
-      margin-top:4px;
-    }
+    .stat-title { font-size:11px; color:#9ca3af; }
+    .stat-value { font-size:16px; font-weight:600; margin-top:4px; }
+
+    /* Statusai */
     .status-pill {
       display:inline-block;
       padding:2px 8px;
@@ -66,37 +80,16 @@
       font-size:11px;
       margin-right:6px;
     }
-    .status-approved {
-      background:#022c22;
-      color:#6ee7b7;
-      border:1px solid #22c55e;
-    }
-    .status-pending {
-      background:#1f2937;
-      color:#fbbf24;
-      border:1px solid #facc15;
-    }
-    .status-rejected {
-      background:#3f1d1d;
-      color:#fecaca;
-      border:1px solid #ef4444;
-    }
-    .status-blocked {
-      background:#450a0a;
-      color:#fecaca;
-      border:1px solid #b91c1c;
-    }
-    .tag-role {
-      font-size:11px;
-      color:#9ca3af;
-    }
+    .status-approved { background:#022c22; color:#6ee7b7; border:1px solid #22c55e; }
+    .status-pending { background:#1f2937; color:#fbbf24; border:1px solid #facc15; }
+    .status-rejected { background:#3f1d1d; color:#fecaca; border:1px solid #ef4444; }
+    .status-blocked { background:#450a0a; color:#fecaca; border:1px solid #b91c1c; }
+
+    .tag-role { font-size:11px; color:#9ca3af; }
 
     @media (min-width: 768px) {
       .stats-box {
         grid-template-columns:repeat(3, 1fr);
-      }
-      body {
-        font-size:15px;
       }
     }
   </style>
@@ -109,53 +102,43 @@
   <button class="btn small" onclick="logout()" style="margin-left:auto;">Atsijungti</button>
 </header>
 
+<!-- 📌 ADMIN MENIU -->
+<div class="admin-menu">
+  <button onclick="showTab('stats')" id="tab-stats" class="active">Statistika</button>
+  <button onclick="showTab('workers')" id="tab-workers">Darbuotojai</button>
+  <button onclick="showTab('employers')" id="tab-employers">Darbdaviai</button>
+  <button onclick="showTab('offers')" id="tab-offers">Pasiūlymai</button>
+</div>
+
 <main class="container">
 
   <!-- STATISTIKA -->
-  <div class="admin-section">
+  <div id="section-stats" class="admin-section">
     <h3>📊 Statistika</h3>
     <div class="stats-box">
-      <div class="stat">
-        <div class="stat-title">Darbuotojai</div>
-        <div class="stat-value" id="stat-workers">...</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Patvirtinti darbuotojai</div>
-        <div class="stat-value" id="stat-workers-approved">...</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Darbdaviai</div>
-        <div class="stat-value" id="stat-employers">...</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Patvirtinti darbdaviai</div>
-        <div class="stat-value" id="stat-employers-approved">...</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Pasiūlymai</div>
-        <div class="stat-value" id="stat-offers">...</div>
-      </div>
-      <div class="stat">
-        <div class="stat-title">Nepatvirtinti pasiūlymai</div>
-        <div class="stat-value" id="stat-offers-pending">...</div>
-      </div>
+      <div class="stat"><div class="stat-title">Darbuotojai</div><div class="stat-value" id="stat-workers">...</div></div>
+      <div class="stat"><div class="stat-title">Patvirtinti darbuotojai</div><div class="stat-value" id="stat-workers-approved">...</div></div>
+      <div class="stat"><div class="stat-title">Darbdaviai</div><div class="stat-value" id="stat-employers">...</div></div>
+      <div class="stat"><div class="stat-title">Patvirtinti darbdaviai</div><div class="stat-value" id="stat-employers-approved">...</div></div>
+      <div class="stat"><div class="stat-title">Pasiūlymai</div><div class="stat-value" id="stat-offers">...</div></div>
+      <div class="stat"><div class="stat-title">Nepatvirtinti pasiūlymai</div><div class="stat-value" id="stat-offers-pending">...</div></div>
     </div>
   </div>
 
   <!-- DARBUOTOJAI -->
-  <div class="admin-section">
+  <div id="section-workers" class="admin-section" style="display:none;">
     <h3>👷 Darbuotojų patvirtinimas ir blokavimas</h3>
     <div id="workersList">Kraunama...</div>
   </div>
 
   <!-- DARBDAVIAI -->
-  <div class="admin-section">
+  <div id="section-employers" class="admin-section" style="display:none;">
     <h3>🏢 Darbdavių patvirtinimas ir blokavimas</h3>
     <div id="employersList">Kraunama...</div>
   </div>
 
   <!-- PASIŪLYMAI -->
-  <div class="admin-section">
+  <div id="section-offers" class="admin-section" style="display:none;">
     <h3>📄 Darbo pasiūlymų patvirtinimas</h3>
     <div id="offersList">Kraunama...</div>
   </div>
@@ -170,33 +153,36 @@
 
   let currentUser = null;
 
-  // 🔐 Tik admin
+  // ADMIN CHECK
   async function loadAdmin() {
-    const { data, error } = await supabaseClient.auth.getUser();
-    if (error || !data.user) {
-      location.href = "./auth.html";
-      return;
-    }
-
-    currentUser = data.user;
-    const role = currentUser.user_metadata?.role;
-
-    if (role !== "admin") {
+    const { data } = await supabaseClient.auth.getUser();
+    if (!data.user) { location.href = "./auth.html"; return; }
+    if (data.user.user_metadata?.role !== "admin") {
       alert("Tik administratoriai gali matyti šį puslapį.");
       location.href = "./main.html";
       return;
     }
+    currentUser = data.user;
   }
 
-  // 📊 Statistika
+  // ----------- TABS ------------
+  function showTab(tab) {
+    document.querySelectorAll(".admin-menu button").forEach(btn => btn.classList.remove("active"));
+    document.getElementById("tab-" + tab).classList.add("active");
+
+    document.querySelectorAll(".admin-section").forEach(sec => sec.style.display = "none");
+    document.getElementById("section-" + tab).style.display = "block";
+  }
+
+  // ---------- STATISTICS ----------
   async function loadStats() {
     const [
       { count: workers },
-      { count: workersApproved },
+      { count: workersAppr },
       { count: employers },
-      { count: employersApproved },
+      { count: employersAppr },
       { count: offers },
-      { count: offersPending }
+      { count: pendingOffers }
     ] = await Promise.all([
       supabaseClient.from("profiles").select("*", { count:"exact", head:true }).eq("role","worker"),
       supabaseClient.from("profiles").select("*", { count:"exact", head:true }).eq("role","worker").eq("is_approved",true),
@@ -206,199 +192,132 @@
       supabaseClient.from("offers").select("*", { count:"exact", head:true }).eq("status","pending")
     ]);
 
-    document.getElementById("stat-workers").innerText = workers ?? 0;
-    document.getElementById("stat-workers-approved").innerText = workersApproved ?? 0;
-    document.getElementById("stat-employers").innerText = employers ?? 0;
-    document.getElementById("stat-employers-approved").innerText = employersApproved ?? 0;
-    document.getElementById("stat-offers").innerText = offers ?? 0;
-    document.getElementById("stat-offers-pending").innerText = offersPending ?? 0;
+    document.getElementById("stat-workers").innerText = workers;
+    document.getElementById("stat-workers-approved").innerText = workersAppr;
+    document.getElementById("stat-employers").innerText = employers;
+    document.getElementById("stat-employers-approved").innerText = employersAppr;
+    document.getElementById("stat-offers").innerText = offers;
+    document.getElementById("stat-offers-pending").innerText = pendingOffers;
   }
 
-  // 👷 Darbuotojai
+  // ---------- WORKERS ----------
   async function loadWorkers() {
     const box = document.getElementById("workersList");
 
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from("profiles")
       .select("*")
       .eq("role","worker")
       .order("created_at",{ ascending:false });
-
-    if (error) {
-      box.innerHTML = "<p>Klaida kraunant darbuotojus.</p>";
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      box.innerHTML = "<p>Nėra darbuotojų.</p>";
-      return;
-    }
 
     box.innerHTML = "";
     data.forEach(w => {
       const row = document.createElement("div");
       row.className = "row";
 
-      const approvedPill = w.is_approved
-        ? '<span class="status-pill status-approved">Patvirtintas</span>'
-        : '<span class="status-pill status-pending">Nepatvirtintas</span>';
-
-      const blockedPill = w.is_blocked
-        ? '<span class="status-pill status-blocked">Blokuotas</span>'
-        : '';
-
       row.innerHTML = `
-        <div>
-          <strong>${w.full_name || "(be vardo)"}</strong>
-          <span class="tag-role">• Darbuotojas</span><br>
-          Miestas: ${w.city || "-"} • Tel: ${w.phone || "-"} • El. paštas: ${w.email || "-"}
-        </div>
-        <div style="margin-top:4px;">
-          ${approvedPill} ${blockedPill}
-        </div>
-        <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">
-          ${!w.is_approved ? `<button class="btn small" onclick="approveWorker('${w.id}')">Patvirtinti</button>` : ""}
-          ${!w.is_blocked
-            ? `<button class="btn small" onclick="blockWorker('${w.id}')">Blokuoti</button>`
-            : `<button class="btn small" onclick="unblockWorker('${w.id}')">Atblokuoti</button>`}
-        </div>
+        <strong>${w.full_name || "-"} </strong>
+        <span class="tag-role">darbuotojas</span><br>
+        Miestas: ${w.city || ""} | Tel: ${w.phone || ""} | El. paštas: ${w.email || ""}
+        <br>
+        ${w.is_approved ? `<span class='status-pill status-approved'>Patvirtintas</span>` :
+                          `<span class='status-pill status-pending'>Nepatvirtintas</span>`}
+        ${w.is_blocked ? `<span class='status-pill status-blocked'>Blokuotas</span>` : ""}
+        <br><br>
+        ${!w.is_approved ? `<button class='btn small' onclick="approveWorker('${w.id}')">Patvirtinti</button>` : ""}
+        ${!w.is_blocked ? `<button class='btn small' onclick="blockWorker('${w.id}')">Blokuoti</button>`
+                        : `<button class='btn small' onclick="unblockWorker('${w.id}')">Atblokuoti</button>`}
       `;
       box.appendChild(row);
     });
   }
 
   async function approveWorker(id) {
-    await supabaseClient.from("profiles").update({ is_approved:true }).eq("id",id);
-    loadWorkers();
-    loadStats();
+    await supabaseClient.from("profiles").update({ is_approved: true }).eq("id",id);
+    loadWorkers(); loadStats();
   }
   async function blockWorker(id) {
-    await supabaseClient.from("profiles").update({ is_blocked:true }).eq("id",id);
+    await supabaseClient.from("profiles").update({ is_blocked: true }).eq("id",id);
     loadWorkers();
   }
   async function unblockWorker(id) {
-    await supabaseClient.from("profiles").update({ is_blocked:false }).eq("id",id);
+    await supabaseClient.from("profiles").update({ is_blocked: false }).eq("id",id);
     loadWorkers();
   }
 
-  // 🏢 Darbdaviai
+  // ---------- EMPLOYERS ----------
   async function loadEmployers() {
     const box = document.getElementById("employersList");
 
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from("profiles")
       .select("*")
       .eq("role","employer")
       .order("created_at",{ ascending:false });
-
-    if (error) {
-      box.innerHTML = "<p>Klaida kraunant darbdavius.</p>";
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      box.innerHTML = "<p>Nėra darbdavių.</p>";
-      return;
-    }
 
     box.innerHTML = "";
     data.forEach(e => {
       const row = document.createElement("div");
       row.className = "row";
 
-      const approvedPill = e.is_approved
-        ? '<span class="status-pill status-approved">Patvirtintas</span>'
-        : '<span class="status-pill status-pending">Nepatvirtintas</span>';
-
-      const blockedPill = e.is_blocked
-        ? '<span class="status-pill status-blocked">Blokuotas</span>'
-        : '';
-
       row.innerHTML = `
-        <div>
-          <strong>${e.company || "(be įmonės pavadinimo)"}</strong>
-          <span class="tag-role">• Darbdavys</span><br>
-          Įmonės kodas: ${e.company_code || "-"}<br>
-          Tel: ${e.phone || "-"} • El. paštas: ${e.email || "-"}
-        </div>
-        <div style="margin-top:4px;">
-          ${approvedPill} ${blockedPill}
-        </div>
-        <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">
-          ${!e.is_approved ? `<button class="btn small" onclick="approveEmployer('${e.id}')">Patvirtinti</button>` : ""}
-          ${!e.is_blocked
-            ? `<button class="btn small" onclick="blockEmployer('${e.id}')">Blokuoti</button>`
-            : `<button class="btn small" onclick="unblockEmployer('${e.id}')">Atblokuoti</button>`}
-        </div>
+        <strong>${e.company || "-"} </strong>
+        <span class="tag-role">darbdavys</span><br>
+        Kodas: ${e.company_code || ""} | Tel: ${e.phone || ""} | El. paštas: ${e.email || ""}
+        <br>
+        ${e.is_approved ? `<span class='status-pill status-approved'>Patvirtintas</span>` :
+                          `<span class='status-pill status-pending'>Nepatvirtintas</span>`}
+        ${e.is_blocked ? `<span class='status-pill status-blocked'>Blokuotas</span>` : ""}
+        <br><br>
+        ${!e.is_approved ? `<button class='btn small' onclick="approveEmployer('${e.id}')">Patvirtinti</button>` : ""}
+        ${!e.is_blocked ? `<button class='btn small' onclick="blockEmployer('${e.id}')">Blokuoti</button>`
+                        : `<button class='btn small' onclick="unblockEmployer('${e.id}')">Atblokuoti</button>`}
       `;
       box.appendChild(row);
     });
   }
 
   async function approveEmployer(id) {
-    await supabaseClient.from("profiles").update({ is_approved:true }).eq("id",id);
-    loadEmployers();
-    loadStats();
+    await supabaseClient.from("profiles").update({ is_approved: true }).eq("id",id);
+    loadEmployers(); loadStats();
   }
   async function blockEmployer(id) {
-    await supabaseClient.from("profiles").update({ is_blocked:true }).eq("id",id);
+    await supabaseClient.from("profiles").update({ is_blocked: true }).eq("id",id);
     loadEmployers();
   }
   async function unblockEmployer(id) {
-    await supabaseClient.from("profiles").update({ is_blocked:false }).eq("id",id);
+    await supabaseClient.from("profiles").update({ is_blocked: false }).eq("id",id);
     loadEmployers();
   }
 
-  // 📄 Pasiūlymai
+  // ---------- OFFERS ----------
   async function loadOffers() {
     const box = document.getElementById("offersList");
 
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from("offers")
       .select("*")
       .order("created_at",{ ascending:false });
-
-    if (error) {
-      box.innerHTML = "<p>Klaida kraunant pasiūlymus.</p>";
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      box.innerHTML = "<p>Nėra pasiūlymų.</p>";
-      return;
-    }
 
     box.innerHTML = "";
     data.forEach(o => {
       const row = document.createElement("div");
       row.className = "row";
 
-      let statusPill = "";
-      if (o.status === "approved") {
-        statusPill = '<span class="status-pill status-approved">Patvirtintas</span>';
-      } else if (o.status === "rejected") {
-        statusPill = '<span class="status-pill status-rejected">Atmestas</span>';
-      } else {
-        statusPill = '<span class="status-pill status-pending">Laukia patvirtinimo</span>';
-      }
+      const status = o.status === "approved" ? "status-approved"
+                    : o.status === "rejected" ? "status-rejected"
+                    : "status-pending";
 
       row.innerHTML = `
-        <div>
-          <strong>${o.title}</strong> • ${o.city || "-"}<br>
-          Įmonė: ${o.company || "-"} • Įmonės kodas: ${o.company_code || "-"}
-        </div>
-        <div style="margin-top:4px;">
-          ${statusPill}
-        </div>
-        <div style="margin-top:4px;">
-          <span class="small-text">${o.description || ""}</span>
-        </div>
-        <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
-          ${o.status === "pending" ? `
-            <button class="btn small" onclick="approveOffer('${o.id}')">Patvirtinti</button>
-            <button class="btn small" onclick="rejectOffer('${o.id}')">Atmesti</button>
-          ` : ""}
-        </div>
+        <strong>${o.title}</strong> • ${o.city}<br>
+        Įmonė: ${o.company} (${o.company_code})
+        <br>
+        <span class="status-pill ${status}">${o.status}</span>
+        <br><br>
+        ${o.status === "pending" ? `
+          <button class='btn small' onclick="approveOffer('${o.id}')">Patvirtinti</button>
+          <button class='btn small' onclick="rejectOffer('${o.id}')">Atmesti</button>
+        ` : ""}
       `;
       box.appendChild(row);
     });
@@ -406,23 +325,20 @@
 
   async function approveOffer(id) {
     await supabaseClient.from("offers").update({ status:"approved" }).eq("id",id);
-    loadOffers();
-    loadStats();
+    loadOffers(); loadStats();
   }
-
   async function rejectOffer(id) {
     await supabaseClient.from("offers").update({ status:"rejected" }).eq("id",id);
-    loadOffers();
-    loadStats();
+    loadOffers(); loadStats();
   }
 
-  // Atsijungimas
+  // ---------- LOGOUT ----------
   async function logout() {
     await supabaseClient.auth.signOut();
     location.href = "./auth.html";
   }
 
-  // Start
+  // ---------- INIT ----------
   (async () => {
     await loadAdmin();
     await loadStats();
@@ -431,11 +347,6 @@
     await loadOffers();
   })();
 
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./service-worker.js").catch(e => {
-      console.log("SW error admin-panel", e);
-    });
-  }
 </script>
 
 </body>
