@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Darbdavio profilis – Timurita</title>
+
+  <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#1a2a44">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
+
+  <style>
+    label {
+      display:block;
+      margin:8px 0 4px;
+      font-weight:600;
+      font-size:14px;
+    }
+    input, textarea, select {
+      width:100%;
+      padding:8px;
+      border-radius:8px;
+      border:1px solid #1e293b;
+      background:#0f172a;
+      color:#e2e8f0;
+      margin-bottom:10px;
+      font-size:14px;
+    }
+    textarea { min-height:80px; resize:vertical; }
+    .required::after {
+      content:" *";
+      color:#ef4444;
+      font-weight:bold;
+    }
+    .btn.small { padding:5px 10px; font-size:13px; }
+    .small-text { font-size:12px; color:#9ca3af; }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <h2>Darbdavio profilis</h2>
+  <button onclick="logout()" class="btn small" style="margin-left:auto;">Atsijungti</button>
+</header>
+
+<main class="container">
+
+  <div class="card">
+    <h3>Įmonės duomenys</h3>
+    <p class="small-text">
+      Užpildykite įmonės duomenis. Jie automatiškai bus naudojami naujo darbo pasiūlymo formoje.
+    </p>
+
+    <form id="employerForm">
+
+      <label class="required">Įmonės pavadinimas</label>
+      <input type="text" id="company" required>
+
+      <label class="required">Įmonės kodas</label>
+      <input type="text" id="companyCode" required>
+
+      <label class="required">Miestas</label>
+      <select id="city" required>
+        <option value="Vilnius">Vilnius</option>
+      </select>
+
+      <label class="required">Kontaktinis asmuo</label>
+      <input type="text" id="contact" required>
+
+      <label class="required">Telefonas</label>
+      <input type="text" id="phone" required>
+
+      <label class="required">El. paštas</label>
+      <input type="email" id="email" required>
+
+      <label>Trumpas aprašymas apie įmonę</label>
+      <textarea id="description" placeholder="Ką darote, kokius darbus dažniausiai siūlote, kita informacija."></textarea>
+
+      <button class="btn" type="submit">💾 Išsaugoti profilį</button>
+    </form>
+
+    <p id="msg" class="small-text" style="margin-top:8px;"></p>
+  </div>
+
+</main>
+
+<script>
+  const supabaseClient = supabase.createClient(
+    "https://qnczakppadjxbicgjzcy.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
+  );
+
+  const form = document.getElementById("employerForm");
+  const msg  = document.getElementById("msg");
+  let currentUser = null;
+
+  async function checkAuthAndLoad() {
+    const { data, error } = await supabaseClient.auth.getUser();
+    if (error || !data.user) {
+      location.href = "./auth.html";
+      return;
+    }
+
+    currentUser = data.user;
+
+    const role = currentUser.user_metadata?.role;
+    if (role !== "employer") {
+      alert("Šis puslapis skirtas tik darbdaviams.");
+      location.href = "./main.html";
+      return;
+    }
+
+    // užkeliame esamus duomenis, jei yra
+    const { data: profile, error: profErr } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if (profErr) {
+      console.log("Klaida skaitant profilį:", profErr);
+      return;
+    }
+
+    if (profile) {
+      if (profile.company) document.getElementById("company").value = profile.company;
+      if (profile.company_code) document.getElementById("companyCode").value = profile.company_code;
+      if (profile.city) document.getElementById("city").value = profile.city;
+      if (profile.full_name) document.getElementById("contact").value = profile.full_name;
+      if (profile.phone) document.getElementById("phone").value = profile.phone;
+      if (profile.email) document.getElementById("email").value = profile.email;
+      if (profile.description) document.getElementById("description").value = profile.description;
+    } else {
+      // naujas profilis – užpildom el. paštą iš user
+      document.getElementById("email").value = currentUser.email || "";
+    }
+  }
+
+  checkAuthAndLoad();
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.textContent = "";
+    msg.style.color = "#e5e7eb";
+
+    if (!currentUser) {
+      msg.style.color = "#fecaca";
+      msg.textContent = "Nėra prisijungusio vartotojo.";
+      return;
+    }
+
+    const company     = document.getElementById("company").value.trim();
+    const companyCode = document.getElementById("companyCode").value.trim();
+    const city        = document.getElementById("city").value;
+    const contact     = document.getElementById("contact").value.trim();
+    const phone       = document.getElementById("phone").value.trim();
+    const email       = document.getElementById("email").value.trim();
+    const description = document.getElementById("description").value.trim();
+
+    if (!company || !companyCode || !city || !contact || !phone || !email) {
+      msg.style.color = "#fecaca";
+      msg.textContent = "Užpildykite visus privalomus laukus.";
+      return;
+    }
+
+    const payload = {
+      id: currentUser.id,
+      company,
+      company_code: companyCode,
+      city,
+      full_name: contact,
+      phone,
+      email,
+      description,
+      role: "employer"
+    };
+
+    const { error } = await supabaseClient
+      .from("profiles")
+      .upsert(payload, { onConflict: "id" });
+
+    if (error) {
+      msg.style.color = "#fecaca";
+      msg.textContent = "Klaida išsaugant profilį: " + error.message;
+      return;
+    }
+
+    msg.style.color = "#a7f3d0";
+    msg.textContent = "✔️ Profilis išsaugotas. Šie duomenys bus naudojami kuriant pasiūlymus.";
+  });
+
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    location.href = "./auth.html";
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./service-worker.js");
+  }
+</script>
+
+</body>
+</html>
