@@ -12,6 +12,33 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 
   <style>
+    body { background:#020617; color:#e5e7eb; }
+
+    /* Viršutinis rolės meniu – toks pats kaip darbdavio profilyje */
+    .role-menu {
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      padding:10px;
+      background:#0f172a;
+      border-bottom:1px solid #1f2937;
+    }
+    .role-menu button {
+      flex:0 0 auto;
+      padding:8px 14px;
+      border-radius:8px;
+      background:#1e293b;
+      color:white;
+      border:1px solid #334155;
+      font-size:14px;
+      white-space:nowrap;
+      cursor:pointer;
+    }
+    .role-menu button.active {
+      background:#0369a1;
+      border-color:#0ea5e9;
+    }
+
     label {
       display:block;
       margin:8px 0 4px;
@@ -23,7 +50,7 @@
       padding:8px;
       border-radius:8px;
       border:1px solid #1e293b;
-      background:#0f172a;
+      background:#020617;
       color:#e2e8f0;
       margin-bottom:10px;
       font-size:14px;
@@ -99,6 +126,21 @@
       background:#7f1d1d;
       border-color:#b91c1c;
     }
+
+    .info-text {
+      font-size:13px;
+      color:#9ca3af;
+      margin-bottom:10px;
+    }
+
+    /* Darbdaviui rodomas įkainių blokas */
+    .price-card {
+      margin-bottom:15px;
+      background:#122032;
+      border:1px solid #1e293b;
+      border-radius:12px;
+      padding:12px;
+    }
   </style>
 </head>
 <body>
@@ -108,10 +150,28 @@
   <button class="btn small" onclick="logout()" style="margin-left:auto;">Atsijungti</button>
 </header>
 
+<!-- ROLE-BASED MENIU -->
+<nav class="role-menu" id="roleMenu" style="display:none;">
+  <!-- Darbdavys -->
+  <div id="menu-employer" style="display:none;">
+    <button onclick="location.href='darbdavys.html'">Sukurti pasiūlymą</button>
+    <button onclick="location.href='darbdavio-profilis.html'">Mano profilis</button>
+    <button onclick="location.href='mano-pasiulymai.html'">Mano pasiūlymai</button>
+    <button onclick="location.href='kandidatai.html'">Kandidatai</button>
+  </div>
+
+  <!-- Darbuotojas (jei netyčia patektų) -->
+  <div id="menu-worker" style="display:none;">
+    <button onclick="location.href='pasiulymai.html'">Pasiūlymai</button>
+    <button onclick="location.href='profilis.html'">Mano profilis</button>
+    <button onclick="location.href='patvirtintos-kandidaturos.html'">Patvirtintos kandidatūros</button>
+  </div>
+</nav>
+
 <main class="container">
 
   <!-- 💰 ĮKAINIŲ INFO BLOKAS -->
-  <div id="priceInfo" class="card" style="margin-bottom:15px; background:#122032; border:1px solid #1e293b;">
+  <div id="priceInfo" class="price-card">
     <h3>💰 Rekomenduojami darbo įkainiai</h3>
     <p class="small-text">
       Pasirinkus darbo poziciją, čia matysite rekomenduojamus darbuotojų įkainius. Tai padeda darbdaviams planuoti realų biudžetą.
@@ -124,8 +184,9 @@
   <!-- Naujo pasiūlymo forma -->
   <div class="card">
     <h3>Sukurti naują darbo pasiūlymą</h3>
-    <p class="small-text">
-      Užpildykite formą. Pasiūlymas pirmiausia keliaus administratoriui, kuris jį patvirtins arba atmes.
+    <p class="info-text">
+      Užpildykite formą. Pasiūlymas pirmiausia keliaus administratoriui, kuris jį patvirtins arba atmes.  
+      Tik patvirtinti pasiūlymai bus matomi darbuotojams.
     </p>
 
     <form id="offerForm">
@@ -181,6 +242,7 @@
   );
 
   let currentUser = null;
+  let currentProfile = null;
 
   // 💰 kainų žemėlapis pagal pavadinimą (NAUJI TEKSTAI)
   const prices = {
@@ -221,38 +283,113 @@
     box.innerHTML = html;
   }
 
-  async function checkEmployer() {
-    const { data, error } = await supabaseClient.auth.getUser();
-    if (error || !data.user) {
+  function statusBadge(status) {
+    const s = (status || "").toLowerCase();
+    if (s === "approved") {
+      return '<span class="badge badge-approved">Patvirtintas</span>';
+    }
+    if (s === "rejected") {
+      return '<span class="badge badge-rejected">Atmestas</span>';
+    }
+    return '<span class="badge badge-pending">Laukia administratoriaus patvirtinimo</span>';
+  }
+
+  // INIT
+  (async () => {
+    const { data: u } = await supabaseClient.auth.getUser();
+    if (!u.user) {
       location.href = "./auth.html";
       return;
     }
+    currentUser = u.user;
 
-    currentUser = data.user;
+    // Profilis
+    const { data: p, error: pErr } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUser.id)
+      .maybeSingle();
 
-    const role = currentUser.user_metadata?.role;
-    if (role !== "employer") {
-      alert("Šis puslapis prieinamas tik darbdaviams.");
-      location.href = "./main.html";
+    if (pErr) {
+      document.getElementById("offerMsg").textContent =
+        "Klaida kraunant profilį: " + pErr.message;
       return;
     }
 
-    await preloadEmployerProfile();
+    // Jei profilio nėra – sukuriam bazę
+    if (!p) {
+      const baseProfile = {
+        id: currentUser.id,
+        role: currentUser.user_metadata?.role || "employer",
+        email: currentUser.email,
+        created_at: new Date().toISOString()
+      };
+
+      const { data: created, error: cErr } = await supabaseClient
+        .from("profiles")
+        .insert(baseProfile)
+        .select()
+        .single();
+
+      if (cErr) {
+        document.getElementById("offerMsg").textContent =
+          "Klaida kuriant profilį: " + cErr.message;
+        return;
+      }
+      currentProfile = created;
+    } else {
+      currentProfile = p;
+    }
+
+    // ADMIN → admin
+    if (currentProfile.role === "admin") {
+      location.href = "./admin.html";
+      return;
+    }
+
+    // DARBUOTOJAS → darbuotojo puslapiai
+    if (currentProfile.role === "worker") {
+      location.href = "./pasiulymai.html";
+      return;
+    }
+
+    // DARBDAVYS
+    if (currentProfile.role === "employer") {
+      document.getElementById("roleMenu").style.display = "flex";
+      document.getElementById("menu-employer").style.display = "flex";
+      highlightActive("Sukurti pasiūlymą");
+    }
+
+    // Užblokuotas?
+    if (currentProfile.is_blocked) {
+      document.getElementById("offersList").innerHTML =
+        "Jūsų paskyra užblokuota. Susisiekite su administracija.";
+      return;
+    }
+
+    // Užpildom formą iš profilio
+    preloadEmployerProfile();
+
+    // Event listener pavadinimui
+    const titleSelect = document.getElementById("title");
+    if (titleSelect) {
+      titleSelect.addEventListener("change", updatePriceInfo);
+    }
+
+    loadOffers();
+  })();
+
+  function highlightActive(label) {
+    document.querySelectorAll(".role-menu button").forEach(btn => {
+      if (btn.textContent.trim() === label) {
+        btn.classList.add("active");
+      }
+    });
   }
 
   async function preloadEmployerProfile() {
     try {
-      const { data: profile, error } = await supabaseClient
-        .from("profiles")
-        .select("*")
-        .eq("id", currentUser.id)
-        .maybeSingle();
-
-      if (error) {
-        console.log("Klaida skaitant darbdavio profilį:", error);
-        return;
-      }
-
+      const profile = currentProfile;
       if (!profile) return;
 
       const companyInput     = document.getElementById("company");
@@ -277,19 +414,8 @@
         emailInput.value = profile.email;
       }
     } catch (e) {
-      console.log("Klaida pre-load darbdavio profilio:", e);
+      console.log("Klaida pildant darbdavio profilį į formą:", e);
     }
-  }
-
-  function statusBadge(status) {
-    const s = (status || "").toLowerCase();
-    if (s === "approved") {
-      return '<span class="badge badge-approved">Patvirtintas</span>';
-    }
-    if (s === "rejected") {
-      return '<span class="badge badge-rejected">Atmestas</span>';
-    }
-    return '<span class="badge badge-pending">Laukia patvirtinimo</span>';
   }
 
   const offerForm = document.getElementById("offerForm");
@@ -349,7 +475,7 @@
 
     offerForm.reset();
     document.getElementById("city").value = "Vilnius";
-    updatePriceInfo(); // po reset vėl atnaujinti tekstą
+    updatePriceInfo();
 
     loadOffers();
   });
@@ -426,7 +552,7 @@
 
     const { data: apps, error } = await supabaseClient
       .from("applications")
-      .select("id, worker_id, status")
+      .select("id, worker_id, status, created_at")
       .eq("offer_id", offerId);
 
     if (error) {
@@ -447,7 +573,7 @@
         .eq("id", app.worker_id)
         .maybeSingle();
 
-      if (profErr) {
+      if (profErr || !profile) {
         const div = document.createElement("div");
         div.className = "candidate";
         div.textContent = "Klaida skaitant kandidato duomenis.";
@@ -464,10 +590,10 @@
       if (appStatus === "rejected") statusLabel = "Atmestas";
 
       div.innerHTML = `
-        <div><strong>${profile?.full_name || "Be vardo"}</strong> (${profile?.city || "-"})</div>
-        <div>Tel.: ${profile?.phone || "-"}</div>
-        <div>El. paštas: ${profile?.email || "-"}</div>
-        <div>IV nr.: ${profile?.iv_nr || "-"}</div>
+        <div><strong>${profile.full_name || "Be vardo"}</strong> (${profile.city || "-"})</div>
+        <div>Tel.: ${profile.phone || "-"}</div>
+        <div>El. paštas: ${profile.email || "-"}</div>
+        <div>IV nr.: ${profile.iv_nr || "-"}</div>
 
         <div class="candidate-actions">
           ${
@@ -501,7 +627,6 @@
     loadOffers();
   }
 
-  // 🔥 Ištrinti pasiūlymą
   async function deleteOffer(offerId, title) {
     const sure = confirm(`Ar tikrai norite ištrinti pasiūlymą "${title}"? Kandidatūros taip pat bus ištrintos.`);
     if (!sure) return;
@@ -534,16 +659,6 @@
     await supabaseClient.auth.signOut();
     location.href = "./auth.html";
   }
-
-  (async () => {
-    await checkEmployer();
-    await loadOffers();
-
-    const titleSelect = document.getElementById("title");
-    if (titleSelect) {
-      titleSelect.addEventListener("change", updatePriceInfo);
-    }
-  })();
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./service-worker.js")
