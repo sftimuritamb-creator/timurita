@@ -26,23 +26,6 @@
   <h2>Timurita</h2>
 </header>
 
-<!-- ROLE MENIU (rodomas tik kai vartotojas identifikuotas) -->
-<nav class="role-menu" style="display:none;">
-  <div id="menu-worker" style="display:none;">
-    <button onclick="location.href='pasiulymai.html'">Pasiūlymai</button>
-    <button onclick="location.href='profilis.html'">Mano profilis</button>
-    <button onclick="location.href='patvirtintos-kandidaturos.html'">Patvirtintos kandidatūros</button>
-  </div>
-
-  <div id="menu-employer" style="display:none;">
-    <button onclick="location.href='darbdavys.html'">Sukurti pasiūlymą</button>
-    <button onclick="location.href='darbdavio-profilis.html'">Mano profilis</button>
-    <button onclick="location.href='mano-pasiulymai.html'">Mano pasiūlymai</button>
-    <button onclick="location.href='kandidatai.html'">Kandidatai</button>
-  </div>
-</nav>
-
-<!-- Centrinė žinutė, jei rodom -->
 <div class="center-box" id="loadingBox">
   Tikriname paskyrą, prašome palaukti...
 </div>
@@ -54,58 +37,87 @@
   );
 
   async function init() {
-    const session = await supabaseClient.auth.getUser();
+    const { data: userData, error: userErr } = await supabaseClient.auth.getUser();
 
-    if (!session.data.user) {
-      // Jei neprisijungęs → į login
+    if (userErr || !userData.user) {
+      // jei neprisijungęs → login
       location.href = "auth.html";
       return;
     }
 
-    const user = session.data.user;
+    const user = userData.user;
+    const loadingBox = document.getElementById("loadingBox");
 
-    // Gaunam profilį
-    const { data: profile } = await supabaseClient
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
+    try {
+      // bandome nuskaityti profilį
+      let { data: profile, error: pErr } = await supabaseClient
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
 
-    if (!profile) {
+      // jei profilio nėra – sukuriame automatiškai
+      if (!profile) {
+        const baseProfile = {
+          id: user.id,
+          role: user.user_metadata?.role || "worker",
+          email: user.email,
+          created_at: new Date().toISOString()
+        };
+
+        const { data: created, error: cErr } = await supabaseClient
+          .from("profiles")
+          .insert(baseProfile)
+          .select()
+          .single();
+
+        if (cErr) {
+          console.log("Klaida kuriant profilį:", cErr);
+          loadingBox.innerText = "Klaida kuriant profilį. Bandykite dar kartą arba susisiekite su administracija.";
+          return;
+        }
+
+        profile = created;
+      } else if (pErr) {
+        console.log("Klaida skaitant profilį:", pErr);
+        loadingBox.innerText = "Klaida skaitant profilį. Bandykite dar kartą.";
+        return;
+      }
+
+      // jeigu pažymėtas kaip blokuotas
+      if (profile.is_blocked) {
+        alert("Jūsų paskyra yra užblokuota. Susisiekite su administracija.");
+        await supabaseClient.auth.signOut();
+        location.href = "auth.html";
+        return;
+      }
+
+      // 🔥 ADMIN → admin.html
+      if (profile.role === "admin") {
+        location.href = "admin.html";
+        return;
+      }
+
+      // 👷‍♂️ DARBUOTOJAS → pasiūlymai
+      if (profile.role === "worker") {
+        location.href = "pasiulymai.html";
+        return;
+      }
+
+      // 🏢 DARBDAVYS → darbdavys.html (pasiūlymų kūrimo)
+      if (profile.role === "employer") {
+        location.href = "darbdavys.html";
+        return;
+      }
+
+      // jei rolė kažkokia keista
+      loadingBox.innerHTML = "Nerasta jūsų rolė. Prašome susisiekti su administratoriumi.";
+
+    } catch (e) {
+      console.log("Netikėta klaida main.html:", e);
       document.getElementById("loadingBox").innerText =
-        "Klaida: profilis nerastas.";
-      return;
+        "Įvyko netikėta klaida. Bandykite perkrauti puslapį.";
     }
-
-    // ⛔ Blokuoti vartotojai
-    if (profile.is_blocked) {
-      alert("Jūsų paskyra yra užblokuota. Susisiekite su administracija.");
-      await supabaseClient.auth.signOut();
-      location.href = "auth.html";
-      return;
-    }
-
-    // 🔥 ADMIN → admin.html
-    if (profile.role === "admin") {
-      location.href = "admin.html";
-      return;
-    }
-
-    // 👷‍♂️ DARBUOTOJAS
-    if (profile.role === "worker") {
-      location.href = "pasiulymai.html";
-      return;
-    }
-
-    // 🏢 DARBDAVYS
-    if (profile.role === "employer") {
-      location.href = "darbdavys.html";
-      return;
-    }
-
-    // Jei kažkas ne taip
-    document.getElementById("loadingBox").innerHTML =
-      "Nerasta jūsų rolė. Prašome susisiekti su administratoriumi.";
   }
 
   init();
