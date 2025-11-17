@@ -95,6 +95,10 @@
       color:#9ca3af;
     }
     .btn.small { padding:6px 10px; font-size:13px; }
+    .danger {
+      background:#7f1d1d;
+      border-color:#b91c1c;
+    }
   </style>
 </head>
 <body>
@@ -332,7 +336,13 @@
             <strong>${o.title}</strong><br>
             <span class="small-text">${o.company || ""} • ${o.city || ""}</span>
           </div>
-          <div>${statusBadge(o.status)}</div>
+          <div style="text-align:right;">
+            ${statusBadge(o.status)}
+            <br>
+            <button class="btn small danger" onclick="deleteOffer('${o.id}', '${o.title.replace(/'/g, "\\'")}')">
+              🗑 Ištrinti
+            </button>
+          </div>
         </div>
 
         <div class="small-text" style="margin-top:6px;">
@@ -437,7 +447,37 @@
       return;
     }
 
-    // Perkraunam pasiūlymus ir kandidatus
+    loadOffers();
+  }
+
+  // 🔥 NAUJA DALIS – IŠTRINTI PASIŪLYMĄ
+  async function deleteOffer(offerId, title) {
+    const sure = confirm(`Ar tikrai norite ištrinti pasiūlymą "${title}"? Kandidatūros taip pat bus ištrintos.`);
+    if (!sure) return;
+
+    // Pirmiausia ištrinam kandidatūras į šį pasiūlymą
+    const { error: appsErr } = await supabaseClient
+      .from("applications")
+      .delete()
+      .eq("offer_id", offerId);
+
+    if (appsErr) {
+      alert("Klaida šalinant kandidatus: " + appsErr.message);
+      return;
+    }
+
+    // Tada ištrinam patį pasiūlymą
+    const { error: offerErr } = await supabaseClient
+      .from("offers")
+      .delete()
+      .eq("id", offerId);
+
+    if (offerErr) {
+      alert("Klaida šalinant pasiūlymą: " + offerErr.message);
+      return;
+    }
+
+    alert("Pasiūlymas ir susijusios kandidatūros sėkmingai ištrinti.");
     loadOffers();
   }
 
