@@ -23,6 +23,10 @@
       padding:6px 10px;
       font-size:13px;
     }
+    .small-text {
+      font-size:12px;
+      color:#9ca3af;
+    }
   </style>
 </head>
 <body>
@@ -36,7 +40,9 @@
 
   <div class="card">
     <h3>Visi patvirtinti pasiūlymai</h3>
-    <p>Galite kandidatuoti tik tada, jei administratorius patvirtino jūsų paskyrą.</p>
+    <p class="small-text">
+      Kandidatuoti gali tik patvirtinti darbuotojai. Kiti vartotojai gali tik peržiūrėti pasiūlymus.
+    </p>
 
     <div id="jobsList">Kraunama...</div>
   </div>
@@ -52,11 +58,19 @@
   let currentUser = null;
   let currentProfile = null;
 
-  // 1️⃣ Užkraunam prisijungusį vartotoją ir jo profilį (jei worker)
+  // Mažas palaukimas, kad Supabase spėtų atkurti sesiją PWA režime
+  function waitForSessionRestore() {
+    return new Promise(resolve => setTimeout(resolve, 300));
+  }
+
+  // 1️⃣ Užkraunam prisijungusį vartotoją ir profilį (jei worker)
   async function loadUser() {
+    await waitForSessionRestore();
+
     const { data, error } = await supabaseClient.auth.getUser();
 
     if (error || !data.user) {
+      // jei iš viso neprisijungęs – į auth
       location.href = "./auth.html";
       return;
     }
@@ -65,6 +79,7 @@
     const role = currentUser.user_metadata?.role;
 
     if (role === "worker") {
+      // darbuotojui atsikraunam profilį (patvirtinimui tikrinti)
       const { data: profile, error: profErr } = await supabaseClient
         .from("profiles")
         .select("*")
@@ -78,6 +93,7 @@
         currentProfile = profile || null;
       }
     } else {
+      // darbdavys / admin – gali matyti pasiūlymus, bet nekandidatuoja
       currentProfile = null;
     }
   }
@@ -134,9 +150,9 @@
 
     const role = currentUser.user_metadata?.role;
 
-    // Tik darbuotojai gali kandidatuoti
+    // Tik darbuotojai gali kandidatuoti – kiti tik mato pasiūlymus
     if (role !== "worker") {
-      area.innerHTML = `<p style="font-size:12px;color:#9ca3af;">Prisijunkite kaip darbuotojas, kad galėtumėte kandidatuoti.</p>`;
+      area.innerHTML = `<p class="small-text">Prisijungę kaip darbdavys / admin galite tik peržiūrėti šį pasiūlymą.</p>`;
       return;
     }
 
