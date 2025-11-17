@@ -108,34 +108,43 @@
     </p>
 
     <form id="offerForm">
+      <!-- Pavadinimas: pasirinkimas iš 3 variantų -->
       <label class="required">Pavadinimas</label>
-      <input type="text" id="title" required placeholder="pvz. Pagalbinis darbininkas">
+      <select id="title" required>
+        <option value="">Pasirinkite...</option>
+        <option value="Pagalbinis darbuotojas">Pagalbinis darbuotojas</option>
+        <option value="Darbuotojas betonuotojas">Darbuotojas betonuotojas</option>
+        <option value="Darbuotojas Valytoja/as">Darbuotojas Valytoja/as</option>
+      </select>
 
+      <!-- Miestas: tik Vilnius -->
       <label class="required">Miestas</label>
       <select id="city" required>
         <option value="Vilnius">Vilnius</option>
       </select>
 
+      <!-- Įmonės pavadinimas: privalomas, automatiškai bandom užpildyti iš profilio -->
       <label class="required">Įmonės pavadinimas</label>
       <input type="text" id="company" required placeholder="Jūsų įmonė">
 
+      <!-- Įmonės kodas: privalomas, automatiškai bandom užpildyti iš profilio -->
       <label class="required">Įmonės kodas</label>
       <input type="text" id="companyCode" required placeholder="Įmonės kodas">
 
-      <label>Atlygis (pvz. €/val.)</label>
-      <input type="text" id="salary" placeholder="pvz. 8 Eur/val.">
+      <!-- Atlygio lauką pašalinom -->
 
       <label>Aprašymas</label>
       <textarea id="description" placeholder="Trumpai aprašykite darbą, laiką, reikalavimus"></textarea>
 
-      <label>Kontaktinis asmuo</label>
-      <input type="text" id="contact" placeholder="Vardas, pavardė">
+      <!-- Kontaktas: visi privalomi -->
+      <label class="required">Kontaktinis asmuo</label>
+      <input type="text" id="contact" required placeholder="Vardas, pavardė">
 
-      <label>Telefonas</label>
-      <input type="text" id="phone" placeholder="Kontaktinis telefonas">
+      <label class="required">Telefonas</label>
+      <input type="text" id="phone" required placeholder="Kontaktinis telefonas">
 
-      <label>El. paštas</label>
-      <input type="email" id="email" placeholder="Kontaktinis el. paštas">
+      <label class="required">El. paštas</label>
+      <input type="email" id="email" required placeholder="Kontaktinis el. paštas">
 
       <button class="btn" type="submit">💾 Išsaugoti pasiūlymą</button>
     </form>
@@ -175,6 +184,62 @@
       location.href = "./main.html";
       return;
     }
+
+    // pabandom užpildyti formą iš darbdavio profilio
+    await preloadEmployerProfile();
+  }
+
+  async function preloadEmployerProfile() {
+    try {
+      const { data: profile, error } = await supabaseClient
+        .from("profiles")
+        .select("*")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+      if (error) {
+        console.log("Klaida skaitant darbdavio profilį:", error);
+        return;
+      }
+
+      if (!profile) return;
+
+      const companyInput     = document.getElementById("company");
+      const companyCodeInput = document.getElementById("companyCode");
+      const contactInput     = document.getElementById("contact");
+      const phoneInput       = document.getElementById("phone");
+      const emailInput       = document.getElementById("email");
+
+      // Pirmiausia bandome imti iš specialių laukų, jei juos turėsi ateity
+      if (profile.company && !companyInput.value) {
+        companyInput.value = profile.company;
+      }
+      if (profile.company_code && !companyCodeInput.value) {
+        companyCodeInput.value = profile.company_code;
+      }
+
+      // Jei nėra specialių laukų – naudojam fallback iš to, ką turim:
+      // full_name kaip įmonės pavadinimą, iv_nr kaip įmonės kodą (jei naudojama tam)
+      if (!companyInput.value && profile.full_name) {
+        companyInput.value = profile.full_name;
+      }
+      if (!companyCodeInput.value && profile.iv_nr) {
+        companyCodeInput.value = profile.iv_nr;
+      }
+
+      if (!contactInput.value && profile.full_name) {
+        contactInput.value = profile.full_name;
+      }
+      if (!phoneInput.value && profile.phone) {
+        phoneInput.value = profile.phone;
+      }
+      if (!emailInput.value && profile.email) {
+        emailInput.value = profile.email;
+      }
+
+    } catch (e) {
+      console.log("Klaida pre-load darbdavio profilio:", e);
+    }
   }
 
   function statusBadge(status) {
@@ -207,15 +272,14 @@
     const city        = document.getElementById("city").value;
     const company     = document.getElementById("company").value.trim();
     const companyCode = document.getElementById("companyCode").value.trim();
-    const salary      = document.getElementById("salary").value.trim();
     const description = document.getElementById("description").value.trim();
     const contact     = document.getElementById("contact").value.trim();
     const phone       = document.getElementById("phone").value.trim();
     const email       = document.getElementById("email").value.trim();
 
-    if (!title || !city || !company || !companyCode) {
+    if (!title || !city || !company || !companyCode || !contact || !phone || !email) {
       offerMsg.style.color = "#fecaca";
-      offerMsg.textContent = "Užpildykite visus privalomus laukus (Pavadinimas, Miestas, Įmonės pavadinimas, Įmonės kodas).";
+      offerMsg.textContent = "Užpildykite visus privalomus laukus.";
       return;
     }
 
@@ -225,11 +289,10 @@
       city,
       company,
       company_code: companyCode,
-      salary: salary || null,
       description: description || null,
-      contact: contact || null,
-      phone: phone || null,
-      email: email || currentUser.email,
+      contact,
+      phone,
+      email,
       status: "pending"
     };
 
@@ -290,8 +353,7 @@
         </div>
 
         <div class="small-text" style="margin-top:6px;">
-          <strong>Įmonės kodas:</strong> ${o.company_code || "-"}<br>
-          <strong>Atlygis:</strong> ${o.salary || "-"}
+          <strong>Įmonės kodas:</strong> ${o.company_code || "-"}
         </div>
 
         <div class="small-text" style="margin-top:6px;">
