@@ -67,6 +67,7 @@
 
 <header class="app-header">
   <h2>Darbo pasiūlymai</h2>
+  <button class="btn small" onclick="logout()" style="margin-left:auto;">Atsijungti</button>
 </header>
 
 <!-- ROLE-BASED MENIU -->
@@ -143,7 +144,7 @@
       return;
     }
 
-    // DARBDAVYS → darbdavys.html (pasiūlymus kuria, ne žiūri kaip darbuotojas)
+    // DARBDAVYS → darbdavys.html
     if (currentProfile.role === "employer") {
       location.href = "./darbdavys.html";
       return;
@@ -280,7 +281,11 @@
     alert("Kandidatuota sėkmingai! Laukite darbdavio sprendimo.");
   }
 
-  // SW
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    location.href = "./auth.html";
+  }
+
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./service-worker.js")
       .catch(e => console.log("SW error pasiulymai.html", e));
