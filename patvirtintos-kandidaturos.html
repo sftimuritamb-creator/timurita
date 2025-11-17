@@ -2,61 +2,40 @@
 <html lang="lt">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Patvirtintos kandidatūros – Timurita</title>
 
   <link rel="stylesheet" href="./style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 
   <style>
-    body { background:#020617; color:#e5e7eb; }
+    body { background:#0f172a; color:white; }
 
-    /* Role meniu – toks pat kaip kituose darbuotojo puslapiuose */
-    .role-menu {
-      display:flex;
-      gap:10px;
-      overflow-x:auto;
-      padding:10px;
+    .card {
       background:#0f172a;
-      border-bottom:1px solid #1f2937;
-    }
-    .role-menu button {
-      flex:0 0 auto;
-      padding:8px 14px;
-      border-radius:8px;
-      background:#1e293b;
-      color:white;
-      border:1px solid #334155;
-      font-size:14px;
-      white-space:nowrap;
-      cursor:pointer;
-    }
-    .role-menu button.active {
-      background:#0369a1;
-      border-color:#0ea5e9;
+      border:1px solid #1f2937;
+      margin-bottom:16px;
+      padding:16px;
+      border-radius:12px;
+      box-shadow:0 10px 15px -3px rgba(0,0,0,0.4);
     }
 
-    .info-text {
-      font-size:13px;
-      color:#9ca3af;
-      margin-bottom:10px;
-    }
-
-    .accepted-badge {
-      display:inline-block;
-      padding:3px 8px;
-      border-radius:999px;
-      font-size:11px;
+    .status-approved {
       background:#022c22;
       color:#6ee7b7;
       border:1px solid #22c55e;
-      margin-top:4px;
+      padding:3px 8px;
+      border-radius:999px;
+      font-size:12px;
+      display:inline-block;
+      margin-bottom:8px;
     }
 
-    .date-text {
-      font-size:12px;
-      color:#9ca3af;
-      margin-top:4px;
+    .no-results {
+      text-align:center;
+      color:#94a3b8;
+      padding:30px 10px;
+      font-size:16px;
     }
   </style>
 </head>
@@ -65,32 +44,11 @@
 
 <header class="app-header">
   <h2>Patvirtintos kandidatūros</h2>
+  <button class="btn small" onclick="logout()" style="margin-left:auto;">Atsijungti</button>
 </header>
 
-<!-- ROLE-BASED MENIU -->
-<nav class="role-menu" id="roleMenu" style="display:none;">
-  <!-- Darbuotojas -->
-  <div id="menu-worker" style="display:none;">
-    <button onclick="location.href='pasiulymai.html'">Pasiūlymai</button>
-    <button onclick="location.href='profilis.html'">Mano profilis</button>
-    <button onclick="location.href='patvirtintos-kandidaturos.html'">Patvirtintos kandidatūros</button>
-  </div>
-
-  <!-- Darbdavys (jei netyčia patektų) -->
-  <div id="menu-employer" style="display:none;">
-    <button onclick="location.href='darbdavys.html'">Sukurti pasiūlymą</button>
-    <button onclick="location.href='darbdavio-profilis.html'">Mano profilis</button>
-    <button onclick="location.href='mano-pasiulymai.html'">Mano pasiūlymai</button>
-    <button onclick="location.href='kandidatai.html'">Kandidatai</button>
-  </div>
-</nav>
-
 <main class="container">
-  <p id="topInfo" class="info-text">
-    Čia matysite darbo pasiūlymus, į kuriuos darbdaviai jus <strong>priėmė</strong>.
-  </p>
-
-  <div id="acceptedList">Kraunama...</div>
+  <div id="approvedList">Kraunama...</div>
 </main>
 
 <script>
@@ -100,149 +58,88 @@
   );
 
   let currentUser = null;
-  let currentProfile = null;
 
-  // 🔁 INIT
-  (async () => {
-    const { data: u } = await supabaseClient.auth.getUser();
-    if (!u.user) {
-      location.href = "./auth.html";
+  async function init() {
+    const session = await supabaseClient.auth.getUser();
+    if (!session.data.user) {
+      location.href = "auth.html";
       return;
     }
-    currentUser = u.user;
+    currentUser = session.data.user;
 
-    const { data: p, error: pErr } = await supabaseClient
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUser.id)
-      .maybeSingle();
-
-    if (pErr || !p) {
-      document.getElementById("acceptedList").innerText = "Klaida kraunant profilį.";
-      return;
-    }
-
-    currentProfile = p;
-
-    // Blokuotas
-    if (currentProfile.is_blocked) {
-      document.getElementById("acceptedList").innerHTML =
-        "Jūsų paskyra užblokuota. Susisiekite su administracija.";
-      return;
-    }
-
-    // ADMIN → admin
-    if (currentProfile.role === "admin") {
-      location.href = "./admin.html";
-      return;
-    }
-
-    // DARBDAVYS → jų puslapiai
-    if (currentProfile.role === "employer") {
-      location.href = "./darbdavys.html";
-      return;
-    }
-
-    // DARBUOTOJAS → rodom meniu
-    if (currentProfile.role === "worker") {
-      document.getElementById("roleMenu").style.display = "flex";
-      document.getElementById("menu-worker").style.display = "flex";
-      highlightActive("Patvirtintos kandidatūros");
-
-      if (!currentProfile.is_approved) {
-        document.getElementById("topInfo").innerHTML =
-          "Jūsų paskyra dar nepatvirtinta. Patvirtintos kandidatūros atsiras, kai darbdaviai priims jūsų kandidatūras.";
-      }
-    }
-
-    loadAcceptedApplications();
-  })();
-
-  function highlightActive(label) {
-    document.querySelectorAll(".role-menu button").forEach(btn => {
-      if (btn.textContent.trim() === label) {
-        btn.classList.add("active");
-      }
-    });
+    loadApproved();
   }
 
-  // 📥 Kraunam priimtas kandidatūras
-  async function loadAcceptedApplications() {
-    const box = document.getElementById("acceptedList");
-    box.textContent = "Kraunama...";
+  async function loadApproved() {
+    const box = document.getElementById("approvedList");
 
-    // Pirmiausia – traukiam applications, kur worker_id = currentUser.id ir status = 'accepted'
-    const { data: apps, error: appsErr } = await supabaseClient
+    // 1. Pasiimame darbuotojo ID
+    const workerId = currentUser.id;
+
+    // 2. Pasiimame patvirtintas kandidatūras su pasiūlymų informacija
+    const { data, error } = await supabaseClient
       .from("applications")
-      .select("id, offer_id, status, created_at")
-      .eq("worker_id", currentUser.id)
-      .eq("status", "accepted")
-      .order("created_at", { ascending: false });
+      .select(`
+        id,
+        status,
+        offers (
+          title,
+          city,
+          company,
+          company_code,
+          contact,
+          phone,
+          email
+        )
+      `)
+      .eq("worker_id", workerId)
+      .eq("status", "approved")
+      .order("id", { ascending: false });
 
-    if (appsErr) {
-      box.textContent = "Klaida kraunant kandidatūras: " + appsErr.message;
+    if (error) {
+      console.log(error);
+      box.innerHTML = "<p class='no-results'>Klaida kraunant duomenis.</p>";
       return;
     }
 
-    if (!apps || apps.length === 0) {
-      box.innerHTML = "Darbdaviai dar nėra patvirtinę jūsų kandidatūrų.";
+    if (!data || data.length === 0) {
+      box.innerHTML = "<p class='no-results'>Šiuo metu neturite patvirtintų kandidatūrų.</p>";
       return;
     }
 
     box.innerHTML = "";
-
-    for (const app of apps) {
-      // Kiekvienai kandidatūrai – paimame susijusį pasiūlymą
-      const { data: offer, error: oErr } = await supabaseClient
-        .from("offers")
-        .select("*")
-        .eq("id", app.offer_id)
-        .maybeSingle();
-
-      if (oErr || !offer) {
-        const c = document.createElement("div");
-        c.className = "card";
-        c.textContent = "Klaida kraunant darbo pasiūlymo duomenis.";
-        box.appendChild(c);
-        continue;
-      }
+    data.forEach(item => {
+      const o = item.offers;
 
       const card = document.createElement("div");
       card.className = "card";
 
-      const dateText = app.created_at
-        ? new Date(app.created_at).toLocaleString("lt-LT")
-        : "";
-
       card.innerHTML = `
-        <h3>${offer.title || "Darbo pasiūlymas"}</h3>
-        <span class="accepted-badge">Kandidatūra priimta</span>
+        <span class="status-approved">Patvirtinta</span>
 
-        <p class="date-text">
-          Patvirtinimo data: ${dateText || "nenurodyta"}
-        </p>
+        <h3 style="margin-bottom:6px;">${o.title}</h3>
 
-        <p><strong>Miestas:</strong> ${offer.city || "-"}</p>
-        <p><strong>Įmonė:</strong> ${offer.company || "-"}</p>
-        <p><strong>Aprašymas:</strong> ${offer.description || "-"}</p>
+        <p><strong>Miestas:</strong> ${o.city}</p>
+        <p><strong>Įmonė:</strong> ${o.company}</p>
+        <p><strong>Įmonės kodas:</strong> ${o.company_code}</p>
 
-        <p><strong>Kontaktinis asmuo:</strong> ${offer.contact || "-"}</p>
-        <p><strong>Telefonas:</strong> ${offer.phone || "-"}</p>
-        <p><strong>El. paštas:</strong> ${offer.email || "-"}</p>
+        <br>
 
-        <p class="info-text">
-          Jeigu darbdavys nurodė darbo pradžios laiką ar vietą – jie gali būti aprašyme arba atskirai pateikti el. paštu / telefonu.
-        </p>
+        <p><strong>Kontaktinis asmuo:</strong> ${o.contact}</p>
+        <p><strong>Telefonas:</strong> ${o.phone}</p>
+        <p><strong>El. paštas:</strong> ${o.email}</p>
       `;
 
       box.appendChild(card);
-    }
+    });
   }
 
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./service-worker.js")
-      .catch(e => console.log("SW error patvirtintos-kandidaturos.html", e));
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    location.href = "auth.html";
   }
+
+  init();
 </script>
 
 </body>
