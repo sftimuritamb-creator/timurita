@@ -7,7 +7,7 @@
  *  - Supabase užklausos – VISADA per tinklą (nekaišioja cache)
  */
 
-const VERSION = 'v94-2025-11-15';
+const VERSION = 'v95-2025-11-15';
 const BASE = '/timurita';
 
 const CACHE_STATIC = `timurita-static-${VERSION}`;
