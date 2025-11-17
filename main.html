@@ -1,230 +1,51 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="lt">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Timurita – Pagrindinis</title>
-
-  <meta name="description" content="Trumpalaikio darbo platforma statybų sektoriuje – atlyginimas kiekvieną penktadienį, be ilgalaikių įsipareigojimų.">
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#1a2a44">
-  <link rel="icon" href="./Timurita_logo_192x192.png" type="image/png">
   <link rel="stylesheet" href="./style.css">
 
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
 
   <style>
-    .hero {
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-    }
-    @media (min-width: 768px) {
-      .hero { flex-direction:row; align-items:center; }
-    }
-    .hero-text {
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .hero-text h1 {
-      margin:0;
-      font-size:24px;
-    }
-    @media (min-width: 768px) {
-      .hero-text h1 { font-size:28px; }
-    }
-    .hero-text p { margin:0; color:#cbd5e1; }
-
-    .hero-list {
-      margin:8px 0 0;
-      padding-left:18px;
-      color:#e2e8f0;
-      font-size:14px;
-    }
-    .hero-list li { margin-bottom:4px; }
-
-    .hero-steps {
-      margin-top:8px;
-      font-size:13px;
-      color:#a5b4fc;
-    }
-
-    /* MY BUTTON */
-    .offer-btn {
-      margin-top:12px;
-      display:flex;
-      width:100%;
-      justify-content:center;
-      padding:12px 18px;
-      background:#0ea5e9;
-      color:#0b1120;
-      font-size:15px;
-      border:none;
-      border-radius:14px;
-      font-weight:600;
-      cursor:pointer;
-      box-shadow:0 0 20px rgba(14,165,233,0.3);
-    }
-    .offer-btn:hover {
-      background:#38bdf8;
-    }
-
-    .hero-logo {
-      flex:1;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:10px;
-    }
-    .hero-logo img {
-      max-width:220px;
-      width:100%;
-      height:auto;
-      border-radius:20px;
-      border:1px solid #1e293b;
-      box-shadow:0 20px 40px rgba(15,23,42,0.7);
-      background:#020617;
-      padding:10px;
-      object-fit:contain;
-    }
-
-    .feature-grid {
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-    }
-    @media (min-width: 768px) {
-      .feature-grid {
-        grid-template-columns:repeat(3,minmax(0,1fr));
-      }
-    }
-    .feature-card {
-      background:#020617;
-      border-radius:12px;
-      padding:10px 12px;
-      border:1px solid #1e293b;
-      font-size:14px;
-    }
-    .feature-card strong {
-      display:block;
-      margin-bottom:4px;
-    }
-
-    .role-actions {
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    @media (min-width: 600px) {
-      .role-actions { flex-direction:row; }
-    }
-    .role-actions .btn {
-      flex:1;
-      justify-content:center;
-    }
-
-    .pill {
-      display:inline-block;
-      padding:3px 8px;
-      border-radius:999px;
-      border:1px solid #1e293b;
-      font-size:11px;
-      color:#a5b4fc;
-      background:#020617;
+    body { background:#0f172a; color:white; }
+    .center-box {
+      text-align:center;
+      padding:40px 20px;
+      font-size:18px;
+      color:#cbd5e1;
     }
   </style>
 </head>
+
 <body>
 
 <header class="app-header">
-  <a href="./main.html" style="display:flex;align-items:center;text-decoration:none;color:inherit;gap:10px;">
-    <img src="./Timurita_logo_192x192.png" alt="Timurita" style="width:40px;height:40px;border-radius:12px;">
-    <div>
-      <h3 style="margin:0;">Timurita</h3>
-      <div class="small">Sujungiame darbdavius ir statybų specialistus</div>
-    </div>
-  </a>
-  <button onclick="logout()" class="btn small" style="margin-left:auto;">Atsijungti</button>
+  <h2>Timurita</h2>
 </header>
 
-<main class="container">
-
-  <!-- HERO BLOKAS -->
-  <div class="card">
-    <div class="hero">
-      <div class="hero-text">
-
-        <span class="pill" id="welcomeRole">Sveiki sugrįžę</span>
-
-        <h1>Užsidirbk statybose be ilgalaikių įsipareigojimų</h1>
-
-        <p>
-          Trumpalaikio darbo platforma Vilniuje – atlyginimas kiekvieną penktadienį,
-          jokio ilgo laukimo ir sudėtingų atrankų.
-        </p>
-
-        <ul class="hero-list">
-          <li>Atlyginimas – kiekvieną penktadienį</li>
-          <li>Paprasta dirbti – jokių darbo pokalbių</li>
-          <li>Užsidirbk be ilgalaikių įsipareigojimų</li>
-        </ul>
-
-        <p class="hero-steps">
-          Užsiregistruok → kandidatuok → sulauk patvirtinimo → atvyk dirbti → gauk darbo užmokestį.
-        </p>
-
-        <!-- NAUJAS MYGTUKAS čia -->
-        <button class="offer-btn" onclick="location.href='./pasiulymai.html'">
-          🔍 Darbo pasiūlymai
-        </button>
-
-      </div>
-
-      <!-- Dešinėje – didelis logotipas -->
-      <div class="hero-logo">
-        <img src="./Timurita_logo_192x192.png" alt="Timurita logotipas">
-      </div>
-    </div>
+<!-- ROLE MENIU (rodomas tik kai vartotojas identifikuotas) -->
+<nav class="role-menu" style="display:none;">
+  <div id="menu-worker" style="display:none;">
+    <button onclick="location.href='pasiulymai.html'">Pasiūlymai</button>
+    <button onclick="location.href='profilis.html'">Mano profilis</button>
+    <button onclick="location.href='patvirtintos-kandidaturos.html'">Patvirtintos kandidatūros</button>
   </div>
 
-  <!-- 3 PRIVALUMAI -->
-  <div class="card">
-    <h3>Kodėl verta?</h3>
-
-    <div class="feature-grid">
-      <div class="feature-card">
-        <strong>Atlyginimas – kiekvieną penktadienį</strong>
-        Jokio ilgo laukimo – dirbai šią savaitę, penktadienį gauni pinigus.
-      </div>
-
-      <div class="feature-card">
-        <strong>Paprasta dirbti, be pokalbių</strong>
-        Kandidatuoji, atvyksti ir dirbi – viskas paprasta ir greita.
-      </div>
-
-      <div class="feature-card">
-        <strong>Laisvas darbo grafikas</strong>
-        Dirbk tik tada, kada tau patogu. Jokio spaudimo ar įsipareigojimų.
-      </div>
-    </div>
+  <div id="menu-employer" style="display:none;">
+    <button onclick="location.href='darbdavys.html'">Sukurti pasiūlymą</button>
+    <button onclick="location.href='darbdavio-profilis.html'">Mano profilis</button>
+    <button onclick="location.href='mano-pasiulymai.html'">Mano pasiūlymai</button>
+    <button onclick="location.href='kandidatai.html'">Kandidatai</button>
   </div>
+</nav>
 
-  <!-- ROLĖS VEIKSMAI -->
-  <div class="card" id="rolesSection">
-    <h3>Pasirink, kaip nori naudotis Timurita</h3>
-    <div class="role-actions">
-      <button class="btn big" type="button" onclick="location.href='./darbuotojai.html'">
-        👷 Esu darbuotojas – noriu rasti darbą
-      </button>
-      <button class="btn big" type="button" onclick="location.href='./darbdavys.html'">
-        🧱 Esu darbdavys – noriu rasti darbuotojų
-      </button>
-    </div>
-  </div>
-
-</main>
+<!-- Centrinė žinutė, jei rodom -->
+<div class="center-box" id="loadingBox">
+  Tikriname paskyrą, prašome palaukti...
+</div>
 
 <script>
   const supabaseClient = supabase.createClient(
@@ -232,38 +53,62 @@
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
   );
 
-  async function checkAuthAndSetRole() {
-    const { data } = await supabaseClient.auth.getUser();
-    if (!data || !data.user) {
-      location.href = "./auth.html";
+  async function init() {
+    const session = await supabaseClient.auth.getUser();
+
+    if (!session.data.user) {
+      // Jei neprisijungęs → į login
+      location.href = "auth.html";
       return;
     }
 
-    const role = data.user.user_metadata?.role || "worker";
-    const pill = document.getElementById("welcomeRole");
+    const user = session.data.user;
 
-    if (role === "employer") {
-      pill.textContent = "Prisijungė darbdavys";
-      pill.style.borderColor = "#f97316";
-    } else {
-      pill.textContent = "Prisijungęs darbuotojas";
-      pill.style.borderColor = "#22c55e";
+    // Gaunam profilį
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile) {
+      document.getElementById("loadingBox").innerText =
+        "Klaida: profilis nerastas.";
+      return;
     }
 
-    try { localStorage.setItem("timurita_role", role); } catch(e) {}
+    // ⛔ Blokuoti vartotojai
+    if (profile.is_blocked) {
+      alert("Jūsų paskyra yra užblokuota. Susisiekite su administracija.");
+      await supabaseClient.auth.signOut();
+      location.href = "auth.html";
+      return;
+    }
+
+    // 🔥 ADMIN → admin.html
+    if (profile.role === "admin") {
+      location.href = "admin.html";
+      return;
+    }
+
+    // 👷‍♂️ DARBUOTOJAS
+    if (profile.role === "worker") {
+      location.href = "pasiulymai.html";
+      return;
+    }
+
+    // 🏢 DARBDAVYS
+    if (profile.role === "employer") {
+      location.href = "darbdavys.html";
+      return;
+    }
+
+    // Jei kažkas ne taip
+    document.getElementById("loadingBox").innerHTML =
+      "Nerasta jūsų rolė. Prašome susisiekti su administratoriumi.";
   }
 
-  checkAuthAndSetRole();
-
-  async function logout() {
-    await supabaseClient.auth.signOut();
-    location.href = "./auth.html";
-  }
-
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js')
-      .catch(e => console.log('SW error main.html', e));
-  }
+  init();
 </script>
 
 </body>
