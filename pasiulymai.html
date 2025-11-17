@@ -41,7 +41,7 @@
   <div class="card">
     <h3>Visi patvirtinti pasiūlymai</h3>
     <p class="small-text">
-      Kandidatuoti gali tik patvirtinti darbuotojai. Kiti vartotojai gali tik peržiūrėti pasiūlymus.
+      Pasiūlymus gali peržiūrėti visi. Kandidatuoti gali tik patvirtinti darbuotojai.
     </p>
 
     <div id="jobsList">Kraunama...</div>
@@ -58,42 +58,38 @@
   let currentUser = null;
   let currentProfile = null;
 
-  // Mažas palaukimas, kad Supabase spėtų atkurti sesiją PWA režime
-  function waitForSessionRestore() {
-    return new Promise(resolve => setTimeout(resolve, 300));
-  }
-
-  // 1️⃣ Užkraunam prisijungusį vartotoją ir profilį (jei worker)
+  // 1️⃣ Bandome perskaityti prisijungusį vartotoją (be jokių redirect)
   async function loadUser() {
-    await waitForSessionRestore();
-
-    const { data, error } = await supabaseClient.auth.getUser();
-
-    if (error || !data.user) {
-      // jei iš viso neprisijungęs – į auth
-      location.href = "./auth.html";
-      return;
-    }
-
-    currentUser = data.user;
-    const role = currentUser.user_metadata?.role;
-
-    if (role === "worker") {
-      // darbuotojui atsikraunam profilį (patvirtinimui tikrinti)
-      const { data: profile, error: profErr } = await supabaseClient
-        .from("profiles")
-        .select("*")
-        .eq("id", currentUser.id)
-        .maybeSingle();
-
-      if (profErr) {
-        console.log("Klaida kraunant profilį:", profErr);
+    try {
+      const { data, error } = await supabaseClient.auth.getUser();
+      if (error || !data.user) {
+        currentUser = null;
         currentProfile = null;
-      } else {
-        currentProfile = profile || null;
+        return;
       }
-    } else {
-      // darbdavys / admin – gali matyti pasiūlymus, bet nekandidatuoja
+
+      currentUser = data.user;
+      const role = currentUser.user_metadata?.role;
+
+      if (role === "worker") {
+        const { data: profile, error: profErr } = await supabaseClient
+          .from("profiles")
+          .select("*")
+          .eq("id", currentUser.id)
+          .maybeSingle();
+
+        if (profErr) {
+          console.log("Klaida kraunant profilį:", profErr);
+          currentProfile = null;
+        } else {
+          currentProfile = profile || null;
+        }
+      } else {
+        currentProfile = null;
+      }
+    } catch (e) {
+      console.log("Klaida loadUser():", e);
+      currentUser = null;
       currentProfile = null;
     }
   }
@@ -140,38 +136,38 @@
     });
   }
 
-  // 3️⃣ Parodom / paslepiam „Kandidatuoti“ mygtuką pagal role ir is_approved
+  // 3️⃣ Parodom / paslepiam „Kandidatuoti“ mygtuką (be automatinio redirect)
   function renderApplyButton(offerId) {
     const area = document.getElementById(`btn-${offerId}`);
+
+    // jei neprisijungęs – leidžiam tik žiūrėti
     if (!currentUser) {
-      area.innerHTML = "";
+      area.innerHTML = `<p class="small-text">Norėdami kandidatuoti, prisijunkite kaip darbuotojas.</p>`;
       return;
     }
 
     const role = currentUser.user_metadata?.role;
 
-    // Tik darbuotojai gali kandidatuoti – kiti tik mato pasiūlymus
     if (role !== "worker") {
       area.innerHTML = `<p class="small-text">Prisijungę kaip darbdavys / admin galite tik peržiūrėti šį pasiūlymą.</p>`;
       return;
     }
 
-    // Jei profilis neįrašytas arba nepatvirtintas
     if (!currentProfile || !currentProfile.is_approved) {
       area.innerHTML = `<p style="color:#fbbf24;font-size:12px;">Jūsų paskyra dar nepatvirtinta – negalite kandidatuoti.</p>`;
       return;
     }
 
-    // Viskas gerai – rodom mygtuką
     area.innerHTML = `
       <button class="btn small" onclick="apply('${offerId}')">Kandidatuoti</button>
     `;
   }
 
-  // 4️⃣ Kandidatavimo funkcija – rašom į applications su status: "pending"
+  // 4️⃣ Kandidatavimo funkcija – tik čia, paspaudus, darom redirect į auth, jei reikia
   async function apply(offerId) {
     if (!currentUser) {
-      alert("Pirmiausia prisijunkite.");
+      const go = confirm("Norėdami kandidatuoti, turite prisijungti. Ar norite eiti į prisijungimo langą?");
+      if (go) location.href = "./auth.html";
       return;
     }
 
@@ -208,16 +204,14 @@
     alert("Sėkmingai kandidatavote! Darbdavys matys jūsų kandidatūrą.");
   }
 
-  // Atsijungimas
   async function logout() {
     await supabaseClient.auth.signOut();
     location.href = "./auth.html";
   }
 
-  // Paleidimas
   (async () => {
-    await loadUser();
-    await loadJobs();
+    await loadUser();   // be redirect
+    await loadJobs();   // visada rodom pasiūlymus
   })();
 
   if ("serviceWorker" in navigator) {
