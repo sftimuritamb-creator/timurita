@@ -84,6 +84,12 @@
       color:#e5e7eb;
       margin-top:4px;
     }
+    .candidate-actions {
+      margin-top:6px;
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+    }
     .small-text {
       font-size:12px;
       color:#9ca3af;
@@ -108,7 +114,6 @@
     </p>
 
     <form id="offerForm">
-      <!-- Pavadinimas: pasirinkimas iš 3 variantų -->
       <label class="required">Pavadinimas</label>
       <select id="title" required>
         <option value="">Pasirinkite...</option>
@@ -117,34 +122,28 @@
         <option value="Darbuotojas Valytoja/as">Darbuotojas Valytoja/as</option>
       </select>
 
-      <!-- Miestas: tik Vilnius -->
       <label class="required">Miestas</label>
       <select id="city" required>
         <option value="Vilnius">Vilnius</option>
       </select>
 
-      <!-- Įmonės pavadinimas: privalomas, automatiškai bandom užpildyti iš profilio -->
       <label class="required">Įmonės pavadinimas</label>
-      <input type="text" id="company" required placeholder="Jūsų įmonė">
+      <input type="text" id="company" required>
 
-      <!-- Įmonės kodas: privalomas, automatiškai bandom užpildyti iš profilio -->
       <label class="required">Įmonės kodas</label>
-      <input type="text" id="companyCode" required placeholder="Įmonės kodas">
-
-      <!-- Atlygio lauką pašalinom -->
+      <input type="text" id="companyCode" required>
 
       <label>Aprašymas</label>
       <textarea id="description" placeholder="Trumpai aprašykite darbą, laiką, reikalavimus"></textarea>
 
-      <!-- Kontaktas: visi privalomi -->
       <label class="required">Kontaktinis asmuo</label>
-      <input type="text" id="contact" required placeholder="Vardas, pavardė">
+      <input type="text" id="contact" required>
 
       <label class="required">Telefonas</label>
-      <input type="text" id="phone" required placeholder="Kontaktinis telefonas">
+      <input type="text" id="phone" required>
 
       <label class="required">El. paštas</label>
-      <input type="email" id="email" required placeholder="Kontaktinis el. paštas">
+      <input type="email" id="email" required>
 
       <button class="btn" type="submit">💾 Išsaugoti pasiūlymą</button>
     </form>
@@ -168,7 +167,6 @@
 
   let currentUser = null;
 
-  // 🔐 Tik darbdavys turi pasiekti šį puslapį
   async function checkEmployer() {
     const { data, error } = await supabaseClient.auth.getUser();
     if (error || !data.user) {
@@ -185,7 +183,6 @@
       return;
     }
 
-    // pabandom užpildyti formą iš darbdavio profilio
     await preloadEmployerProfile();
   }
 
@@ -210,33 +207,21 @@
       const phoneInput       = document.getElementById("phone");
       const emailInput       = document.getElementById("email");
 
-      // Pirmiausia bandome imti iš specialių laukų, jei juos turėsi ateity
       if (profile.company && !companyInput.value) {
         companyInput.value = profile.company;
       }
       if (profile.company_code && !companyCodeInput.value) {
         companyCodeInput.value = profile.company_code;
       }
-
-      // Jei nėra specialių laukų – naudojam fallback iš to, ką turim:
-      // full_name kaip įmonės pavadinimą, iv_nr kaip įmonės kodą (jei naudojama tam)
-      if (!companyInput.value && profile.full_name) {
-        companyInput.value = profile.full_name;
-      }
-      if (!companyCodeInput.value && profile.iv_nr) {
-        companyCodeInput.value = profile.iv_nr;
-      }
-
-      if (!contactInput.value && profile.full_name) {
+      if (profile.full_name && !contactInput.value) {
         contactInput.value = profile.full_name;
       }
-      if (!phoneInput.value && profile.phone) {
+      if (profile.phone && !phoneInput.value) {
         phoneInput.value = profile.phone;
       }
-      if (!emailInput.value && profile.email) {
+      if (profile.email && !emailInput.value) {
         emailInput.value = profile.email;
       }
-
     } catch (e) {
       console.log("Klaida pre-load darbdavio profilio:", e);
     }
@@ -253,7 +238,6 @@
     return '<span class="badge badge-pending">Laukia patvirtinimo</span>';
   }
 
-  // 💾 Naujo pasiūlymo išsaugojimas
   const offerForm = document.getElementById("offerForm");
   const offerMsg  = document.getElementById("offerMsg");
 
@@ -315,7 +299,6 @@
     loadOffers();
   });
 
-  // 📥 Įkelti darbdavio pasiūlymus
   async function loadOffers() {
     const list = document.getElementById("offersList");
     list.textContent = "Kraunama...";
@@ -372,12 +355,10 @@
 
       list.appendChild(card);
 
-      // užkraunam kandidatus šiam pasiūlymui
       loadCandidatesForOffer(o.id);
     }
   }
 
-  // 👥 Įkelti kandidatus konkrečiam pasiūlymui
   async function loadCandidatesForOffer(offerId) {
     const box = document.getElementById(`candidates-${offerId}`);
     if (!box) return;
@@ -399,7 +380,6 @@
 
     box.innerHTML = "";
     for (const app of apps) {
-      // nuskaitom darbuotojo profilį
       const { data: profile, error: profErr } = await supabaseClient
         .from("profiles")
         .select("full_name, city, phone, email, iv_nr")
@@ -418,17 +398,47 @@
       div.className = "candidate";
 
       const appStatus = (app.status || "pending").toLowerCase();
+      let statusLabel = "Laukia sprendimo";
+      if (appStatus === "accepted") statusLabel = "Priimtas";
+      if (appStatus === "rejected") statusLabel = "Atmestas";
 
       div.innerHTML = `
         <div><strong>${profile?.full_name || "Be vardo"}</strong> (${profile?.city || "-"})</div>
         <div>Tel.: ${profile?.phone || "-"}</div>
         <div>El. paštas: ${profile?.email || "-"}</div>
         <div>IV nr.: ${profile?.iv_nr || "-"}</div>
-        <div class="candidate-status"><strong>Statusas:</strong> ${appStatus}</div>
+
+        <div class="candidate-actions">
+          ${
+            appStatus === "pending"
+              ? `
+              <button class="btn small" onclick="updateApplicationStatus('${app.id}', 'accepted')">Priimti</button>
+              <button class="btn small" onclick="updateApplicationStatus('${app.id}', 'rejected')">Atmesti</button>
+              `
+              : `<span class="small-text">Sprendimas: ${statusLabel}</span>`
+          }
+        </div>
+
+        <div class="candidate-status"><strong>Statusas sistemoje:</strong> ${appStatus}</div>
       `;
 
       box.appendChild(div);
     }
+  }
+
+  async function updateApplicationStatus(appId, newStatus) {
+    const { error } = await supabaseClient
+      .from("applications")
+      .update({ status: newStatus })
+      .eq("id", appId);
+
+    if (error) {
+      alert("Klaida keičiant kandidato statusą: " + error.message);
+      return;
+    }
+
+    // Perkraunam pasiūlymus ir kandidatus
+    loadOffers();
   }
 
   async function logout() {
@@ -441,7 +451,7 @@
     await loadOffers();
   })();
 
-  if ('serviceWorker' in navigator) {
+  if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./service-worker.js")
       .catch(e => console.log("SW error darbdavys.html", e));
   }
