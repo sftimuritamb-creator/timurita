@@ -56,7 +56,7 @@
 <script>
   const supabaseClient = supabase.createClient(
     "https://qnczakppadjxbicgjzcy.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiIsInJlZiI6InFuY3pha3BwYWRqeGJpY2dqemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTYxMjcsImV4cCI6MjA3ODUzMjEyN30.0lAl6L1GU1_uWpULlraaKM0KIfy3lCNSI_wp2X5zDmY"
   );
 
   let currentUser = null;
@@ -123,7 +123,6 @@
         <div><strong>Įmonė:</strong> ${o.company || "-"}</div>
         <div><strong>Įmonės kodas:</strong> ${o.company_code || "-"}</div>
         <div><strong>Miestas:</strong> ${o.city || "-"}</div>
-        <div><strong>Atlygis:</strong> ${o.salary || "-"}</div>
         <p style="margin-top:10px;">${o.description || ""}</p>
         <br>
         <div id="btn-${o.id}"></div>
@@ -181,23 +180,6 @@
       return;
     }
 
-    // Patikrinam, ar jau kandidatuota į tą pasiūlymą
-    const { data: existing, error: existErr } = await supabaseClient
-      .from("applications")
-      .select("id")
-      .eq("offer_id", offerId)
-      .eq("worker_id", currentUser.id)
-      .maybeSingle();
-
-    if (existErr) {
-      console.log("Klaida tikrinant paraišką:", existErr);
-    }
-
-    if (existing) {
-      alert("Jūs jau kandidatuojate į šį pasiūlymą.");
-      return;
-    }
-
     const { error } = await supabaseClient
       .from("applications")
       .insert({
@@ -207,6 +189,13 @@
       });
 
     if (error) {
+      // Jei tokia klaida – reiškia jau yra įrašas (unikalus apribojimas)
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("duplicate key") || msg.includes("applications_unique")) {
+        alert("Jūs jau kandidatuojate į šį pasiūlymą.");
+        return;
+      }
+
       alert("Klaida kandidatuojant: " + error.message);
       return;
     }
