@@ -110,6 +110,17 @@
 
 <main class="container">
 
+  <!-- 💰 ĮKAINIŲ INFO BLOKAS -->
+  <div id="priceInfo" class="card" style="margin-bottom:15px; background:#122032; border:1px solid #1e293b;">
+    <h3>💰 Rekomenduojami darbo įkainiai</h3>
+    <p class="small-text">
+      Pasirinkus darbo poziciją, čia matysite rekomenduojamus darbuotojų įkainius. Tai padeda darbdaviams planuoti realų biudžetą.
+    </p>
+    <div id="priceDetails" style="margin-top:10px; font-size:15px; font-weight:500; color:#e2e8f0;">
+      Pasirinkite darbo pavadinimą.
+    </div>
+  </div>
+
   <!-- Naujo pasiūlymo forma -->
   <div class="card">
     <h3>Sukurti naują darbo pasiūlymą</h3>
@@ -170,6 +181,45 @@
   );
 
   let currentUser = null;
+
+  // 💰 kainų žemėlapis pagal pavadinimą
+  const prices = {
+    "Pagalbinis darbuotojas": {
+      miestas: "100 € / į rankas mieste",
+      uzMiesto: "120 € / į rankas už miesto"
+    },
+    "Darbuotojas betonuotojas": {
+      miestas: "150 € / į rankas mieste",
+      uzMiesto: "170 € / į rankas už miesto"
+    },
+    "Darbuotojas Valytoja/as": {
+      miestas: "10 € / į rankas"
+    }
+  };
+
+  function updatePriceInfo() {
+    const selected = document.getElementById("title").value;
+    const box = document.getElementById("priceDetails");
+
+    if (!selected) {
+      box.innerHTML = "Pasirinkite darbo pavadinimą.";
+      return;
+    }
+
+    const p = prices[selected];
+    if (!p) {
+      box.innerHTML = "Informacija nerasta.";
+      return;
+    }
+
+    let html = `<strong>${selected}</strong><br>`;
+    html += `<div style="margin-top:6px;">• ${p.miestas}</div>`;
+    if (p.uzMiesto) {
+      html += `<div>• ${p.uzMiesto}</div>`;
+    }
+
+    box.innerHTML = html;
+  }
 
   async function checkEmployer() {
     const { data, error } = await supabaseClient.auth.getUser();
@@ -299,6 +349,7 @@
 
     offerForm.reset();
     document.getElementById("city").value = "Vilnius";
+    updatePriceInfo(); // po reset vėl atnaujinti tekstą
 
     loadOffers();
   });
@@ -450,12 +501,11 @@
     loadOffers();
   }
 
-  // 🔥 NAUJA DALIS – IŠTRINTI PASIŪLYMĄ
+  // 🔥 Ištrinti pasiūlymą
   async function deleteOffer(offerId, title) {
     const sure = confirm(`Ar tikrai norite ištrinti pasiūlymą "${title}"? Kandidatūros taip pat bus ištrintos.`);
     if (!sure) return;
 
-    // Pirmiausia ištrinam kandidatūras į šį pasiūlymą
     const { error: appsErr } = await supabaseClient
       .from("applications")
       .delete()
@@ -466,7 +516,6 @@
       return;
     }
 
-    // Tada ištrinam patį pasiūlymą
     const { error: offerErr } = await supabaseClient
       .from("offers")
       .delete()
@@ -489,6 +538,12 @@
   (async () => {
     await checkEmployer();
     await loadOffers();
+
+    // uždedam klausymą ant pavadinimo select'o
+    const titleSelect = document.getElementById("title");
+    if (titleSelect) {
+      titleSelect.addEventListener("change", updatePriceInfo);
+    }
   })();
 
   if ("serviceWorker" in navigator) {
